@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+status.json
+.temp_ratchet.py
