@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 status.json
 .temp_ratchet.py
+.pytest_cache/
+pytest-cache-files-*/
+.coverage
+htmlcov/
