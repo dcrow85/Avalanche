@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syntropy City // Avalanche Research Center</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="masthead">
+      <div class="masthead-top">
+        <div class="masthead-code">Bureau A-01<br>Research Control</div>
+        <div class="masthead-title">
+          <h1>Syntropy.City</h1>
+          <p>Avalanche Research Center</p>
+        </div>
+        <div class="masthead-status">Status<br>Live Chamber</div>
+      </div>
+      <div class="masthead-bottom">
+        <div class="declaration">
+          <span class="eyebrow">Operational Brief</span>
+          <p>
+            Avalanche is a pressure chamber for agent cognition: memory scarcity,
+            irreversible falsification, structured dead ends, and hostile oracle
+            inputs. This site is the public control room for the current organisms
+            and the archive of the traces they leave behind.
+          </p>
+        </div>
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <div class="telemetry-label">Current Branch</div>
+            <div class="telemetry-value">V4.4.1</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Sensorium</div>
+            <div class="telemetry-value">Permutation</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Loophole Seal</div>
+            <div class="telemetry-value">Anti-Cache</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Chamber Type</div>
+            <div class="telemetry-value">Sterile</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Command Layer</div>
+        <div class="section-meta">Live comparative ecology</div>
+      </div>
+      <div class="section-body">
+        <div class="run-summary">
+          <div class="telemetry-card">
+            <div class="telemetry-label">Agent Harness</div>
+            <div class="telemetry-value">Codex</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Raw Harness</div>
+            <div class="telemetry-value">Qwen / Grok</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Dead-End Stack</div>
+            <div class="telemetry-value">Basin / Family / Local</div>
+          </div>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Public Surface</div>
+            <div class="telemetry-value">Control Room</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title">Live Organisms</div>
+          <div class="section-meta">Direct feed from active chambers</div>
+        </div>
+        <div class="section-body">
+          <div class="run-grid" id="live-grid">
+            <div class="empty-state">Awaiting live telemetry...</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title">Archive</div>
+          <div class="section-meta">Recovered run states</div>
+        </div>
+        <div class="section-body">
+          <div class="archive-list" id="archive-list">
+            <div class="empty-state">Awaiting indexed runs...</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="footer-note">
+      Agent architecture under epistemic pressure. Public interface only; raw terraria remain private.
+    </div>
+  </main>
+
+  <script>
+    const LIVE_ROUTE_BY_RUN = {
+      "terrarium-v44-codex-perm-53-01": "/live/ava-53/",
+      "terrarium-v44-codex-perm-54-01": "/live/ava-54/",
+      "terrarium-v44-qwen-perm-01": "/live/qwen/",
+      "terrarium-v44-grok-perm-01": "/live/grok/",
+      "terrarium-v44-haiku-perm-01": "/live/haiku/",
+      "terrarium-v44-qwen-perm-02": "/live/qwen-fresh/",
+      "terrarium-v44-grok-perm-02": "/live/grok-fresh/",
+      "terrarium-v44-haiku-perm-02": "/live/haiku-fresh/"
+    };
+
+    function latestMetric(run, key, fallback = "-") {
+      const value = run.latest_metrics && run.latest_metrics[key];
+      return typeof value === "undefined" || value === null ? fallback : value;
+    }
+
+    function runCard(run) {
+      const resultClass = (run.last_result || "").toLowerCase() || "idle";
+      const liveLink = LIVE_ROUTE_BY_RUN[run.name] || null;
+      return `
+        <article class="run-card ${resultClass}">
+          <div class="run-topline">
+            <div>
+              <div class="run-name">${run.name}</div>
+              <div class="run-organism">${run.organism}</div>
+            </div>
+            <div class="run-state">${run.phase || "UNKNOWN"} / ${run.last_result || "IN-FLIGHT"}</div>
+          </div>
+          <div class="run-metrics">
+            <div class="metric">
+              <div class="metric-label">Cycle</div>
+              <div class="metric-value">${run.cycle}/${run.max_cycles}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">C_ast</div>
+              <div class="metric-value">${latestMetric(run, "solver_ast_complexity")}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Families</div>
+              <div class="metric-value">${latestMetric(run, "dead_end_family_count")}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Basin Tenure</div>
+              <div class="metric-value">${latestMetric(run, "basin_tenure")}</div>
+            </div>
+          </div>
+          <div class="run-actions">
+            ${liveLink ? `<a class="action primary" href="${liveLink}">Open Live Feed</a>` : ""}
+            <a class="action" href="/run.html?run=${encodeURIComponent(run.slug)}">Open Summary</a>
+          </div>
+        </article>
+      `;
+    }
+
+    function archiveItem(run) {
+      const timestamp = run.timestamp ? new Date(run.timestamp).toLocaleString() : "timestamp unavailable";
+      return `
+        <a class="archive-item" href="/run.html?run=${encodeURIComponent(run.slug)}">
+          <h3>${run.name}</h3>
+          <p>${run.organism} // ${run.phase || "UNKNOWN"} // ${run.last_result || "IN-FLIGHT"} // ${timestamp}</p>
+        </a>
+      `;
+    }
+
+    async function loadRuns() {
+      const res = await fetch("/api/runs.json", { cache: "no-store" });
+      const runs = await res.json();
+      const live = runs.filter(run => LIVE_ROUTE_BY_RUN[run.name]).slice(0, 8);
+      const archive = runs;
+
+      const liveGrid = document.getElementById("live-grid");
+      liveGrid.innerHTML = live.length ? live.map(runCard).join("") : '<div class="empty-state">No live telemetry available.</div>';
+
+      const archiveList = document.getElementById("archive-list");
+      archiveList.innerHTML = archive.length ? archive.map(archiveItem).join("") : '<div class="empty-state">No indexed runs yet.</div>';
+    }
+
+    loadRuns().catch(() => {
+      document.getElementById("live-grid").innerHTML = '<div class="empty-state">Telemetry link offline.</div>';
+      document.getElementById("archive-list").innerHTML = '<div class="empty-state">Run index unavailable.</div>';
+    });
+  </script>
+</body>
+</html>

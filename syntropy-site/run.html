@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run Summary // Syntropy City</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="shell run-shell">
+    <section class="masthead">
+      <div class="masthead-top">
+        <div class="masthead-code">Archive Access<br>Recovered Trace</div>
+        <div class="masthead-title">
+          <h1 id="run-name">Loading</h1>
+          <p id="run-subtitle">Terrarium Summary</p>
+        </div>
+        <div class="masthead-status"><a href="/">Return<br>Control Room</a></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Run State</div>
+        <div class="section-meta" id="run-timestamp">Timestamp pending</div>
+      </div>
+      <div class="section-body">
+        <div class="run-summary" id="run-summary"></div>
+        <div class="run-links" id="run-links"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Cycle Playback</div>
+        <div class="section-meta" id="snapshot-meta">Latest recorded state</div>
+      </div>
+      <div class="section-body">
+        <div class="snapshot-strip">
+          <div class="snapshot-label">Playback Rail</div>
+          <div class="snapshot-meta" id="snapshot-cycle">Cycle snapshot pending</div>
+          <div class="snapshot-controls">
+            <button id="snapshot-prev">Prev</button>
+            <input type="range" id="snapshot-range" min="0" max="0" value="0">
+            <button id="snapshot-next">Next</button>
+            <button id="snapshot-live" class="live">Latest</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title">opinions.md</div>
+          <div class="section-meta" id="opinions-meta">Theory surface</div>
+        </div>
+        <div class="section-body">
+          <div class="log-block"><pre id="opinions-content"></pre></div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title">dead-ends.md</div>
+          <div class="section-meta" id="deadends-meta">Constraint surface</div>
+        </div>
+        <div class="section-body">
+          <div class="log-block"><pre id="deadends-content"></pre></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Last Error</div>
+        <div class="section-meta">Terminal contradiction</div>
+      </div>
+      <div class="section-body">
+        <div class="log-block"><pre id="error-content"></pre></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let runPayload = null;
+    let snapshotIndex = -1;
+    const LIVE_ROUTE_BY_RUN = {
+      "terrarium-v44-codex-perm-53-01": "/live/ava-53/",
+      "terrarium-v44-codex-perm-54-01": "/live/ava-54/",
+      "terrarium-v44-qwen-perm-01": "/live/qwen/",
+      "terrarium-v44-grok-perm-01": "/live/grok/",
+      "terrarium-v44-haiku-perm-01": "/live/haiku/",
+      "terrarium-v44-qwen-perm-02": "/live/qwen-fresh/",
+      "terrarium-v44-grok-perm-02": "/live/grok-fresh/",
+      "terrarium-v44-haiku-perm-02": "/live/haiku-fresh/"
+    };
+
+    function metric(label, value) {
+      return `
+        <div class="telemetry-card">
+          <div class="telemetry-label">${label}</div>
+          <div class="telemetry-value">${value}</div>
+        </div>
+      `;
+    }
+
+    function setAlertState(snapshot) {
+      document.body.classList.remove("alert-ratchet", "alert-ontology", "alert-edge");
+      if (!snapshot) return;
+      const phase = snapshot.phase || "";
+      const metrics = snapshot.metrics || {};
+      const turbulence = metrics.turbulence_state || "";
+      if (phase === "RATCHET") document.body.classList.add("alert-ratchet");
+      if (turbulence === "ONTOLOGY_CHANGE" || turbulence === "EPICYCLE_ACCUMULATION" || turbulence === "PRODUCTIVE_TURBULENCE") {
+        document.body.classList.add("alert-ontology");
+      }
+      const edge =
+        phase === "RATCHET" ||
+        snapshot.last_result === "FAIL" ||
+        turbulence === "EPICYCLE_ACCUMULATION" ||
+        Math.abs(Number(metrics.solver_ast_delta || 0)) >= 3;
+      if (edge) document.body.classList.add("alert-edge");
+    }
+
+    function renderSnapshot(run) {
+      const snapshots = Array.isArray(run.cycle_snapshots) && run.cycle_snapshots.length
+        ? run.cycle_snapshots
+        : [{
+            cycle: run.cycle,
+            max_cycles: run.max_cycles,
+            phase: run.phase,
+            last_result: run.last_result,
+            opinions_content: run.opinions_content,
+            dead_ends_content: run.dead_ends_content,
+            metrics: run.latest_metrics || {},
+          }];
+      if (snapshotIndex < 0 || snapshotIndex >= snapshots.length) {
+        snapshotIndex = snapshots.length - 1;
+      }
+      const snapshot = snapshots[snapshotIndex];
+      document.getElementById("snapshot-range").max = String(Math.max(0, snapshots.length - 1));
+      document.getElementById("snapshot-range").value = String(snapshotIndex);
+      document.getElementById("snapshot-meta").textContent = `${snapshots.length} recorded states`;
+      document.getElementById("snapshot-cycle").textContent =
+        `Cycle ${snapshot.cycle || "-"} / ${snapshot.max_cycles || run.max_cycles || "-"} // ${snapshot.phase || "-"} // ${snapshot.last_result || "IN-FLIGHT"}`;
+      document.getElementById("opinions-content").textContent = snapshot.opinions_content || "";
+      document.getElementById("deadends-content").textContent = snapshot.dead_ends_content || "";
+      setAlertState(snapshot);
+    }
+
+    async function loadRun() {
+      const slug = new URLSearchParams(window.location.search).get("run");
+      if (!slug) {
+        throw new Error("missing run slug");
+      }
+      const res = await fetch(`/api/runs/${encodeURIComponent(slug)}.json`, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error("missing run payload");
+      }
+      const run = await res.json();
+      runPayload = run;
+      const liveLink = LIVE_ROUTE_BY_RUN[run.name] || null;
+
+      document.getElementById("run-name").textContent = run.name;
+      document.getElementById("run-subtitle").textContent = `${run.organism} // ${run.phase || "UNKNOWN"} // ${run.last_result || "IN-FLIGHT"}`;
+      document.getElementById("run-timestamp").textContent = run.timestamp ? new Date(run.timestamp).toLocaleString() : "timestamp unavailable";
+      document.getElementById("opinions-meta").textContent = `${run.opinions_words || 0} words`;
+      document.getElementById("deadends-meta").textContent = `${run.dead_ends_words || 0} words`;
+      document.getElementById("error-content").textContent = run.last_error || "No terminal error recorded.";
+
+      const latest = run.latest_metrics || {};
+      document.getElementById("run-summary").innerHTML = [
+        metric("Cycle", `${run.cycle}/${run.max_cycles}`),
+        metric("Phase", run.phase || "-"),
+        metric("Result", run.last_result || "IN-FLIGHT"),
+        metric("D_sem", typeof latest.opinions_jaccard_distance === "undefined" ? "-" : latest.opinions_jaccard_distance),
+        metric("C_ast", typeof latest.solver_ast_complexity === "undefined" ? "-" : latest.solver_ast_complexity),
+        metric("Families", typeof latest.dead_end_family_count === "undefined" ? "-" : latest.dead_end_family_count),
+        metric("Basins", typeof latest.dead_end_basin_count === "undefined" ? "-" : latest.dead_end_basin_count),
+        metric("Ptolemaic Ratio", typeof latest.ptolemaic_ratio === "undefined" ? "-" : latest.ptolemaic_ratio),
+      ].join("");
+
+      document.getElementById("run-links").innerHTML = `
+        <a class="action" href="/">Return to Control Room</a>
+        ${liveLink ? `<a class="action primary" href="${liveLink}">Open Live Feed</a>` : ""}
+      `;
+      renderSnapshot(run);
+    }
+
+    document.getElementById("snapshot-prev").addEventListener("click", () => {
+      if (!runPayload) return;
+      snapshotIndex = Math.max(0, snapshotIndex - 1);
+      renderSnapshot(runPayload);
+    });
+
+    document.getElementById("snapshot-next").addEventListener("click", () => {
+      if (!runPayload) return;
+      const snapshots = Array.isArray(runPayload.cycle_snapshots) ? runPayload.cycle_snapshots : [];
+      snapshotIndex = Math.min(Math.max(0, snapshots.length - 1), snapshotIndex + 1);
+      renderSnapshot(runPayload);
+    });
+
+    document.getElementById("snapshot-range").addEventListener("input", (event) => {
+      if (!runPayload) return;
+      snapshotIndex = Number(event.target.value || 0);
+      renderSnapshot(runPayload);
+    });
+
+    document.getElementById("snapshot-live").addEventListener("click", () => {
+      if (!runPayload) return;
+      const snapshots = Array.isArray(runPayload.cycle_snapshots) ? runPayload.cycle_snapshots : [];
+      snapshotIndex = Math.max(0, snapshots.length - 1);
+      renderSnapshot(runPayload);
+    });
+
+    loadRun().catch(() => {
+      document.getElementById("run-name").textContent = "Run Not Found";
+      document.getElementById("run-subtitle").textContent = "Archive payload unavailable";
+      document.getElementById("error-content").textContent = "The requested run summary could not be loaded.";
+    });
+  </script>
+</body>
+</html>
