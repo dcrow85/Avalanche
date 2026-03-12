@@ -158,6 +158,7 @@ STOPWORDS = {
 }
 
 TOKEN_RE = re.compile(r"\b[a-z]{3,}\b")
+DEFAULT_PINK_WINDOW = 8
 TARGET_AST_NODES = (
     ast.If,
     ast.For,
@@ -319,6 +320,123 @@ def text_signal_metrics(text: str) -> dict[str, float | int]:
         "opinions_uppercase_density": round(uppercase_count / max(1, char_count), 4),
         "opinions_digit_density": round(digit_count / max(1, char_count), 4),
     }
+
+
+def _coerce_numeric_series(series: list[object]) -> list[float]:
+    values: list[float] = []
+    for item in series:
+        if isinstance(item, bool):
+            continue
+        if isinstance(item, (int, float)):
+            values.append(float(item))
+    return values
+
+
+def _power_spectrum(series: list[float]) -> tuple[list[float], list[float]]:
+    n = len(series)
+    if n < 4:
+        return [], []
+    mean = sum(series) / n
+    centered = [value - mean for value in series]
+    frequencies: list[float] = []
+    powers: list[float] = []
+    for k in range(1, (n // 2) + 1):
+        real = 0.0
+        imag = 0.0
+        for idx, value in enumerate(centered):
+            angle = 2.0 * math.pi * k * idx / n
+            real += value * math.cos(angle)
+            imag -= value * math.sin(angle)
+        power = (real * real + imag * imag) / max(1, n)
+        frequencies.append(k / n)
+        powers.append(power)
+    return frequencies, powers
+
+
+def _log_slope(xs: list[float], ys: list[float]) -> float:
+    pairs = [
+        (math.log10(x), math.log10(y))
+        for x, y in zip(xs, ys)
+        if x > 0 and y > 0
+    ]
+    if len(pairs) < 2:
+        return 0.0
+    mean_x = sum(x for x, _ in pairs) / len(pairs)
+    mean_y = sum(y for _, y in pairs) / len(pairs)
+    numerator = sum((x - mean_x) * (y - mean_y) for x, y in pairs)
+    denominator = sum((x - mean_x) ** 2 for x, _ in pairs)
+    if denominator == 0:
+        return 0.0
+    return numerator / denominator
+
+
+def spectral_series_metrics(series: list[object], prefix: str) -> dict[str, float | int]:
+    """Compact spectrum over a cycle-indexed numeric series."""
+    values = _coerce_numeric_series(series)
+    metrics: dict[str, float | int] = {
+        f"{prefix}_sample_count": len(values),
+        f"{prefix}_dominant_period": 0.0,
+        f"{prefix}_dominant_power_ratio": 0.0,
+        f"{prefix}_spectral_entropy": 0.0,
+        f"{prefix}_low_high_power_ratio": 0.0,
+        f"{prefix}_pink_beta": 0.0,
+        f"{prefix}_pink_distance": 1.0,
+        f"{prefix}_pink_closeness": 0.0,
+    }
+    if len(values) < 4:
+        return metrics
+
+    freqs, powers = _power_spectrum(values)
+    total_power = sum(powers)
+    if total_power <= 0:
+        return metrics
+
+    dominant_index = max(range(len(powers)), key=lambda idx: powers[idx])
+    dominant_frequency = freqs[dominant_index]
+    dominant_period = 1.0 / dominant_frequency if dominant_frequency > 0 else 0.0
+    dominant_power_ratio = powers[dominant_index] / total_power
+
+    positive_powers = [power / total_power for power in powers if power > 0]
+    if len(positive_powers) > 1:
+        entropy = -sum(prob * math.log2(prob) for prob in positive_powers) / math.log2(len(positive_powers))
+    else:
+        entropy = 0.0
+
+    low_cut = max(1, len(powers) // 3)
+    low_power = sum(powers[:low_cut])
+    high_power = sum(powers[low_cut:])
+    low_high_ratio = low_power / max(high_power, 1e-9)
+
+    beta = -_log_slope(freqs, powers)
+    pink_distance = abs(beta - 1.0)
+    pink_closeness = max(0.0, 1.0 - pink_distance)
+
+    metrics.update(
+        {
+            f"{prefix}_dominant_period": round(dominant_period, 4),
+            f"{prefix}_dominant_power_ratio": round(dominant_power_ratio, 4),
+            f"{prefix}_spectral_entropy": round(entropy, 4),
+            f"{prefix}_low_high_power_ratio": round(low_high_ratio, 4),
+            f"{prefix}_pink_beta": round(beta, 4),
+            f"{prefix}_pink_distance": round(pink_distance, 4),
+            f"{prefix}_pink_closeness": round(pink_closeness, 4),
+        }
+    )
+    return metrics
+
+
+def rolling_pink_metrics(
+    series: list[object],
+    prefix: str,
+    *,
+    window: int = DEFAULT_PINK_WINDOW,
+) -> dict[str, float | int]:
+    """Trailing-window spectral probe for pink-noise style behavior."""
+    values = _coerce_numeric_series(series)
+    trailing = values[-window:] if window > 0 else values
+    metrics = spectral_series_metrics(trailing, prefix)
+    metrics[f"{prefix}_pink_window"] = min(window, len(values)) if window > 0 else len(values)
+    return metrics
 
 
 def _normalize_family_id(text: str) -> str:

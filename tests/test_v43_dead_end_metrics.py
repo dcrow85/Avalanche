@@ -1,5 +1,7 @@
 """Regression tests for V4.3 dead-end family parsing and retention metrics."""
 
+import math
+
 import v43_metrics
 
 
@@ -60,3 +62,19 @@ def test_dead_end_metrics_reports_retention_and_churn():
     assert metrics["dead_end_family_retention"] == 0.5
     assert metrics["dead_end_ontology_count"] == 4
     assert metrics["dead_end_structured_count"] == 2
+
+
+def test_spectral_series_metrics_detects_alternating_period():
+    metrics = v43_metrics.spectral_series_metrics([1, 0, 1, 0, 1, 0, 1, 0], "ptolemaic_ratio")
+
+    assert metrics["ptolemaic_ratio_sample_count"] == 8
+    assert math.isclose(metrics["ptolemaic_ratio_dominant_period"], 2.0, rel_tol=0.1)
+    assert metrics["ptolemaic_ratio_dominant_power_ratio"] > 0.9
+
+
+def test_rolling_pink_metrics_reports_window_and_closeness():
+    metrics = v43_metrics.rolling_pink_metrics([1, 2, 3, 5, 8, 13, 21, 34, 55], "token", window=6)
+
+    assert metrics["token_pink_window"] == 6
+    assert metrics["token_sample_count"] == 6
+    assert 0.0 <= metrics["token_pink_closeness"] <= 1.0

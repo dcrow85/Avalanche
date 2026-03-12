@@ -777,6 +777,18 @@ HTML_PAGE = r"""<!DOCTYPE html>
           <div class="value phase-telemetry" id="de-ontology">-</div>
         </div>
         <div class="status-card">
+          <div class="label">P_beta</div>
+          <div class="value phase-telemetry" id="ptolemy-beta">-</div>
+        </div>
+        <div class="status-card">
+          <div class="label">OpPink</div>
+          <div class="value phase-telemetry" id="opinions-pink">-</div>
+        </div>
+        <div class="status-card">
+          <div class="label">TokPink</div>
+          <div class="value phase-telemetry" id="token-pink">-</div>
+        </div>
+        <div class="status-card">
           <div class="label">Turbulence</div>
           <div class="value" id="turbulence-state">-</div>
         </div>
@@ -1077,6 +1089,12 @@ function update(data) {
       typeof telemetry.opinions_char_entropy === 'undefined' ? '-' : Number(telemetry.opinions_char_entropy).toFixed(3);
     document.getElementById('de-retain').textContent = Math.round(Number(telemetry.dead_end_family_retention || 0) * 100) + '%';
     document.getElementById('de-ontology').textContent = telemetry.dead_end_ontology_count ?? '-';
+    document.getElementById('ptolemy-beta').textContent =
+      typeof telemetry.ptolemaic_ratio_pink_beta === 'undefined' ? '-' : Number(telemetry.ptolemaic_ratio_pink_beta).toFixed(2);
+    document.getElementById('opinions-pink').textContent =
+      typeof telemetry.opinions_entropy_pink_closeness === 'undefined' ? '-' : Number(telemetry.opinions_entropy_pink_closeness).toFixed(2);
+    document.getElementById('token-pink').textContent =
+      typeof telemetry.token_pink_closeness === 'undefined' ? '-' : Number(telemetry.token_pink_closeness).toFixed(2);
     const turbulence = telemetry.turbulence_state || 'BOOTSTRAP';
     const turbulenceEl = document.getElementById('turbulence-state');
     turbulenceEl.textContent = turbulence;

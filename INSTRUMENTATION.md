@@ -24,6 +24,13 @@ Core fields:
 - `solver_ast_delta`
 - `turbulence_state`
 - `ptolemaic_ratio`
+- `ptolemaic_ratio_dominant_period`
+- `ptolemaic_ratio_dominant_power_ratio`
+- `ptolemaic_ratio_spectral_entropy`
+- `ptolemaic_ratio_low_high_power_ratio`
+- `ptolemaic_ratio_pink_beta`
+- `ptolemaic_ratio_pink_distance`
+- `ptolemaic_ratio_pink_closeness`
 - `dead_ends_count`
 - `dead_end_basin_count`
 - `dead_end_family_count`
@@ -49,6 +56,10 @@ Current fields:
 - `opinions_symbol_density`
 - `opinions_uppercase_density`
 - `opinions_digit_density`
+- `opinions_entropy_pink_beta`
+- `opinions_entropy_pink_distance`
+- `opinions_entropy_pink_closeness`
+- `opinions_entropy_pink_window`
 
 Purpose:
 - move beyond word count
@@ -66,6 +77,10 @@ Current fields:
 - `api_completion_tokens_cycle`
 - `api_total_tokens_cycle`
 - `api_reasoning_tokens_cycle`
+- `token_pink_beta`
+- `token_pink_distance`
+- `token_pink_closeness`
+- `token_pink_window`
 
 Important:
 - this only applies to runs launched after the instrumentation patch
@@ -107,6 +122,9 @@ Currently surfaced:
 - `Turbulence`
 - `Tokens` (raw only, new launches)
 - `H_char` (new launches)
+- `P_beta`
+- `OpPink`
+- `TokPink`
 
 ## What Is Still Missing
 
@@ -117,6 +135,7 @@ Not yet implemented or not yet reliable:
 - solver/witness coherence score as a first-class metric
 - cross-run spectral comparison tooling
 - automated Git commit metadata tied to run launches
+- scale-domain pink-noise estimates (DFA / fluctuation style)
 
 ## Interpretation Notes
 
@@ -124,6 +143,8 @@ Not yet implemented or not yet reliable:
 - external provider limits can create fake `GRIND -> FORMAT_FAIL` tails
 - raw token metrics are useful only when provider `usage` is actually returned
 - `opinions_char_entropy` is a probe, not a settled theory metric
+- Current pink-noise pass is frequency-domain only: log-log spectral slope over cycle-indexed telemetry.
+- The main alternative branch is scale-domain fluctuation analysis (for example DFA / Hurst-style estimates). That branch is not implemented yet and should be treated as a separate probe family, not mixed silently into the current metrics.
 
 ## Minimum Read Before Changing Instrumentation
 

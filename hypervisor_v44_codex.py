@@ -22,8 +22,10 @@ from pathlib import Path
 
 from v43_metrics import (
     classify_turbulence,
+    rolling_pink_metrics,
     semantic_distance,
     solver_ast_complexity,
+    spectral_series_metrics,
     text_signal_metrics,
 )
 from v44_epistemics import (
@@ -728,6 +730,19 @@ def compute_cycle_metrics(
     }
     metrics.update(text_signal_metrics(current_opinions))
     metrics.update(dead_end_metrics(previous_active, current_active, current_state))
+    history_plus = _metric_history + [metrics]
+    metrics.update(
+        spectral_series_metrics(
+            [entry.get("ptolemaic_ratio", 0) for entry in history_plus],
+            "ptolemaic_ratio",
+        )
+    )
+    metrics.update(
+        rolling_pink_metrics(
+            [entry.get("opinions_char_entropy", 0) for entry in history_plus],
+            "opinions_entropy",
+        )
+    )
     _metric_history.append(metrics)
     with open(METRICS_FILE, "a", encoding="utf-8") as handle:
         handle.write(json.dumps(metrics) + "\n")
