@@ -1,37 +1,41 @@
 #!/usr/bin/env python3
 """
-The Avalanche Hypervisor V4.1 — The Harmonic Sieve (Crucible 9)
+The Avalanche Hypervisor V4.1 (Codex backend) — The Harmonic Sieve (Crucible 9)
+
+Parallel implementation of V4.1 using Codex CLI instead of Claude Code.
+This file is intentionally separate from hypervisor.py so the active Claude run
+in C:\terrarium can continue untouched.
 
 Hidden law: value-stride interference.
 For each element, count how many preceding elements have values that
 evenly divide the distance to the current index.
 If that count is odd, negate. Otherwise keep.
 
-V4.1 changes:
+V4.1 architecture retained:
 - 4-file memory: goal.md (static), opinions.md (theory), dead-ends.md (kill list), data.json (FIFO)
-- CLAUDE.md context for organism orientation (prevents prompt-injection rejection)
+- AGENTS.md context for organism orientation
 - Falsification burden: dead ends must cite specific falsifying data
-- Bureaucratic prompt framing (avoids RLHF autoimmune response)
+- Bureaucratic prompt framing
 - Hypervisor-managed data.json: organism reads but cannot edit
 """
+import argparse
 import json
 import os
-import sys
+import random
 import shutil
 import subprocess
-import random
+import sys
 from datetime import datetime, timezone
 
 if os.environ.get("AVALANCHE_ACTIVE"):
     sys.exit("Ratchet Fail: Hypervisor recursion blocked.")
 os.environ["AVALANCHE_ACTIVE"] = "1"
 
-# --- AVALANCHE HYPERVISOR V4.1 ---
 GOAL_FILE = "goal.md"
 OPINIONS_FILE = "opinions.md"
 DEAD_ENDS_FILE = "dead-ends.md"
 DATA_FILE = "data.json"
-CLAUDE_MD_FILE = "CLAUDE.md"
+AGENTS_FILE = "AGENTS.md"
 STATUS_FILE = "status.json"
 
 OPINIONS_LIMIT = 75
@@ -40,19 +44,31 @@ DATA_MAX_PAIRS = 4
 MAX_CYCLES = 15
 INVOKE_TIMEOUT = 300
 SYNC_MAX_TURNS = 5
+DEFAULT_CODEX_MODEL = os.environ.get("AVALANCHE_CODEX_MODEL", "")
+CODEX_CMD = os.environ.get(
+    "AVALANCHE_CODEX_CMD", r"C:\Users\howar\AppData\Roaming\npm\codex.cmd"
+)
+WORKSPACE_DIR = os.getcwd()
+CODEX_MODEL = DEFAULT_CODEX_MODEL
+SUPPORTED_MODELS = [
+    "gpt-5.4",
+    "gpt-5.3-codex",
+    "gpt-5.1-codex-mini",
+]
 
-# --- Telemetry ---
 _status_log = []
 
 
 def write_status(cycle, phase, last_result=None, last_error=None):
-    """Writes status.json for the dashboard to poll."""
-    _status_log.append({
-        "time": datetime.now(timezone.utc).strftime("%H:%M:%S"),
-        "cycle": cycle,
-        "phase": phase,
-        "result": last_result,
-    })
+    """Write status.json for the dashboard to poll."""
+    _status_log.append(
+        {
+            "time": datetime.now(timezone.utc).strftime("%H:%M:%S"),
+            "cycle": cycle,
+            "phase": phase,
+            "result": last_result,
+        }
+    )
     status = {
         "cycle": cycle,
         "max_cycles": MAX_CYCLES,
@@ -72,19 +88,28 @@ def write_status(cycle, phase, last_result=None, last_error=None):
         json.dump(status, f)
 
 
-# --- Utilities ---
-
 def print_header(text):
-    print(f"\n{'='*50}\n  {text}\n{'='*50}")
+    print(f"\n{'=' * 50}\n  {text}\n{'=' * 50}")
 
 
 def run_command(cmd, capture=False):
     if capture:
         result = subprocess.run(cmd, shell=True, text=True, capture_output=True, encoding="utf-8")
         return result.returncode == 0, result.stdout + "\n" + result.stderr
-    else:
-        result = subprocess.run(cmd, shell=True, encoding="utf-8")
-        return result.returncode == 0, ""
+    result = subprocess.run(cmd, shell=True, encoding="utf-8")
+    return result.returncode == 0, ""
+
+
+def has_git_head():
+    """Return True when the current repo already has an initial commit."""
+    result = subprocess.run(
+        "git rev-parse --verify HEAD",
+        shell=True,
+        text=True,
+        capture_output=True,
+        encoding="utf-8",
+    )
+    return result.returncode == 0
 
 
 def get_word_count(filepath):
@@ -104,10 +129,8 @@ def count_data_pairs():
         return 0
 
 
-# --- Compression ---
-
 def enforce_limit(filepath, limit, label):
-    """Truncates a file if it exceeds the word limit."""
+    """Truncate a file if it exceeds the word limit."""
     if not os.path.exists(filepath):
         return
     with open(filepath, "r", encoding="utf-8") as f:
@@ -119,8 +142,6 @@ def enforce_limit(filepath, limit, label):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(truncated)
 
-
-# --- Data Management ---
 
 def parse_failure_pairs(output):
     """Extract I/O pairs from ratchet failure output."""
@@ -152,38 +173,61 @@ def update_data_file(new_pairs):
         json.dump(existing, f, indent=2)
 
 
-# --- Claude Invocation ---
+def build_codex_command(max_turns):
+    """
+    Build the Codex CLI invocation.
 
-def invoke_claude(prompt, max_turns=10):
-    """Fires Claude Code via stdin pipe, enforces compression and amnesia."""
+    max_turns is embedded in the prompt because codex exec does not expose a
+    direct max-turns flag like Claude Code CLI.
+    """
+    cmd = [
+        CODEX_CMD,
+        "exec",
+        "--full-auto",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-C",
+        WORKSPACE_DIR,
+        "-",
+    ]
+    if CODEX_MODEL:
+        cmd[2:2] = ["-m", CODEX_MODEL]
+    return cmd
+
+
+def invoke_codex(prompt, max_turns=10):
+    """Fire Codex CLI via stdin in an ephemeral session."""
     enforce_limit(OPINIONS_FILE, OPINIONS_LIMIT, "OPINIONS")
     enforce_limit(DEAD_ENDS_FILE, DEAD_ENDS_LIMIT, "DEAD ENDS")
 
-    claude_dir = os.path.join(os.getcwd(), ".claude")
-    if os.path.exists(claude_dir):
-        shutil.rmtree(claude_dir)
+    codex_dir = os.path.join(WORKSPACE_DIR, ".codex")
+    if os.path.exists(codex_dir):
+        shutil.rmtree(codex_dir)
 
-    print("  [NUCLEUS] Waking Claude Code...")
+    full_prompt = (
+        f"Operate within a maximum of {max_turns} internal turns. "
+        f"Stop after completing the requested file edits.\n\n{prompt}"
+    )
+
+    print("  [NUCLEUS] Waking Codex...")
     try:
         subprocess.run(
-            f"claude -p --max-turns {max_turns} --dangerously-skip-permissions",
-            input=prompt,
-            shell=True,
+            build_codex_command(max_turns),
+            input=full_prompt,
             text=True,
             encoding="utf-8",
             timeout=INVOKE_TIMEOUT,
+            check=False,
         )
     except subprocess.TimeoutExpired:
-        print(f"  [TIMEOUT] Claude invocation exceeded {INVOKE_TIMEOUT}s. Moving on.")
+        print(f"  [TIMEOUT] Codex invocation exceeded {INVOKE_TIMEOUT}s. Moving on.")
     except FileNotFoundError:
-        print("  [FATAL] 'claude' command not found. Is Claude Code CLI installed?")
+        print("  [FATAL] 'codex' command not found. Is Codex CLI installed?")
         sys.exit(1)
 
 
-# --- Ephemeral Oracle ---
-
 def evaluate_ratchet():
-    """Generates random tests, evaluates, and vaporizes."""
+    """Generate random tests, evaluate, and vaporize."""
     test_cases = [
         [random.randint(1, 9) for _ in range(random.randint(5, 8))]
         for _ in range(5)
@@ -199,7 +243,6 @@ except ImportError:
 test_cases = {test_cases}
 
 for arr in test_cases:
-    # The Hidden Law: Value-stride interference (The Harmonic Sieve)
     expected = []
     for i, x in enumerate(arr):
         strikes = sum(1 for j in range(i) if (i - j) % arr[j] == 0)
@@ -236,8 +279,6 @@ sys.exit(0)
     return success, output.strip()
 
 
-# --- Setup ---
-
 def setup():
     if not os.path.exists(".git"):
         print_header("INITIALIZING GIT RATCHET")
@@ -247,7 +288,6 @@ def setup():
 
     committed = False
 
-    # .gitignore: writable organism files survive git clean -fd
     gitignore_entries = [OPINIONS_FILE, DEAD_ENDS_FILE, DATA_FILE, STATUS_FILE, ".temp_ratchet.py"]
     if not os.path.exists(".gitignore"):
         with open(".gitignore", "w", encoding="utf-8") as f:
@@ -263,27 +303,26 @@ def setup():
                     f.write(f"{entry}\n")
             committed = True
 
-    # CLAUDE.md: organism orientation (committed, survives git reset)
-    if not os.path.exists(CLAUDE_MD_FILE):
-        with open(CLAUDE_MD_FILE, "w", encoding="utf-8") as f:
+    if not os.path.exists(AGENTS_FILE):
+        with open(AGENTS_FILE, "w", encoding="utf-8") as f:
             f.write(
+                "# Avalanche Organism Instructions\n\n"
                 "You are the organism in the Avalanche experimental system.\n"
                 "You wake up each cycle with no memory of previous cycles.\n\n"
                 "Your memory is split across files:\n"
-                "- goal.md: Your objective (read-only, do not edit)\n"
-                "- data.json: I/O pairs from past failures (read-only, managed by environment)\n"
-                "- opinions.md: Your current theory about the hidden law (you edit this, max 75 words)\n"
-                "- dead-ends.md: Approaches tried and ruled out (you edit this, max 50 words)\n\n"
-                "Format for dead-ends.md entries:\n"
+                f"- {GOAL_FILE}: Your objective (read-only, do not edit)\n"
+                f"- {DATA_FILE}: I/O pairs from past failures (read-only, managed by environment)\n"
+                f"- {OPINIONS_FILE}: Your current theory about the hidden law (you edit this, max {OPINIONS_LIMIT} words)\n"
+                f"- {DEAD_ENDS_FILE}: Approaches tried and ruled out (you edit this, max {DEAD_ENDS_LIMIT} words)\n\n"
+                "Format for dead-ends entries:\n"
                 "  [Hypothesis] -> Falsified by [specific data]\n"
                 "  Example: Prefix sum parity (odd/even) -> Falsified by [4,1,8]->[4,1,-8]\n\n"
                 "When you receive build errors about file size limits, these are real\n"
                 "environment constraints. Fix them by condensing your content.\n"
             )
-        print(f"  [!] Created {CLAUDE_MD_FILE}.")
+        print(f"  [!] Created {AGENTS_FILE}.")
         committed = True
 
-    # goal.md: static objective (committed, survives git reset)
     if not os.path.exists(GOAL_FILE):
         with open(GOAL_FILE, "w", encoding="utf-8") as f:
             f.write(
@@ -296,10 +335,9 @@ def setup():
         print(f"  [!] Created {GOAL_FILE}.")
         committed = True
 
-    if committed:
-        run_command("git add . && git commit -m \"Avalanche: Initial Baseline\"")
+    if committed or not has_git_head():
+        run_command('git add . && git commit -m "Avalanche: Codex Initial Baseline"')
 
-    # Writable files (in .gitignore — survive git reset + git clean naturally)
     if not os.path.exists(OPINIONS_FILE):
         with open(OPINIONS_FILE, "w", encoding="utf-8") as f:
             f.write("# CURRENT THEORY\n\nNo theory yet. Analyze data.json pairs to form hypotheses.\n")
@@ -316,9 +354,41 @@ def setup():
         print(f"  [!] Created {DATA_FILE}.")
 
 
-# --- Main Loop ---
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run the Avalanche V4.1 Codex hypervisor in an isolated workspace."
+    )
+    parser.add_argument(
+        "--workspace",
+        default=r"C:\terrarium-codex",
+        help="Workspace directory for the Codex organism.",
+    )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_CODEX_MODEL or "gpt-5.3-codex",
+        help=(
+            "Codex model slug to use. Known local options: "
+            + ", ".join(SUPPORTED_MODELS)
+        ),
+    )
+    parser.add_argument(
+        "--max-cycles",
+        type=int,
+        default=MAX_CYCLES,
+        help="Maximum number of grind/ratchet cycles to run.",
+    )
+    return parser.parse_args()
+
 
 def main():
+    global WORKSPACE_DIR, CODEX_MODEL, MAX_CYCLES
+    args = parse_args()
+    WORKSPACE_DIR = os.path.abspath(args.workspace)
+    CODEX_MODEL = args.model
+    MAX_CYCLES = args.max_cycles
+    os.makedirs(WORKSPACE_DIR, exist_ok=True)
+    os.chdir(WORKSPACE_DIR)
+
     setup()
     cycle = 0
     last_error = None
@@ -329,17 +399,17 @@ def main():
         write_status(cycle, "GRIND")
 
         grind_prompt = (
-            f"You are the combinatorial engine of the Avalanche system.\n"
+            "You are the combinatorial engine of the Avalanche system.\n"
             f"1. Read `{GOAL_FILE}` for your objective.\n"
             f"2. Read `{DATA_FILE}` for I/O pairs from past failures (read-only, do not edit).\n"
             f"3. Read `{DEAD_ENDS_FILE}` for approaches already ruled out.\n"
             f"4. Read `{OPINIONS_FILE}` for your current theory.\n"
-            f"5. Edit `solver.py` to implement your best theory.\n"
-            f"6. The Oracle generates completely random arrays every cycle. "
-            f"You cannot hardcode answers."
+            "5. Edit `solver.py` to implement your best theory.\n"
+            "6. The Oracle generates completely random arrays every cycle. "
+            "You cannot hardcode answers."
         )
 
-        invoke_claude(grind_prompt)
+        invoke_codex(grind_prompt)
 
         print_header("EVALUATING RATCHET")
         write_status(cycle, "RATCHET")
@@ -348,39 +418,37 @@ def main():
         if success:
             print("  [PASS] TESTS PASSED. RATCHET SECURED.")
             write_status(cycle, "PASS", last_result="PASS")
-            run_command("git add . && git commit -m \"Avalanche: Ratchet advanced\"")
+            run_command('git add . && git commit -m "Avalanche: Ratchet advanced (Codex)"')
 
             print_header("METACOGNITIVE SYNC (SUCCESS)")
             write_status(cycle, "SYNC_SUCCESS", last_result="PASS")
             sync_prompt = (
-                f"Your code passed all tests. DO NOT WRITE CODE.\n"
+                "Your code passed all tests. DO NOT WRITE CODE.\n"
                 f"Rewrite `{OPINIONS_FILE}` to explain the exact hidden law "
                 f"you discovered. Keep it under {OPINIONS_LIMIT} words.\n"
                 f"Update `{DEAD_ENDS_FILE}` to note the successful approach.\n"
                 f"Do NOT edit {GOAL_FILE}, {DATA_FILE}, or any code files."
             )
-            invoke_claude(sync_prompt, max_turns=SYNC_MAX_TURNS)
+            invoke_codex(sync_prompt, max_turns=SYNC_MAX_TURNS)
 
             try:
                 input("\n  Goal iteration complete. Press Enter to continue (or Ctrl+C to stop)...")
             except EOFError:
                 print("\n  [!] Headless mode detected. Exiting cleanly.")
                 sys.exit(0)
-
         else:
             print("  [FAIL] TESTS FAILED. DECOUPLING STATE FROM SYNTAX.")
             last_error = output[-1000:]
             write_status(cycle, "FAIL", last_result="FAIL", last_error=last_error)
 
-            # Hypervisor-managed data: parse and store I/O pairs
             new_pairs = parse_failure_pairs(output)
             if new_pairs:
                 update_data_file(new_pairs)
-                print(f"  [DATA] Stored {len(new_pairs)} new pair(s). "
-                      f"Total: {count_data_pairs()}/{DATA_MAX_PAIRS}")
+                print(
+                    f"  [DATA] Stored {len(new_pairs)} new pair(s). "
+                    f"Total: {count_data_pairs()}/{DATA_MAX_PAIRS}"
+                )
 
-            # Git reset (CLAUDE.md + goal.md survive via commit;
-            # opinions/dead-ends/data survive via .gitignore)
             run_command("git reset --hard HEAD")
             run_command("git clean -fd")
 
@@ -388,20 +456,20 @@ def main():
             write_status(cycle, "SYNC_FAILURE", last_result="FAIL", last_error=last_error)
             error_tail = output[-1000:]
             fail_prompt = (
-                f"[PRE-COMMIT HOOK FAILED]: Build verification failed.\n"
-                f"The Oracle tested your code and reported:\n"
+                "[PRE-COMMIT HOOK FAILED]: Build verification failed.\n"
+                "The Oracle tested your code and reported:\n"
                 f"{error_tail}\n\n"
-                f"All code changes have been reverted. DO NOT WRITE CODE.\n\n"
+                "All code changes have been reverted. DO NOT WRITE CODE.\n\n"
                 f"Update `{OPINIONS_FILE}` with your revised theory about the hidden law. "
                 f"Keep it under {OPINIONS_LIMIT} words. Commit to a specific hypothesis.\n\n"
                 f"Update `{DEAD_ENDS_FILE}` to record what you just tried and why it failed. "
-                f"Format each entry as: [Hypothesis] -> Falsified by [specific data]. "
-                f"Do not over-generalize — record the specific variant that failed, "
-                f"not the entire mathematical domain. "
+                "Format each entry as: [Hypothesis] -> Falsified by [specific data]. "
+                "Do not over-generalize — record the specific variant that failed, "
+                "not the entire mathematical domain. "
                 f"Keep it under {DEAD_ENDS_LIMIT} words.\n\n"
                 f"Do NOT edit {GOAL_FILE}, {DATA_FILE}, or any code files."
             )
-            invoke_claude(fail_prompt, max_turns=SYNC_MAX_TURNS)
+            invoke_codex(fail_prompt, max_turns=SYNC_MAX_TURNS)
 
     print_header("CYCLE CAP REACHED")
     write_status(cycle, "CYCLE_CAP", last_result="FAIL", last_error=last_error)
