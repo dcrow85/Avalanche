@@ -509,6 +509,113 @@ HTML_PAGE = r"""<!DOCTYPE html>
     overflow-y: auto;
   }
 
+  .panel-subchart {
+    position: relative;
+    border-top: 1px solid var(--line);
+    background:
+      linear-gradient(90deg, rgba(255, 179, 71, 0.08), transparent 18%, transparent 82%, rgba(124,255,191,0.05)),
+      repeating-linear-gradient(
+        135deg,
+        rgba(255,179,71,0.045) 0,
+        rgba(255,179,71,0.045) 8px,
+        transparent 8px,
+        transparent 16px
+      ),
+      rgba(0, 0, 0, 0.22);
+    padding: 12px 16px 14px;
+  }
+
+  .panel-subchart::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 52%);
+  }
+
+  .subchart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .subchart-label {
+    color: var(--amber);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  .subchart-meta {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .subchart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .oscillator-card {
+    position: relative;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.025), transparent 62%),
+      rgba(0, 0, 0, 0.22);
+    padding: 10px 12px 12px;
+    min-width: 0;
+  }
+
+  .oscillator-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, rgba(255,179,71,0.42), rgba(255,179,71,0.08));
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+  }
+
+  .oscillator-frame {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 6px 8px;
+    align-items: stretch;
+  }
+
+  .axis-y,
+  .axis-x {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .axis-y {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+    align-self: center;
+  }
+
+  .axis-x {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .subchart-svg {
+    width: 100%;
+    height: 120px;
+    display: block;
+  }
+
   .data-pair {
     margin-bottom: 10px;
     padding: 10px 12px;
@@ -664,6 +771,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .status-bar,
     .telemetry-bar,
     .panels,
+    .subchart-grid,
     .telemetry-grid {
       grid-template-columns: 1fr;
     }
@@ -816,6 +924,36 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="op-bar"></div></div>
         <div class="panel-body" id="op-content"><span class="no-data">Waiting for data...</span></div>
+        <div class="panel-subchart">
+          <div class="subchart-head">
+            <div class="subchart-label">Rolling Noise Spectrometer</div>
+            <div class="subchart-meta" id="opinions-pink-meta">window -</div>
+          </div>
+          <div class="subchart-grid">
+            <div class="oscillator-card">
+              <div class="subchart-head">
+                <div class="subchart-label">Opinions Spectrometer</div>
+                <div class="subchart-meta" id="opinions-pink-latest">beta -</div>
+              </div>
+              <div class="oscillator-frame">
+                <div class="axis-y">Beta</div>
+                <svg class="subchart-svg" id="opinions-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
+                <div class="axis-x">Cycle / Regime</div>
+              </div>
+            </div>
+            <div class="oscillator-card">
+              <div class="subchart-head">
+                <div class="subchart-label">Token Spectrometer</div>
+                <div class="subchart-meta" id="token-pink-latest">beta -</div>
+              </div>
+              <div class="oscillator-frame">
+                <div class="axis-y">Beta</div>
+                <svg class="subchart-svg" id="token-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
+                <div class="axis-x">Cycle / Regime</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="panel">
@@ -866,6 +1004,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
           <div class="chart-meta">
             <span id="defam-min">min -</span>
             <span id="defam-max">max -</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <div class="chart-label">Ptolemaic Ratio</div>
+          <svg class="chart-svg" id="ptolemy-chart" viewBox="0 0 420 92" preserveAspectRatio="none"></svg>
+          <div class="chart-meta">
+            <span id="ptolemy-min">min -</span>
+            <span id="ptolemy-max">max -</span>
           </div>
         </div>
         <div class="chart-block">
@@ -941,16 +1087,16 @@ function wcClass(words, limit) {
   return '';
 }
 
-function renderLineChart(points, color) {
+function renderLineChart(points, color, options = {}) {
   const width = 420;
-  const height = 92;
-  const padX = 10;
-  const padY = 8;
+  const height = options.height || 92;
+  const padX = options.padX || 22;
+  const padY = options.padY || 10;
   if (!Array.isArray(points) || points.length === 0) {
     return '';
   }
-  const min = Math.min(...points);
-  const max = Math.max(...points);
+  const min = typeof options.min === 'number' ? options.min : Math.min(...points);
+  const max = typeof options.max === 'number' ? options.max : Math.max(...points);
   const span = max - min || 1;
   const step = points.length === 1 ? 0 : (width - padX * 2) / (points.length - 1);
   const coords = points.map((value, idx) => {
@@ -962,8 +1108,46 @@ function renderLineChart(points, color) {
   const dots = coords.map(([x, y]) =>
     `<circle cx="${x}" cy="${y}" r="2.5" fill="${color}" />`
   ).join('');
-  const minLine = `<line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="#21262d" stroke-width="1" />`;
-  return `${minLine}<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${polyline}" />${dots}`;
+  const baseY = height - padY;
+  const axisX = `<line x1="${padX}" y1="${baseY}" x2="${width - padX}" y2="${baseY}" stroke="#2d383a" stroke-width="1" />`;
+  const axisY = `<line x1="${padX}" y1="${padY}" x2="${padX}" y2="${baseY}" stroke="#2d383a" stroke-width="1" />`;
+  const midY = padY + ((baseY - padY) / 2);
+  const guides = `
+    <line x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+    <line x1="${padX}" y1="${midY}" x2="${width - padX}" y2="${midY}" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+  `;
+  const bands = Array.isArray(options.bandLines) ? options.bandLines.map((band) => {
+    const value = Number(band.value);
+    const clamped = Math.min(max, Math.max(min, value));
+    const y = height - padY - (((clamped - min) / span) * (height - padY * 2));
+    const label = escapeHtml(String(band.label || value));
+    const stroke = band.stroke || 'rgba(255,255,255,0.08)';
+    return `
+      <line x1="${padX}" y1="${y}" x2="${width - padX}" y2="${y}" stroke="${stroke}" stroke-width="1" stroke-dasharray="5 4" />
+      <text x="${width - padX + 6}" y="${y + 3}" fill="#7b9388" font-size="9" text-anchor="start">${label}</text>
+    `;
+  }).join('') : '';
+  const yTickValues = Array.isArray(options.yTickValues) ? options.yTickValues : [];
+  const yTicks = yTickValues.map((value) => {
+    const clamped = Math.min(max, Math.max(min, Number(value)));
+    const y = height - padY - (((clamped - min) / span) * (height - padY * 2));
+    const label = typeof options.yTickFormat === 'function'
+      ? options.yTickFormat(clamped)
+      : String(clamped);
+    return `
+      <line x1="${padX - 4}" y1="${y}" x2="${padX}" y2="${y}" stroke="rgba(255,255,255,0.16)" stroke-width="1" />
+      <text x="${padX - 8}" y="${y + 3}" fill="#7b9388" font-size="9" text-anchor="end">${label}</text>
+    `;
+  }).join('');
+  const xStart = options.xStart;
+  const xEnd = options.xEnd;
+  const xLabels = (typeof xStart !== 'undefined' && typeof xEnd !== 'undefined')
+    ? `
+      <text x="${padX}" y="${height - 1}" fill="#7b9388" font-size="9" text-anchor="start">${xStart}</text>
+      <text x="${width - padX}" y="${height - 1}" fill="#7b9388" font-size="9" text-anchor="end">${xEnd}</text>
+    `
+    : '';
+  return `${guides}${bands}${axisX}${axisY}${yTicks}${xLabels}<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${polyline}" />${dots}`;
 }
 
 function renderTelemetryCharts(history) {
@@ -977,16 +1161,64 @@ function renderTelemetryCharts(history) {
   const dsem = history.map(item => Number(item.opinions_jaccard_distance || 0));
   const cast = history.map(item => Number(item.solver_ast_complexity || 0));
   const defam = history.map(item => Number(item.dead_end_family_count || 0));
+  const ptolemy = history.map(item => Number(item.ptolemaic_ratio || 0));
+  const opinionsPink = history.map(item => Number(item.opinions_entropy_pink_closeness || 0));
+  const tokenPink = history.map(item => Number(item.token_pink_closeness || 0));
+  const opinionsBeta = history.map(item => Number(item.opinions_entropy_pink_beta || 0));
+  const tokenBeta = history.map(item => Number(item.token_pink_beta || 0));
+  const opinionsWindows = history.map(item => Number(item.opinions_entropy_pink_window || 0));
+  const tokenWindows = history.map(item => Number(item.token_pink_window || 0));
+  const cycleStart = history[0].cycle_metric || 1;
+  const cycleEnd = history[history.length - 1].cycle_metric || history.length;
 
   document.getElementById('dsem-chart').innerHTML = renderLineChart(dsem, '#79c0ff');
   document.getElementById('cast-chart').innerHTML = renderLineChart(cast, '#56d364');
   document.getElementById('defam-chart').innerHTML = renderLineChart(defam, '#d2a8ff');
+  document.getElementById('ptolemy-chart').innerHTML = renderLineChart(ptolemy, '#ffb347');
+  const spectrometerBands = [
+    { value: 2.0, label: 'BROWN', stroke: 'rgba(255,127,77,0.18)' },
+    { value: 1.0, label: 'PINK', stroke: 'rgba(201,255,98,0.2)' },
+    { value: 0.0, label: 'WHITE', stroke: 'rgba(134,231,255,0.18)' },
+    { value: -1.0, label: 'BLUE', stroke: 'rgba(121,192,255,0.16)' },
+  ];
+  document.getElementById('opinions-pink-chart').innerHTML = renderLineChart(opinionsBeta, '#c8ff63', {
+    height: 120,
+    padX: 40,
+    padY: 12,
+    min: -1,
+    max: 2.5,
+    yTickValues: [2.0, 1.0, 0.0, -1.0],
+    yTickFormat: value => Number(value).toFixed(1),
+    xStart: cycleStart,
+    xEnd: cycleEnd,
+    bandLines: spectrometerBands,
+  });
+  document.getElementById('token-pink-chart').innerHTML = renderLineChart(tokenBeta, '#ff7f4d', {
+    height: 120,
+    padX: 40,
+    padY: 12,
+    min: -1,
+    max: 2.5,
+    yTickValues: [2.0, 1.0, 0.0, -1.0],
+    yTickFormat: value => Number(value).toFixed(1),
+    xStart: cycleStart,
+    xEnd: cycleEnd,
+    bandLines: spectrometerBands,
+  });
   document.getElementById('dsem-min').textContent = 'min ' + Math.min(...dsem).toFixed(4);
   document.getElementById('dsem-max').textContent = 'max ' + Math.max(...dsem).toFixed(4);
   document.getElementById('cast-min').textContent = 'min ' + Math.min(...cast);
   document.getElementById('cast-max').textContent = 'max ' + Math.max(...cast);
   document.getElementById('defam-min').textContent = 'min ' + Math.min(...defam);
   document.getElementById('defam-max').textContent = 'max ' + Math.max(...defam);
+  document.getElementById('ptolemy-min').textContent = 'min ' + Math.min(...ptolemy).toFixed(2);
+  document.getElementById('ptolemy-max').textContent = 'max ' + Math.max(...ptolemy).toFixed(2);
+  document.getElementById('opinions-pink-meta').textContent =
+    'opinions ' + Math.max(...opinionsWindows, 0) + ' // token ' + Math.max(...tokenWindows, 0);
+  document.getElementById('opinions-pink-latest').textContent =
+    'beta ' + opinionsBeta[opinionsBeta.length - 1].toFixed(2) + ' // closeness ' + opinionsPink[opinionsPink.length - 1].toFixed(2);
+  document.getElementById('token-pink-latest').textContent =
+    'beta ' + tokenBeta[tokenBeta.length - 1].toFixed(2) + ' // closeness ' + tokenPink[tokenPink.length - 1].toFixed(2);
 
   const band = document.getElementById('turbulence-band');
   band.innerHTML = history.map(item => {

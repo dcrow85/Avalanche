@@ -78,6 +78,15 @@ def test_validate_dead_ends_requires_empirical_span_per_family():
     assert any("at least 2 falsifying arrays" in error for error in errors)
 
 
+def test_validate_dead_ends_handles_numeric_basin_citations_without_crashing():
+    payload = valid_dead_ends()
+    payload["basins"][0]["cited_families"] = [1, 2]
+
+    errors = v44_epistemics.validate_dead_ends(payload, v44_epistemics.blank_dead_ends(), v44_epistemics.blank_state())
+
+    assert any("unknown family ids" in error for error in errors)
+
+
 def test_merge_state_and_metrics_track_history():
     state = v44_epistemics.blank_state()
     first = valid_dead_ends()

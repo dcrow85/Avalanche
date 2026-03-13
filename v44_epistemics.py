@@ -60,6 +60,17 @@ def _collect_ids(items: list[dict[str, object]]) -> set[str]:
     return {str(item.get("id")) for item in items if item.get("id")}
 
 
+def _normalize_id_list(payload: object) -> list[str]:
+    if not isinstance(payload, list):
+        return []
+    normalized: list[str] = []
+    for item in payload:
+        text = str(item).strip()
+        if text:
+            normalized.append(text)
+    return normalized
+
+
 def _normalize_array(payload: object) -> list[int] | None:
     if not isinstance(payload, list) or not payload:
         return None
@@ -141,10 +152,11 @@ def validate_dead_ends(
             errors.append(f"Basin `{basin_id}` exceeds {MAX_BASIN_WORDS} words.")
         if any(char in FORBIDDEN_BASIN_CHARS for char in claim):
             errors.append(f"Basin `{basin_id}` violates the syntax firewall.")
-        if not isinstance(cited, list) or len(cited) < 2:
+        normalized_cited = _normalize_id_list(cited)
+        if not isinstance(cited, list) or len(normalized_cited) < 2:
             errors.append(f"Basin `{basin_id}` must cite at least 2 family ids.")
         else:
-            missing = [family_id for family_id in cited if family_id not in current_family_ids]
+            missing = [family_id for family_id in normalized_cited if family_id not in current_family_ids]
             if missing:
                 errors.append(f"Basin `{basin_id}` cites unknown family ids: {', '.join(missing)}.")
 
