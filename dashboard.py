@@ -45,6 +45,7 @@ def read_jsonl_safe(path):
 def get_api_response(terrarium):
     """Build the JSON response from terrarium files."""
     status_path = os.path.join(terrarium, "status.json")
+    metrics_path = os.path.join(terrarium, "cycle_metrics.jsonl")
     opinions_path = os.path.join(terrarium, "opinions.md")
     dead_ends_path = os.path.join(terrarium, "dead-ends.md")
     snapshots_path = os.path.join(terrarium, "cycle_snapshots.jsonl")
@@ -60,6 +61,11 @@ def get_api_response(terrarium):
     opinions = read_file_safe(opinions_path)
     dead_ends = read_file_safe(dead_ends_path)
     snapshots = read_jsonl_safe(snapshots_path)
+    metrics_history = read_jsonl_safe(metrics_path)
+    if not metrics_history:
+        metrics_history = status.get("metrics_history", [])
+        if not isinstance(metrics_history, list):
+            metrics_history = []
     data_raw = read_file_safe(data_path)
     goal = read_file_safe(goal_path)
 
@@ -68,9 +74,7 @@ def get_api_response(terrarium):
     except json.JSONDecodeError:
         data_parsed = []
 
-    latest_metrics = status.get("metrics_history", [])
-    if isinstance(latest_metrics, list) and latest_metrics:
-        latest_metrics = latest_metrics[-1]
+    latest_metrics = metrics_history[-1] if metrics_history else {}
     if not isinstance(latest_metrics, dict):
         latest_metrics = {}
 
@@ -92,6 +96,7 @@ def get_api_response(terrarium):
         "opinions_content": opinions,
         "dead_ends_content": dead_ends,
         "cycle_snapshots": snapshots,
+        "metrics_history": metrics_history,
         "data_content": json.dumps(data_parsed, indent=2) if data_parsed else "[]",
         "goal_content": goal,
     }

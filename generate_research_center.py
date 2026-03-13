@@ -72,9 +72,11 @@ def load_run(run_dir: Path) -> dict | None:
     opinions = read_text(run_dir / "opinions.md")
     dead_ends = read_text(run_dir / "dead-ends.md")
     snapshots = read_jsonl(run_dir / "cycle_snapshots.jsonl")
-    metrics_history = status.get("metrics_history", [])
-    if not isinstance(metrics_history, list):
-        metrics_history = []
+    metrics_history = read_jsonl(run_dir / "cycle_metrics.jsonl")
+    if not metrics_history:
+        metrics_history = status.get("metrics_history", [])
+        if not isinstance(metrics_history, list):
+            metrics_history = []
 
     latest_metrics = metrics_history[-1] if metrics_history else {}
     if not isinstance(latest_metrics, dict):
