@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Avalanche Hypervisor V4.4 (Codex backend)
+Avalanche Hypervisor V4.4 (Claude backend)
 
-Structured-squeeze branch running on codex exec so experiments stay on the
-user's OpenAI Pro plan path instead of the raw API billing path.
+Structured-squeeze branch running on Claude Code so experiments stay on the
+user's Claude subscription path instead of the raw API billing path.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import json
 import os
 import random
 import shutil
+import signal
 import subprocess
 import sys
 import types
@@ -58,41 +59,71 @@ STATUS_FILE = "status.json"
 METRICS_FILE = "cycle_metrics.jsonl"
 SNAPSHOTS_FILE = "cycle_snapshots.jsonl"
 SOLVER_FILE = "solver.py"
-AGENTS_FILE = "AGENTS.md"
+CLAUDE_FILE = "CLAUDE.md"
 VALIDATION_LOG_FILE = "validation_errors.jsonl"
-INVOCATION_LOG_FILE = "codex_invocations.jsonl"
+INVOCATION_LOG_FILE = "claude_invocations.jsonl"
 TRACES_DIR = "traces"
 
 OPINIONS_LIMIT = 75
 DATA_MAX_PAIRS = 4
 DEFAULT_MAX_CYCLES = 20
 INVOKE_TIMEOUT = 300
+GRIND_INVOKE_TIMEOUT = int(os.environ.get("AVALANCHE_CLAUDE_GRIND_TIMEOUT", str(INVOKE_TIMEOUT)))
+FAIL_SYNC_INVOKE_TIMEOUT = int(os.environ.get("AVALANCHE_CLAUDE_FAIL_SYNC_TIMEOUT", str(max(INVOKE_TIMEOUT, 600))))
+LINTER_INVOKE_TIMEOUT = int(os.environ.get("AVALANCHE_CLAUDE_LINTER_TIMEOUT", "180"))
 SYNC_MAX_TURNS = 5
 OCCAM_BASE_COMPLEXITY = 15
 OCCAM_COMPLEXITY_PER_FAMILY = 5
-DEFAULT_CODEX_MODEL = os.environ.get("AVALANCHE_CODEX_MODEL", "gpt-5.3-codex")
-DEFAULT_CODEX_CMD = (
-    r"C:\Users\howar\AppData\Roaming\npm\codex.cmd" if os.name == "nt" else "codex"
-)
-CODEX_CMD = os.environ.get("AVALANCHE_CODEX_CMD", DEFAULT_CODEX_CMD)
+DEFAULT_CLAUDE_MODEL = os.environ.get("AVALANCHE_CLAUDE_MODEL", "sonnet")
+
+
+def _default_claude_cmd() -> str:
+    if os.name == "nt":
+        npm_cmd = Path.home() / "AppData" / "Roaming" / "npm" / "claude.cmd"
+        if npm_cmd.exists():
+            return str(npm_cmd)
+        resolved = shutil.which("claude.cmd")
+        if resolved:
+            return resolved
+    resolved = shutil.which("claude")
+    return resolved or "claude"
+
+
+def _default_git_bash_path() -> str:
+    existing = os.environ.get("CLAUDE_CODE_GIT_BASH_PATH")
+    if existing:
+        return existing
+    if os.name != "nt":
+        return ""
+    for candidate in (
+        r"C:\Program Files\Git\bin\bash.exe",
+        r"C:\Program Files\Git\usr\bin\bash.exe",
+    ):
+        if os.path.exists(candidate):
+            return candidate
+    return ""
+
+
+DEFAULT_CLAUDE_CMD = _default_claude_cmd()
+CLAUDE_CMD = os.environ.get("AVALANCHE_CLAUDE_CMD", DEFAULT_CLAUDE_CMD)
+DEFAULT_GIT_BASH_PATH = _default_git_bash_path()
 SUPPORTED_MODELS = [
-    "gpt-5.4",
-    "gpt-5.3-codex",
-    "gpt-5.1-codex-mini",
+    "sonnet",
+    "opus",
 ]
 PERMUTATION_MIN_LEN = 5
 PERMUTATION_MAX_LEN = 12
 MAX_LITERAL_INT_SEQUENCE = 3
 
 WORKSPACE_DIR = os.getcwd()
-CODEX_MODEL = DEFAULT_CODEX_MODEL
+CLAUDE_MODEL = DEFAULT_CLAUDE_MODEL
 _status_log: list[dict[str, object]] = []
 _metric_history: list[dict[str, object]] = []
 _rng = random.Random()
 PRESERVED_TOP_LEVEL = {
     ".git",
     ".gitignore",
-    AGENTS_FILE,
+    CLAUDE_FILE,
     GOAL_FILE,
     OPINIONS_FILE,
     DEAD_ENDS_FILE,
@@ -125,6 +156,42 @@ def write_text(path: str, content: str) -> None:
 def write_json(path: str, payload: object) -> None:
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
+
+
+def default_grind_timeout_for_model(model: str | None) -> int:
+    normalized = (model or "").strip().lower()
+    if normalized == "opus":
+        return max(INVOKE_TIMEOUT, 900)
+    return max(INVOKE_TIMEOUT, 600)
+
+
+def default_fail_sync_timeout_for_model(model: str | None) -> int:
+    normalized = (model or "").strip().lower()
+    if normalized == "opus":
+        return max(INVOKE_TIMEOUT, 1200)
+    return max(INVOKE_TIMEOUT, 900)
+
+
+def current_grind_timeout() -> int:
+    return int(
+        os.environ.get(
+            "AVALANCHE_CLAUDE_GRIND_TIMEOUT",
+            str(default_grind_timeout_for_model(CLAUDE_MODEL)),
+        )
+    )
+
+
+def current_fail_sync_timeout() -> int:
+    return int(
+        os.environ.get(
+            "AVALANCHE_CLAUDE_FAIL_SYNC_TIMEOUT",
+            str(default_fail_sync_timeout_for_model(CLAUDE_MODEL)),
+        )
+    )
+
+
+def current_linter_timeout() -> int:
+    return int(os.environ.get("AVALANCHE_CLAUDE_LINTER_TIMEOUT", str(LINTER_INVOKE_TIMEOUT)))
 
 
 def append_cycle_snapshot(
@@ -273,6 +340,19 @@ def write_status(
     append_cycle_snapshot(cycle, max_cycles, phase, last_result=last_result, last_error=last_error, metrics=metrics)
 
 
+def mark_current_status_terminal(phase: str, last_error: str) -> None:
+    try:
+        status = json.loads(read_text(STATUS_FILE) or "{}")
+    except json.JSONDecodeError:
+        return
+    try:
+        cycle = int(status.get("cycle", 0))
+        max_cycles = int(status.get("max_cycles", DEFAULT_MAX_CYCLES))
+    except (TypeError, ValueError):
+        return
+    write_status(cycle, max_cycles, phase, last_result="FAIL", last_error=last_error[:1000])
+
+
 def hidden_law(arr: list[int]) -> list[int]:
     expected = []
     for i, x in enumerate(arr):
@@ -363,14 +443,15 @@ def setup_workspace() -> None:
         write_text(".gitignore", "\n".join(sorted(existing_ignores | gitignore_entries)) + "\n")
         created = True
 
-    if not os.path.exists(AGENTS_FILE):
+    if not os.path.exists(CLAUDE_FILE):
         write_text(
-            AGENTS_FILE,
+            CLAUDE_FILE,
             "# Avalanche Organism Instructions\n\n"
             "This workspace is managed by Avalanche V4.4.\n"
             "The environment controls cycle resets, structured dead-end state, and data.json.\n"
             "Work only through opinions.md, dead-ends.json, and solver.py.\n"
-            "Do not edit goal.md, data.json, dead-ends.md, or dead-end-state.json.\n",
+            "Do not edit goal.md, data.json, dead-ends.md, or dead-end-state.json.\n"
+            "Keep theories compact, falsifiable, and grounded in the current witness arrays.\n",
         )
         created = True
 
@@ -404,30 +485,54 @@ def setup_workspace() -> None:
     os.makedirs(TRACES_DIR, exist_ok=True)
 
     if created or not has_git_head():
-        run_command('git add . && git commit -m "Avalanche: V4.4 Codex baseline"')
+        run_command('git add . && git commit -m "Avalanche: V4.4 Claude baseline"')
 
 
-def build_codex_command(max_turns: int) -> list[str]:
+def build_claude_command() -> list[str]:
     cmd = [
-        CODEX_CMD,
-        "exec",
-        "--full-auto",
-        "--ephemeral",
-        "--skip-git-repo-check",
-        "-C",
-        WORKSPACE_DIR,
-        "-",
+        CLAUDE_CMD,
+        "-p",
+        "--output-format", "json",
+        "--dangerously-skip-permissions",
     ]
-    if CODEX_MODEL:
-        cmd[2:2] = ["-m", CODEX_MODEL]
+    if CLAUDE_MODEL:
+        cmd.extend(["--model", CLAUDE_MODEL])
     return cmd
 
 
+def build_claude_env() -> dict[str, str]:
+    env = os.environ.copy()
+    if os.name == "nt" and DEFAULT_GIT_BASH_PATH and not env.get("CLAUDE_CODE_GIT_BASH_PATH"):
+        env["CLAUDE_CODE_GIT_BASH_PATH"] = DEFAULT_GIT_BASH_PATH
+    return env
+
+
+def _kill_process_tree(proc: subprocess.Popen) -> None:
+    """Kill the process and its entire tree via process group."""
+    try:
+        pgid = os.getpgid(proc.pid)
+        os.killpg(pgid, signal.SIGTERM)
+    except (OSError, ProcessLookupError):
+        pass
+    try:
+        proc.kill()
+    except (OSError, ProcessLookupError):
+        pass
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        try:
+            pgid = os.getpgid(proc.pid)
+            os.killpg(pgid, signal.SIGKILL)
+        except (OSError, ProcessLookupError):
+            pass
+
+
 def _save_trace(cycle: int | None, phase: str | None, ts: datetime, stdout: str) -> str:
-    """Save full Codex conversation trace to traces/ directory. Returns relative path."""
+    """Save full Claude conversation trace to traces/ directory. Returns relative path."""
     traces_path = os.path.join(WORKSPACE_DIR, TRACES_DIR)
     os.makedirs(traces_path, exist_ok=True)
-    filename = f"{(cycle or 0):03d}_{phase or 'UNKNOWN'}_{ts.strftime('%Y%m%dT%H%M%SZ')}.txt"
+    filename = f"{(cycle or 0):03d}_{phase or 'UNKNOWN'}_{ts.strftime('%Y%m%dT%H%M%SZ')}.json"
     filepath = os.path.join(traces_path, filename)
     try:
         with open(filepath, "w", encoding="utf-8") as f:
@@ -437,108 +542,106 @@ def _save_trace(cycle: int | None, phase: str | None, ts: datetime, stdout: str)
     return os.path.join(TRACES_DIR, filename)
 
 
-def invoke_codex(
+def invoke_claude(
     prompt: str,
     max_turns: int = 10,
     timeout: int = INVOKE_TIMEOUT,
     *,
-    label: str = "CODEX_CALL",
+    label: str = "CLAUDE_CALL",
     cycle: int | None = None,
     phase: str | None = None,
-) -> None:
-    codex_dir = os.path.join(WORKSPACE_DIR, ".codex")
-    if os.path.exists(codex_dir):
-        shutil.rmtree(codex_dir)
+) -> str:
+    """Invoke Claude Code CLI. Returns outcome: 'ok', 'timeout', 'cli_not_found', or 'nonzero_exit'."""
+    claude_dir = os.path.join(WORKSPACE_DIR, ".claude")
+    if os.path.exists(claude_dir):
+        shutil.rmtree(claude_dir)
 
     full_prompt = (
         f"Operate within a maximum of {max_turns} internal turns. "
         "Stop after completing the requested file edits.\n\n"
         f"{prompt}"
     )
-    command = build_codex_command(max_turns)
+    command = build_claude_command()
     started_at = datetime.now(timezone.utc)
+
+    use_pgroup = os.name != "nt"
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             command,
-            input=full_prompt,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
-            capture_output=True,
-            timeout=timeout,
-            check=False,
-        )
-        ended_at = datetime.now(timezone.utc)
-        trace_file = _save_trace(cycle, phase or label, ended_at, result.stdout or "")
-        append_invocation_event(
-            {
-                "timestamp": started_at.isoformat(),
-                "started_at": started_at.isoformat(),
-                "ended_at": ended_at.isoformat(),
-                "duration_seconds": round((ended_at - started_at).total_seconds(), 3),
-                "label": label,
-                "cycle": cycle,
-                "phase": phase or label,
-                "model": CODEX_MODEL,
-                "command": command,
-                "cwd": WORKSPACE_DIR,
-                "timeout_seconds": timeout,
-                "max_turns": max_turns,
-                "outcome": "ok" if result.returncode == 0 else "nonzero_exit",
-                "returncode": result.returncode,
-                "prompt": full_prompt,
-                "trace_file": trace_file,
-                "stderr": result.stderr,
-            }
-        )
-    except subprocess.TimeoutExpired:
-        ended_at = datetime.now(timezone.utc)
-        trace_file = _save_trace(cycle, phase or label, ended_at, "")
-        append_invocation_event(
-            {
-                "timestamp": started_at.isoformat(),
-                "started_at": started_at.isoformat(),
-                "ended_at": ended_at.isoformat(),
-                "duration_seconds": round((ended_at - started_at).total_seconds(), 3),
-                "label": label,
-                "cycle": cycle,
-                "phase": phase or label,
-                "model": CODEX_MODEL,
-                "command": command,
-                "cwd": WORKSPACE_DIR,
-                "timeout_seconds": timeout,
-                "max_turns": max_turns,
-                "outcome": "timeout",
-                "returncode": None,
-                "prompt": full_prompt,
-                "trace_file": trace_file,
-                "stderr": "",
-            }
+            env=build_claude_env(),
+            start_new_session=use_pgroup,
         )
     except FileNotFoundError:
         ended_at = datetime.now(timezone.utc)
-        trace_file = _save_trace(cycle, phase or label, ended_at, "")
         append_invocation_event(
             {
-                "timestamp": started_at.isoformat(),
-                "started_at": started_at.isoformat(),
-                "ended_at": ended_at.isoformat(),
-                "duration_seconds": round((ended_at - started_at).total_seconds(), 3),
                 "label": label,
                 "cycle": cycle,
-                "phase": phase or label,
-                "model": CODEX_MODEL,
+                "phase": phase,
+                "model": CLAUDE_MODEL,
                 "command": command,
                 "cwd": WORKSPACE_DIR,
                 "timeout_seconds": timeout,
                 "max_turns": max_turns,
+                "started_at": started_at.isoformat(),
+                "ended_at": ended_at.isoformat(),
+                "duration_seconds": round((ended_at - started_at).total_seconds(), 3),
                 "outcome": "cli_not_found",
-                "returncode": None,
                 "prompt": full_prompt,
-                "trace_file": trace_file,
+                "stdout": "",
                 "stderr": "",
+                "returncode": None,
             }
         )
-        sys.exit("Codex CLI not found.")
+        return "cli_not_found"
+
+    stdout = ""
+    stderr = ""
+    returncode = None
+    outcome = "ok"
+
+    try:
+        stdout, stderr = proc.communicate(input=full_prompt, timeout=timeout)
+        returncode = proc.returncode
+        outcome = "ok" if returncode == 0 else "nonzero_exit"
+    except subprocess.TimeoutExpired:
+        _kill_process_tree(proc)
+        try:
+            stdout, stderr = proc.communicate(timeout=15)
+        except (subprocess.TimeoutExpired, OSError):
+            stdout = stdout or ""
+            stderr = stderr or ""
+        returncode = proc.returncode
+        outcome = "timeout"
+
+    ended_at = datetime.now(timezone.utc)
+    trace_file = _save_trace(cycle, phase, ended_at, stdout or "")
+    append_invocation_event(
+        {
+            "label": label,
+            "cycle": cycle,
+            "phase": phase,
+            "model": CLAUDE_MODEL,
+            "command": command,
+            "cwd": WORKSPACE_DIR,
+            "timeout_seconds": timeout,
+            "max_turns": max_turns,
+            "started_at": started_at.isoformat(),
+            "ended_at": ended_at.isoformat(),
+            "duration_seconds": round((ended_at - started_at).total_seconds(), 3),
+            "outcome": outcome,
+            "prompt": full_prompt,
+            "trace_file": trace_file,
+            "stderr": (stderr or "")[-5000:],
+            "returncode": returncode,
+        }
+    )
+    return outcome
 
 
 def cleanup_workspace_artifacts() -> None:
@@ -760,9 +863,11 @@ def format_fail_prompt(error_tail: str, previous_state: dict[str, object]) -> st
         "A basin must cite at least 2 family ids.\n"
         "All oracle inputs are permutations of distinct positive integers. Do not rely on duplicates, lookup tables, or memorized witness caches.\n"
         "Do not build arithmetic epicycles, arbitrary modulo gating, or index-class exceptions.\n"
-        f"Then write a new `{SOLVER_FILE}` implementing your next best attempt.\n"
+        "This is a contradiction-absorption pass only.\n"
+        f"Do not write `{SOLVER_FILE}` in this pass. The next solver attempt happens in the following GRIND cycle.\n"
+        "If there is only one contradictory oracle array so far, record it as a local and do not promote a family or basin yet.\n"
         f"Do not edit `{GOAL_FILE}`, `{DATA_FILE}`, `{DEAD_ENDS_FILE}`, or `{DEAD_END_STATE_FILE}`.\n"
-        f"Do not create any files other than `{SOLVER_FILE}`, `{OPINIONS_FILE}`, or `{DEAD_ENDS_JSON_FILE}`.\n\n"
+        f"Do not create any files other than `{OPINIONS_FILE}` or `{DEAD_ENDS_JSON_FILE}`.\n\n"
         f"Current state:\n{current_dead_end_summary(previous_state)}\n"
     )
 
@@ -772,6 +877,8 @@ def enforce_workspace_valid(
     *,
     require_solver: bool = True,
     required_falsifier: dict[str, list[int]] | None = None,
+    cycle: int | None = None,
+    phase: str = "LINTER",
 ) -> tuple[bool, str | None]:
     final_error: str | None = None
     for attempt in range(1, SYNC_MAX_TURNS + 1):
@@ -785,20 +892,34 @@ def enforce_workspace_valid(
             _save_dead_ends(dead_ends)
             return True, None
         final_error = error
-        append_validation_event(cycle=None, phase="LINTER", attempt=attempt, error=error)
+        append_validation_event(cycle=cycle, phase=phase, attempt=attempt, error=error)
+        repair_instructions = (
+            f"Fix `{DEAD_ENDS_JSON_FILE}`, `{OPINIONS_FILE}`, and `{SOLVER_FILE}` if needed.\n"
+            f"Do not edit `{GOAL_FILE}`, `{DATA_FILE}`, `{DEAD_ENDS_FILE}`, or `{DEAD_END_STATE_FILE}`.\n\n"
+            if require_solver
+            else (
+                f"Fix `{DEAD_ENDS_JSON_FILE}` and `{OPINIONS_FILE}` only.\n"
+                f"Do not create `{SOLVER_FILE}` during contradiction absorption.\n"
+                f"Do not edit `{GOAL_FILE}`, `{DATA_FILE}`, `{DEAD_ENDS_FILE}`, or `{DEAD_END_STATE_FILE}`.\n\n"
+            )
+        )
         prompt = (
             "[LINTER ERROR: STRUCTURED DEAD-END STATE INVALID]\n"
             f"{error}\n"
-            f"Fix `{DEAD_ENDS_JSON_FILE}`, `{OPINIONS_FILE}`, and `{SOLVER_FILE}` if needed.\n"
-            f"Do not edit `{GOAL_FILE}`, `{DATA_FILE}`, `{DEAD_ENDS_FILE}`, or `{DEAD_END_STATE_FILE}`.\n\n"
+            f"{repair_instructions}"
             f"Current state:\n{current_dead_end_summary(previous_state)}\n"
         )
-        invoke_codex(
+        linter_outcome = invoke_claude(
             prompt,
             max_turns=SYNC_MAX_TURNS,
+            timeout=current_linter_timeout(),
             label="LINTER_REPAIR",
+            cycle=cycle,
+            phase=phase,
         )
         cleanup_workspace_artifacts()
+        if linter_outcome != "ok":
+            break
     final_error = validate_workspace_output_for_phase(
         previous_state,
         require_solver=require_solver,
@@ -806,8 +927,8 @@ def enforce_workspace_valid(
     )
     if final_error:
         append_validation_event(
-            cycle=None,
-            phase="LINTER",
+            cycle=cycle,
+            phase=phase,
             attempt=SYNC_MAX_TURNS + 1,
             error=final_error,
         )
@@ -909,12 +1030,12 @@ def compute_cycle_metrics(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run Avalanche V4.4.1 on Codex CLI.")
-    parser.add_argument("--workspace", default=r"C:\terrarium-v44-codex", help="Workspace directory.")
+    parser = argparse.ArgumentParser(description="Run Avalanche V4.4.1 on Claude Code.")
+    parser.add_argument("--workspace", default=r"C:\terrarium-v44-claude", help="Workspace directory.")
     parser.add_argument(
         "--model",
-        default=DEFAULT_CODEX_MODEL,
-        help="Codex model slug. Known local options: " + ", ".join(SUPPORTED_MODELS),
+        default=DEFAULT_CLAUDE_MODEL,
+        help="Claude model alias or full name. Suggested options: " + ", ".join(SUPPORTED_MODELS),
     )
     parser.add_argument("--max-cycles", type=int, default=DEFAULT_MAX_CYCLES, help="Maximum cycle count.")
     parser.add_argument("--tests-per-cycle", type=int, default=5, help="Random ratchet tests per cycle.")
@@ -928,7 +1049,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--bootstrap-only",
         action="store_true",
-        help="Create the V4.4 Codex workspace and exit without invoking Codex.",
+        help="Create the V4.4 Claude workspace and exit without invoking Claude Code.",
     )
     parser.add_argument(
         "--continue-cycles",
@@ -940,12 +1061,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    global WORKSPACE_DIR, CODEX_MODEL
+    global WORKSPACE_DIR, CLAUDE_MODEL
     global _metric_history
 
     args = parse_args()
     _rng.seed(args.seed)
-    CODEX_MODEL = args.model
+    CLAUDE_MODEL = args.model
     WORKSPACE_DIR = str(Path(args.workspace).resolve())
     os.makedirs(WORKSPACE_DIR, exist_ok=True)
     os.chdir(WORKSPACE_DIR)
@@ -953,7 +1074,7 @@ def main() -> None:
     setup_workspace()
     if args.bootstrap_only:
         write_status(0, args.max_cycles, "BOOTSTRAPPED")
-        print(f"  Avalanche V4.4 Codex workspace bootstrapped at {WORKSPACE_DIR}")
+        print(f"  Avalanche V4.4 Claude workspace bootstrapped at {WORKSPACE_DIR}")
         return
 
     _metric_history, previous_complexity = load_existing_metric_history()
@@ -969,15 +1090,25 @@ def main() -> None:
         previous_opinions = read_text(OPINIONS_FILE)
         previous_state = load_state(DEAD_END_STATE_FILE)
         write_status(cycle, target_cycles, "GRIND")
-        invoke_codex(
+        grind_outcome = invoke_claude(
             format_grind_prompt(cycle, previous_state),
+            timeout=current_grind_timeout(),
             label="GRIND",
             cycle=cycle,
             phase="GRIND",
         )
         cleanup_workspace_artifacts()
 
-        valid, validation_error = enforce_workspace_valid(previous_state)
+        if grind_outcome != "ok":
+            last_error = f"GRIND invocation failed: {grind_outcome}"
+            write_status(cycle, target_cycles, f"GRIND_{grind_outcome.upper()}", last_result="FAIL", last_error=last_error)
+            continue
+
+        valid, validation_error = enforce_workspace_valid(
+            previous_state,
+            cycle=cycle,
+            phase="GRIND",
+        )
         if not valid:
             last_error = (
                 "Structured dead-end state remained invalid after retries."
@@ -994,7 +1125,7 @@ def main() -> None:
             current_dead_ends = _load_dead_ends_json()
             current_state = merge_state(previous_state, current_dead_ends, cycle)
             save_state(DEAD_END_STATE_FILE, current_state)
-            run_command('git add . && git commit -m "Avalanche: V4.4 Codex ratchet advanced"')
+            run_command('git add . && git commit -m "Avalanche: V4.4 Claude ratchet advanced"')
             metrics = compute_cycle_metrics(
                 cycle,
                 previous_opinions,
@@ -1023,19 +1154,32 @@ def main() -> None:
         update_data_file(failing_pairs)
         run_command("git reset --hard HEAD")
         run_command("git clean -fd")
-        invoke_codex(
+        write_status(cycle, target_cycles, "FAIL_SYNC", last_result="FAIL", last_error=last_error)
+        sync_outcome = invoke_claude(
             format_fail_prompt(output[-1000:], previous_state),
             max_turns=SYNC_MAX_TURNS,
+            timeout=current_fail_sync_timeout(),
             label="FAIL_SYNC",
             cycle=cycle,
             phase="FAIL_SYNC",
         )
         cleanup_workspace_artifacts()
 
+        if sync_outcome != "ok":
+            last_error = (
+                (last_error or "")
+                + f"\nFAIL_SYNC invocation failed: {sync_outcome}"
+            )[-1000:]
+            write_status(cycle, target_cycles, f"FAIL_SYNC_{sync_outcome.upper()}", last_result="FAIL", last_error=last_error)
+            continue
+
         required_falsifier = first_failure or (failing_pairs[0] if failing_pairs else None)
         valid, validation_error = enforce_workspace_valid(
             previous_state,
+            require_solver=False,
             required_falsifier=required_falsifier,
+            cycle=cycle,
+            phase="FAIL_SYNC",
         )
         if not valid:
             last_error = (
@@ -1055,7 +1199,7 @@ def main() -> None:
             previous_state,
             current_state,
             previous_complexity,
-            read_text(SOLVER_FILE),
+            attempted_solver_code,
         )
         previous_complexity = metrics["solver_ast_complexity"]  # type: ignore[assignment]
         write_status(
@@ -1075,4 +1219,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n  [!] Avalanche V4.4 Codex powered down by user.")
+        print("\n  [!] Avalanche V4.4 Claude powered down by user.")

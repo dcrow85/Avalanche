@@ -83,3 +83,9 @@ def test_archive_generator_prefers_cycle_metrics_history():
         assert payload["latest_metrics"]["dead_end_family_count"] == 3
     finally:
         shutil.rmtree(run_dir, ignore_errors=True)
+
+
+def test_archive_generator_classifies_claude_runs_separately():
+    assert generate_research_center.classify_run("terrarium-v44-claude-opus-01") == "Claude-Opus"
+    assert generate_research_center.classify_run("terrarium-v44-claude-sonnet-01") == "Claude-Sonnet"
+    assert generate_research_center.classify_run("terrarium-v44-haiku-perm-03") == "Haiku-Raw"

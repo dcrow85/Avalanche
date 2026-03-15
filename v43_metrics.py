@@ -7,6 +7,7 @@ import collections
 import math
 import random
 import re
+import zlib
 from typing import Callable
 
 try:
@@ -276,6 +277,34 @@ def solver_ast_complexity(code: str) -> int:
     except SyntaxError:
         return 0
     return sum(1 for node in ast.walk(tree) if isinstance(node, TARGET_AST_NODES))
+
+
+CONDITIONAL_AST_NODES = (ast.If, ast.IfExp, ast.BoolOp)
+ARITHMETIC_AST_NODES = (ast.BinOp, ast.UnaryOp, ast.Subscript)
+LOOP_AST_NODES = (ast.For, ast.While, ast.ListComp, ast.DictComp, ast.SetComp, ast.GeneratorExp)
+
+
+def solver_compression_ratio(code: str) -> float:
+    """Kolmogorov proxy via zlib. High ratio = repetitive epicycles. Low ratio = dense math."""
+    if not code or len(code) < 10:
+        return 0.0
+    raw = code.encode("utf-8")
+    return round(len(zlib.compress(raw)) / len(raw), 4)
+
+
+def solver_ast_decomposition(code: str) -> dict[str, int]:
+    """Decompose solver AST into conditional / arithmetic / loop node counts."""
+    try:
+        tree = ast.parse(code or "")
+    except SyntaxError:
+        return {"ast_conditional": 0, "ast_arithmetic": 0, "ast_loop": 0, "ast_total_nodes": 0}
+    nodes = list(ast.walk(tree))
+    return {
+        "ast_conditional": sum(1 for n in nodes if isinstance(n, CONDITIONAL_AST_NODES)),
+        "ast_arithmetic": sum(1 for n in nodes if isinstance(n, ARITHMETIC_AST_NODES)),
+        "ast_loop": sum(1 for n in nodes if isinstance(n, LOOP_AST_NODES)),
+        "ast_total_nodes": len(nodes),
+    }
 
 
 def classify_turbulence(d_sem: float, delta_c: int) -> str:

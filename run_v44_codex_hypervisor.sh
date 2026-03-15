@@ -2,8 +2,8 @@
 set -euo pipefail
 
 WORKSPACE="${1:-/opt/avalanche/runs/terrarium-v44-codex}"
-MODEL="${AVALANCHE_CODEX_MODEL:-gpt-5.3-codex}"
-MAX_CYCLES="${AVALANCHE_MAX_CYCLES:-20}"
+MODEL="${2:-${AVALANCHE_CODEX_MODEL:-gpt-5.3-codex}}"
+MAX_CYCLES="${3:-${AVALANCHE_MAX_CYCLES:-20}}"
 CONTINUE_CYCLES="${AVALANCHE_CONTINUE_CYCLES:-0}"
 ORACLE_MODE="${AVALANCHE_ORACLE_MODE:-first-failure}"
 

@@ -48,6 +48,8 @@ def get_api_response(terrarium):
     metrics_path = os.path.join(terrarium, "cycle_metrics.jsonl")
     opinions_path = os.path.join(terrarium, "opinions.md")
     dead_ends_path = os.path.join(terrarium, "dead-ends.md")
+    dead_ends_json_path = os.path.join(terrarium, "dead-ends.json")
+    solver_path = os.path.join(terrarium, "solver.py")
     snapshots_path = os.path.join(terrarium, "cycle_snapshots.jsonl")
     data_path = os.path.join(terrarium, "data.json")
     goal_path = os.path.join(terrarium, "goal.md")
@@ -60,6 +62,8 @@ def get_api_response(terrarium):
 
     opinions = read_file_safe(opinions_path)
     dead_ends = read_file_safe(dead_ends_path)
+    dead_ends_json = read_file_safe(dead_ends_json_path)
+    solver = read_file_safe(solver_path)
     snapshots = read_jsonl_safe(snapshots_path)
     metrics_history = read_jsonl_safe(metrics_path)
     if not metrics_history:
@@ -95,6 +99,8 @@ def get_api_response(terrarium):
         **status,
         "opinions_content": opinions,
         "dead_ends_content": dead_ends,
+        "dead_ends_json_content": dead_ends_json,
+        "solver_content": solver,
         "cycle_snapshots": snapshots,
         "metrics_history": metrics_history,
         "data_content": json.dumps(data_parsed, indent=2) if data_parsed else "[]",
@@ -271,44 +277,22 @@ HTML_PAGE = r"""<!DOCTYPE html>
   }
 
   .header-bottom {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 18px;
-    padding: 20px 22px 22px;
+    padding: 16px 22px 18px;
   }
 
-  .brief,
   .signal-board {
     border: 1px solid var(--line);
     background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 70%), var(--panel-2);
     padding: 16px 18px;
     position: relative;
-  }
-
-  .brief-label {
-    display: inline-block;
-    margin-bottom: 12px;
-    padding: 4px 8px 4px 10px;
-    border-left: 3px solid var(--amber);
-    background: rgba(255, 179, 71, 0.08);
-    color: var(--amber);
-    font-size: 10px;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-  }
-
-  .brief p {
-    margin: 0;
-    max-width: 62ch;
-    line-height: 1.7;
-    font-size: 14px;
-  }
-
-  .signal-board {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     align-content: start;
+  }
+
+  .signal-board-wide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .signal-cell,
@@ -512,6 +496,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
     line-height: 1.6;
     max-height: 420px;
     overflow-y: auto;
+  }
+
+  .panel-code {
+    font-family: "Fira Code", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--acid);
+    background: rgba(0, 0, 0, 0.35);
+    tab-size: 4;
   }
 
   .panel-subchart {
@@ -777,7 +770,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .telemetry-bar,
     .panels,
     .subchart-grid,
-    .telemetry-grid {
+    .telemetry-grid,
+    .signal-board,
+    .signal-board-wide {
       grid-template-columns: 1fr;
     }
 
@@ -803,30 +798,30 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="header-status"><span id="conn">CONNECTING...</span><br>Signal State</div>
       </div>
       <div class="header-bottom">
-        <div class="brief">
-          <span class="brief-label">Telemetry Brief</span>
-          <p>
-            This feed shows one organism inside the Avalanche pressure chamber:
-            active cycle phase, dead-end compression, ratchet contradictions, and
-            theory drift across the structured Basin / Family / Local stack.
-          </p>
-        </div>
-        <div class="signal-board">
+        <div class="signal-board signal-board-wide">
           <div class="signal-cell">
-            <div class="signal-label">Cycle Envelope</div>
+            <div class="signal-label">Cycle</div>
             <div class="signal-value" id="cycle">-</div>
           </div>
           <div class="signal-cell">
-            <div class="signal-label">Phase Gate</div>
+            <div class="signal-label">Phase</div>
             <div class="signal-value" id="phase">-</div>
           </div>
           <div class="signal-cell">
-            <div class="signal-label">Last Result</div>
+            <div class="signal-label">Result</div>
             <div class="signal-value" id="result">-</div>
           </div>
           <div class="signal-cell">
-            <div class="signal-label">Failure Pairs</div>
+            <div class="signal-label">Pairs</div>
             <div class="signal-value" id="dp-count">-</div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-label">Families</div>
+            <div class="signal-value" id="de-families-header">-</div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-label">Compression</div>
+            <div class="signal-value" id="compress-header">-</div>
           </div>
         </div>
       </div>
@@ -843,12 +838,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
           <div class="value" id="de-words">-</div>
         </div>
         <div class="status-card">
-          <div class="label">Theory Cap</div>
-          <div class="value phase-telemetry" id="op-summary">-</div>
+          <div class="label">C_ast</div>
+          <div class="value phase-telemetry" id="c-ast-header">-</div>
         </div>
         <div class="status-card">
-          <div class="label">Constraint Cap</div>
-          <div class="value phase-telemetry" id="de-summary">-</div>
+          <div class="label">Turbulence</div>
+          <div class="value" id="turbulence-header">-</div>
         </div>
       </div>
 
@@ -922,6 +917,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
     </section>
 
     <div class="panels">
+      <section class="panel full-width">
+        <div class="panel-header">
+          <span>solver.py</span>
+          <span class="word-count" id="solver-label">Current Theory</span>
+        </div>
+        <div class="panel-body panel-code" id="solver-content"><span class="no-data">No solver yet</span></div>
+      </section>
+
       <section class="panel">
         <div class="panel-header">
           <span>opinions.md</span>
@@ -929,36 +932,22 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="op-bar"></div></div>
         <div class="panel-body" id="op-content"><span class="no-data">Waiting for data...</span></div>
-        <div class="panel-subchart">
-          <div class="subchart-head">
-            <div class="subchart-label">Rolling Noise Spectrometer</div>
-            <div class="subchart-meta" id="opinions-pink-meta">window -</div>
-          </div>
-          <div class="subchart-grid">
-            <div class="oscillator-card">
-              <div class="subchart-head">
-                <div class="subchart-label">Opinions Spectrometer</div>
-                <div class="subchart-meta" id="opinions-pink-latest">beta -</div>
-              </div>
-              <div class="oscillator-frame">
-                <div class="axis-y">Beta</div>
-                <svg class="subchart-svg" id="opinions-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
-                <div class="axis-x">Cycle / Regime</div>
-              </div>
-            </div>
-            <div class="oscillator-card">
-              <div class="subchart-head">
-                <div class="subchart-label">Token Spectrometer</div>
-                <div class="subchart-meta" id="token-pink-latest">beta -</div>
-              </div>
-              <div class="oscillator-frame">
-                <div class="axis-y">Beta</div>
-                <svg class="subchart-svg" id="token-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
-                <div class="axis-x">Cycle / Regime</div>
-              </div>
-            </div>
-          </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>dead-ends.json</span>
+          <span class="word-count" id="de-json-label">Structured State</span>
         </div>
+        <div class="panel-body panel-code" id="de-json-content"><span class="no-data">Waiting for data...</span></div>
+      </section>
+
+      <section class="panel full-width">
+        <div class="panel-header">
+          <span>data.json</span>
+          <span class="word-count" id="dp-label">-</span>
+        </div>
+        <div class="panel-body" id="data-content"><span class="no-data">No failure data yet</span></div>
       </section>
 
       <section class="panel">
@@ -970,12 +959,37 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="panel-body" id="de-content"><span class="no-data">Waiting for data...</span></div>
       </section>
 
-      <section class="panel full-width">
+      <section class="panel">
         <div class="panel-header">
-          <span>data.json</span>
-          <span class="word-count" id="dp-label">-</span>
+          <span>Spectrometer</span>
+          <span class="word-count" id="opinions-pink-meta">window -</span>
         </div>
-        <div class="panel-body" id="data-content"><span class="no-data">No failure data yet</span></div>
+        <div class="panel-subchart" style="border-top:none">
+          <div class="subchart-grid">
+            <div class="oscillator-card">
+              <div class="subchart-head">
+                <div class="subchart-label">Opinions</div>
+                <div class="subchart-meta" id="opinions-pink-latest">beta -</div>
+              </div>
+              <div class="oscillator-frame">
+                <div class="axis-y">Beta</div>
+                <svg class="subchart-svg" id="opinions-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
+                <div class="axis-x">Cycle</div>
+              </div>
+            </div>
+            <div class="oscillator-card">
+              <div class="subchart-head">
+                <div class="subchart-label">Tokens</div>
+                <div class="subchart-meta" id="token-pink-latest">beta -</div>
+              </div>
+              <div class="oscillator-frame">
+                <div class="axis-y">Beta</div>
+                <svg class="subchart-svg" id="token-pink-chart" viewBox="0 0 420 120" preserveAspectRatio="none"></svg>
+                <div class="axis-x">Cycle</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -1287,7 +1301,6 @@ function update(data) {
   const opWc = wcClass(opWords, opLimit);
   document.getElementById('op-words').textContent = opWords + '/' + opLimit;
   document.getElementById('op-wc-label').textContent = opWords + ' / ' + opLimit + ' words';
-  document.getElementById('op-summary').textContent = opWords + '/' + opLimit;
   document.getElementById('op-wc-label').className = 'word-count ' + opWc;
   const opBar = document.getElementById('op-bar');
   opBar.style.width = Math.min(100, (opWords / opLimit) * 100) + '%';
@@ -1297,7 +1310,6 @@ function update(data) {
   const deWc = wcClass(deWords, deLimit);
   document.getElementById('de-words').textContent = deWords + '/' + deLimit;
   document.getElementById('de-wc-label').textContent = deWords + ' / ' + deLimit + ' words';
-  document.getElementById('de-summary').textContent = deWords + '/' + deLimit;
   document.getElementById('de-wc-label').className = 'word-count ' + deWc;
   const deBar = document.getElementById('de-bar');
   deBar.style.width = Math.min(100, (deWords / deLimit) * 100) + '%';
@@ -1336,6 +1348,14 @@ function update(data) {
     const turbulenceEl = document.getElementById('turbulence-state');
     turbulenceEl.textContent = turbulence;
     turbulenceEl.className = 'value ' + (turbulenceClass[turbulence] || 'phase-idle');
+    // Header summary cards
+    document.getElementById('de-families-header').textContent = telemetry.dead_end_family_count ?? '-';
+    document.getElementById('compress-header').textContent =
+      typeof telemetry.solver_compression_ratio === 'undefined' ? '-' : Number(telemetry.solver_compression_ratio).toFixed(3);
+    document.getElementById('c-ast-header').textContent = telemetry.solver_ast_complexity ?? '-';
+    const turbHeaderEl = document.getElementById('turbulence-header');
+    turbHeaderEl.textContent = turbulence;
+    turbHeaderEl.className = 'value ' + (turbulenceClass[turbulence] || 'phase-idle');
   }
   renderTelemetryCharts(Array.isArray(data.metrics_history) ? data.metrics_history : []);
   updateAlertState(phase, result, telemetry);
@@ -1346,16 +1366,24 @@ function update(data) {
   const activeSnapshot = snapshots[snapshotIndex] || snapshots[snapshots.length - 1];
   const opContent = activeSnapshot.opinions_content || data.opinions_content || '';
   const deContent = activeSnapshot.dead_ends_content || data.dead_ends_content || '';
+  const solverContent = activeSnapshot.solver_content || data.solver_content || '';
+  const deJsonContent = activeSnapshot.dead_ends_json_content || data.dead_ends_json_content || '';
   const dataContent = data.data_content || '[]';
   const activeCycle = activeSnapshot.cycle || cycle;
   const activePhase = activeSnapshot.phase || phase;
   const activeResult = activeSnapshot.last_result || result;
   document.getElementById('snapshot-meta').textContent =
     'Cycle ' + activeCycle + ' / ' + maxCycles + ' // ' + activePhase + ' // ' + (activeResult || 'IN-FLIGHT');
+  document.getElementById('solver-content').innerHTML = solverContent
+    ? escapeHtml(solverContent) : '<span class="no-data">No solver yet</span>';
+  document.getElementById('solver-label').textContent = solverContent
+    ? (solverContent.split('\\n').length + ' lines') : 'No Theory';
   document.getElementById('op-content').innerHTML = opContent
     ? escapeHtml(opContent) : '<span class="no-data">File not found</span>';
   document.getElementById('de-content').innerHTML = deContent
     ? escapeHtml(deContent) : '<span class="no-data">File not found</span>';
+  document.getElementById('de-json-content').innerHTML = deJsonContent
+    ? escapeHtml(deJsonContent) : '<span class="no-data">No structured state yet</span>';
   document.getElementById('data-content').innerHTML = renderDataPairs(dataContent);
 
   // Error

@@ -295,9 +295,46 @@ a {
 }
 
 .run-grid,
-.archive-list {
+.archive-list,
+.archive-groups {
   display: grid;
   gap: 14px;
+}
+
+.archive-group {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.022), transparent 72%), var(--panel-2);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.025) inset;
+}
+
+.archive-group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(90deg, rgba(255,179,71,0.06), transparent 20%, transparent 80%, rgba(124,255,191,0.04));
+}
+
+.archive-group-title {
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--acid);
+}
+
+.archive-group-meta {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+}
+
+.archive-run-list {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px 14px;
 }
 
 .run-card {
@@ -461,11 +498,30 @@ a {
   clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
 }
 
+.archive-item-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
 .archive-item h3 {
-  margin: 0 0 7px;
+  margin: 0;
   font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.archive-badge {
+  padding: 4px 7px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.22);
+  color: var(--amber);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .archive-item p {
@@ -547,6 +603,13 @@ body.alert-edge .telemetry-card {
   .run-metrics,
   .snapshot-strip {
     grid-template-columns: 1fr;
+  }
+
+  .archive-group summary,
+  .archive-group-header,
+  .archive-item-topline {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .masthead-top {

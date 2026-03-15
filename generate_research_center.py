@@ -49,8 +49,23 @@ def classify_run(name: str) -> str:
     lowered = name.lower()
     if "qwen" in lowered:
         return "Qwen-Raw"
-    if "haiku" in lowered or "claude" in lowered:
-        return "Haiku-Raw"
+    if "raw" in lowered:
+        if "opus" in lowered:
+            return "Opus-Raw"
+        if "hunches" in lowered:
+            return "Sonnet-Hunches"
+        if "sonnet" in lowered:
+            return "Sonnet-Raw"
+    if "claude" in lowered:
+        if "opus" in lowered:
+            return "Claude-Opus"
+        if "sonnet" in lowered:
+            return "Claude-Sonnet"
+        if "hunches" in lowered:
+            return "Haiku-Hunches"
+        if "haiku" in lowered:
+            return "Claude-Haiku"
+        return "Claude"
     if "grok" in lowered or "xai" in lowered:
         return "Grok-Raw"
     if "perm-53" in lowered:

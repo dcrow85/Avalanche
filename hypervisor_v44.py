@@ -550,6 +550,15 @@ def normalize_structured_output_text(text: str) -> str:
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         normalized = "\n".join(lines).strip()
+    elif "```" in normalized:
+        m = re.search(r"```(?:json)?\s*\n(.*?)\n\s*```", normalized, re.DOTALL)
+        if m:
+            normalized = m.group(1).strip()
+    if normalized and normalized[0] != "{":
+        start = normalized.find("{")
+        end = normalized.rfind("}")
+        if start != -1 and end > start:
+            normalized = normalized[start:end + 1]
     return normalized
 
 
