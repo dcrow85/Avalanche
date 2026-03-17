@@ -321,11 +321,18 @@ SUPERSEDED_LOG_FILE = "superseded_theories.jsonl"
 
 def compress_dead_ends_for_prompt(
     dead_ends_json: str,
+    *,
+    max_entries: int | None = None,
 ) -> tuple[str, int, int, int]:
     """Compress SUPERSEDED theories to single-line summaries for prompt injection.
 
     ACTIVE entries remain fully expanded. SUPERSEDED basins/families are reduced
     to a one-line summary. Locals (no status) are always fully rendered.
+
+    Args:
+        dead_ends_json: Raw JSON string of the dead-ends structure.
+        max_entries: If set, limit total active entries (basins + families + locals)
+            to this many, keeping the most recent (last in list). Minimum 3.
 
     Returns:
         (compressed_text, active_count, archived_count, estimated_tokens_saved)
@@ -352,6 +359,20 @@ def compress_dead_ends_for_prompt(
             active_families.append(family)
 
     locals_ = dead_ends.get("locals", [])
+
+    # Graveyard thinning: limit total active entries when under compression
+    if max_entries is not None:
+        cap = max(3, max_entries)
+        all_active = (
+            [("basin", b) for b in active_basins]
+            + [("family", f) for f in active_families]
+            + [("local", l) for l in locals_]
+        )
+        if len(all_active) > cap:
+            kept = all_active[-cap:]  # keep most recent (last in list)
+            active_basins = [x for tag, x in kept if tag == "basin"]
+            active_families = [x for tag, x in kept if tag == "family"]
+            locals_ = [x for tag, x in kept if tag == "local"]
 
     active_count = len(active_basins) + len(active_families)
     archived_count = len(archived_basins) + len(archived_families)

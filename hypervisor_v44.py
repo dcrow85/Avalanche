@@ -505,6 +505,11 @@ def format_cycle_prompt(
     mode: str,
     current_state: dict[str, object],
     failure_report: str | None = None,
+    *,
+    altitude_mode: str | None = None,
+    context_window_hud: str | None = None,
+    altitude_map: str | None = None,
+    max_graveyard_entries: int | None = None,
 ) -> list[dict[str, str]]:
     current_data = read_text(DATA_FILE) or "[]"
     current_opinions = read_text(OPINIONS_FILE)
@@ -513,7 +518,9 @@ def format_cycle_prompt(
     goal = read_text(GOAL_FILE)
 
     # Compress SUPERSEDED theories for prompt; log full versions separately
-    compressed_de, _, _, _ = compress_dead_ends_for_prompt(current_dead_ends_json)
+    compressed_de, _, _, _ = compress_dead_ends_for_prompt(
+        current_dead_ends_json, max_entries=max_graveyard_entries
+    )
     try:
         de_dict = json.loads(current_dead_ends_json) if current_dead_ends_json else {}
     except json.JSONDecodeError:
@@ -581,14 +588,45 @@ def format_cycle_prompt(
 
     hunches_section = f"\n# hunches.md (subliminal scratchpad)\n{current_hunches or '(empty)'}\n" if HUNCHES_ENABLED else ""
 
+    # --- Build user prompt ---
+    hud_prefix = f"{context_window_hud}\n\n" if context_window_hud else ""
+
+    altitude_map_section = ""
+    if altitude_map:
+        altitude_map_section = f"\n# Previous Altitude Map\n{altitude_map}\n"
+
+    altitude_instruction = ""
+    if altitude_mode == "low":
+        altitude_instruction = (
+            "\n\nALTITUDE SURVEY (LOW): Identify your single weakest assumption. "
+            "What belief, if wrong, would invalidate your entire approach? "
+            "State it in one sentence. Output a ## Altitude Map section (max 300 tokens) "
+            "instead of solver_py."
+        )
+    elif altitude_mode == "medium":
+        altitude_instruction = (
+            "\n\nALTITUDE SURVEY (MEDIUM): List the 3 strongest patterns you've observed "
+            "in the data. For each, state what evidence supports it and what would falsify it. "
+            "Output a ## Altitude Map section (max 300 tokens) instead of solver_py."
+        )
+    elif altitude_mode == "high":
+        altitude_instruction = (
+            "\n\nALTITUDE SURVEY (HIGH): Review your graveyard. What territory have you NOT explored? "
+            "What family of approaches is absent from your dead ends? Identify the negative space. "
+            "Output a ## Altitude Map section (max 300 tokens) instead of solver_py."
+        )
+
     user_prompt = (
+        f"{hud_prefix}"
         f"{instruction}\n"
         f"\n# goal.md\n{goal}\n"
         f"\n# data.json\n{current_data}\n"
         f"\n# opinions.md\n{current_opinions}\n"
         f"\n# dead-ends.json\n{compressed_de}\n"
         f"{hunches_section}"
+        f"{altitude_map_section}"
         f"\n# historical_ids\n{history_summary(current_state)}\n"
+        f"{altitude_instruction}"
     )
     return [
         {"role": "system", "content": system_prompt},
@@ -777,6 +815,7 @@ def invoke_openai(
     api_base: str,
     *,
     api_key_env: str = "",
+    max_tokens: int = 1200,
 ) -> dict[str, object]:
     api_key, source_env = resolve_api_key(api_key_env)
     if not api_key:
@@ -786,7 +825,7 @@ def invoke_openai(
         "model": model,
         "temperature": DEFAULT_TEMPERATURE,
         "messages": messages,
-        "max_tokens": 1200,
+        "max_tokens": max_tokens,
         "response_format": response_format_payload(api_base),
     }
     request = urllib.request.Request(
@@ -871,8 +910,19 @@ def request_cycle_output(
     failure_report: str | None = None,
     required_falsifier: dict[str, list[int]] | None = None,
     api_key_env: str = "",
+    max_tokens: int = 1200,
+    altitude_mode: str | None = None,
+    context_window_hud: str | None = None,
+    altitude_map: str | None = None,
+    max_graveyard_entries: int | None = None,
 ) -> dict[str, object]:
-    messages = format_cycle_prompt(cycle, max_cycles, mode, current_state, failure_report)
+    messages = format_cycle_prompt(
+        cycle, max_cycles, mode, current_state, failure_report,
+        altitude_mode=altitude_mode,
+        context_window_hud=context_window_hud,
+        altitude_map=altitude_map,
+        max_graveyard_entries=max_graveyard_entries,
+    )
     if required_falsifier is not None:
         messages = messages + [
             {
@@ -886,7 +936,7 @@ def request_cycle_output(
     retry_messages = list(messages)
     last_error = "No response received."
     for _ in range(SYNC_MAX_TURNS):
-        payload = invoke_openai(retry_messages, model, api_base, api_key_env=api_key_env)
+        payload = invoke_openai(retry_messages, model, api_base, api_key_env=api_key_env, max_tokens=max_tokens)
         error = validate_cycle_output(payload, current_state, required_falsifier=required_falsifier)
         if not error:
             return payload
