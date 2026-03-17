@@ -1,5 +1,7 @@
 """Regression tests for Avalanche V4.4 epistemic state helpers."""
 
+import json
+
 import v44_epistemics
 
 
@@ -159,3 +161,31 @@ def test_compress_empty():
     assert active == 0
     assert archived == 0
     assert saved == 0
+
+
+def test_compress_dead_ends_thins_archived_and_locals_before_live_hierarchy():
+    de = {
+        "basins": [
+            {"id": "B1", "status": "ACTIVE", "claim": "main basin", "cited_families": ["F1", "F2"]},
+        ],
+        "families": [
+            {"id": "F1", "status": "ACTIVE", "claim": "family one", "falsifying_arrays": [[1, 2], [3, 4]]},
+            {"id": "F2", "status": "ACTIVE", "claim": "family two", "falsifying_arrays": [[5, 6], [7, 8]]},
+            {"id": "F3", "status": "SUPERSEDED", "claim": "old family", "falsifying_arrays": [[9, 10], [11, 12]]},
+        ],
+        "locals": [
+            {"failing_hypothesis": "first local", "falsifying_array": [2, 1, 3]},
+            {"failing_hypothesis": "second local", "falsifying_array": [3, 1, 2]},
+        ],
+    }
+    text, active, archived, _ = v44_epistemics.compress_dead_ends_for_prompt(
+        json.dumps(de, indent=2),
+        max_entries=3,
+    )
+    assert active == 3
+    assert archived == 0
+    assert '"id": "B1"' in text
+    assert '"id": "F1"' in text
+    assert '"id": "F2"' in text
+    assert "first local" not in text
+    assert "old family" not in text

@@ -13,14 +13,12 @@ interventions, each independently togglable for isolation experiments.
 from __future__ import annotations
 
 import argparse
-import copy
 import hashlib
 import json
 import math
 import os
 import random
 import re
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,7 +30,6 @@ os.environ.pop("AVALANCHE_ACTIVE", None)
 import hypervisor_v44 as hv
 from actuator_metrics import evaluate_solver_fractional
 from v44_epistemics import (
-    blank_state,
     load_state,
     merge_state,
     save_state,
@@ -215,6 +212,7 @@ def run_compression_pass(
 ) -> None:
     """Directed distillation cycle. Model compresses its theory."""
     current_theory = hv.read_text(hv.OPINIONS_FILE) or ""
+    current_dead_ends = hv.read_text(hv.DEAD_ENDS_JSON_FILE) or "{}"
     target_len = int(len(current_theory) * passes.target_compression)
 
     prompt = (
@@ -228,7 +226,14 @@ def run_compression_pass(
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": prompt + f"\n\n# Current opinions.md\n{current_theory}"},
+        {
+            "role": "user",
+            "content": (
+                prompt
+                + f"\n\n# Current opinions.md\n{current_theory}"
+                + f"\n\n# Current dead-ends.json\n{current_dead_ends}"
+            ),
+        },
     ]
 
     try:
@@ -257,6 +262,60 @@ def run_compression_pass(
         "triggered_count": passes.triggered_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
+
+
+def request_altitude_map(
+    cycle: int,
+    args: argparse.Namespace,
+    gradient: GradientState,
+    current_state: dict[str, object],
+    altitude_mode: str,
+    previous_map: str,
+) -> str:
+    """Run a metacognitive survey without invoking the solver schema."""
+    prompt_messages = hv.format_cycle_prompt(
+        cycle,
+        args.max_cycles,
+        "grind",
+        current_state,
+        altitude_mode=altitude_mode,
+        context_window_hud=(
+            f"Context budget: {gradient.output_budget} tokens (output limit). "
+            f"Window: {gradient.current_window}/{gradient.initial_window}."
+        ),
+        altitude_map=previous_map or None,
+        max_graveyard_entries=gradient.max_graveyard_entries,
+        prompt_budget_tokens=gradient.prompt_budget,
+    )
+    altitude_messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are the metacognitive survey instrument of Avalanche V4.7.\n"
+                "Output only a single raw JSON object with exactly one key: altitude_map.\n"
+                "The altitude_map value must be a plain string containing the survey text.\n"
+                "No markdown fences. No extra keys."
+            ),
+        },
+        prompt_messages[-1],
+    ]
+    payload = hv.invoke_openai(
+        altitude_messages,
+        args.model,
+        args.api_base,
+        api_key_env=args.api_key_env,
+        max_tokens=gradient.output_budget,
+        response_format_override="json_object",
+    )
+    if not isinstance(payload, dict):
+        raise RuntimeError("Altitude response must be a JSON object.")
+    altitude_text = str(payload.get("altitude_map", "")).strip()
+    if not altitude_text:
+        altitude_text = extract_altitude_map(payload)
+    altitude_text = altitude_text.strip()
+    if not altitude_text:
+        raise RuntimeError("Altitude response did not include altitude_map.")
+    return altitude_text[:1200]
 
 
 # ---------------------------------------------------------------------------
@@ -294,7 +353,6 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         hv.reset_cycle_usage()
         previous_opinions = hv.read_text(hv.OPINIONS_FILE)
         previous_state = load_state(hv.DEAD_END_STATE_FILE)
-        prev_dead_ends = json.loads(hv.read_text(hv.DEAD_ENDS_JSON_FILE) or "{}")
 
         # Advance gradient
         if not args.no_gradient:
@@ -322,17 +380,73 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         print(f"  [V4.7] Cycle {cycle}/{args.max_cycles} — {mode_label} (window={current_window}, budget={output_budget})")
 
         # --- Build prompt kwargs ---
-        prompt_kwargs: dict[str, Any] = {}
-        if not args.no_gradient:
-            prompt_kwargs["context_window_hud"] = (
+        prompt_kwargs: dict[str, Any] = {
+            "context_window_hud": (
                 f"Context budget: {output_budget} tokens (output limit). "
                 f"Window: {current_window}/{gradient.initial_window}."
-            )
-            prompt_kwargs["max_graveyard_entries"] = gradient.max_graveyard_entries
+            ),
+            "max_graveyard_entries": gradient.max_graveyard_entries,
+            "prompt_budget_tokens": gradient.prompt_budget,
+        }
         if altitude_mode:
             prompt_kwargs["altitude_mode"] = altitude_mode
         if altitude.last_map:
             prompt_kwargs["altitude_map"] = altitude.last_map
+
+        # --- Altitude cycle: extract map and skip oracle ---
+        if altitude_mode:
+            altitude_text = None
+            for format_attempt in range(FORMAT_FAIL_MAX_RETRIES + 1):
+                try:
+                    altitude_text = request_altitude_map(
+                        cycle, args, gradient, previous_state, altitude_mode, altitude.last_map
+                    )
+                    break
+                except RuntimeError as exc:
+                    if format_attempt < FORMAT_FAIL_MAX_RETRIES:
+                        print(f"  [V4.7] ALTITUDE_FAIL (retry {format_attempt + 1}): {exc}")
+                        hv.reset_cycle_usage()
+                        continue
+                    print(f"  [V4.7] ALTITUDE_FATAL: {exc}")
+                    hv.write_status(
+                        cycle,
+                        args.max_cycles,
+                        "FORMAT_FATAL",
+                        last_result="FAIL",
+                        last_error=str(exc),
+                    )
+            if altitude_text is None:
+                _append_jsonl(TELEMETRY_FILE, {
+                    "cycle": cycle,
+                    "window": current_window,
+                    "prompt_budget": gradient.prompt_budget,
+                    "output_budget": output_budget,
+                    "altitude_mode": altitude_mode,
+                    "event": "altitude_fatal",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                continue
+            altitude.last_map = altitude_text
+            print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
+
+            _append_jsonl(TELEMETRY_FILE, {
+                "cycle": cycle, "window": current_window,
+                "prompt_budget": gradient.prompt_budget,
+                "output_budget": output_budget,
+                "altitude_mode": altitude_mode,
+                "altitude_map_len": len(altitude.last_map),
+                "altitude_map": altitude.last_map,
+                "compression_pass": False,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            _append_jsonl(COMPRESSION_LOG_FILE, {
+                "cycle": cycle,
+                "event": f"altitude_{altitude_mode}",
+                "map_len": len(altitude.last_map),
+                "altitude_map": altitude.last_map,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            continue
 
         # --- Request cycle output ---
         workspace_snapshot = _snapshot_workspace()
@@ -362,32 +476,9 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         if grind_payload is None:
             _append_jsonl(TELEMETRY_FILE, {
                 "cycle": cycle, "window": current_window,
+                "prompt_budget": gradient.prompt_budget,
                 "output_budget": output_budget,
                 "event": "format_fatal",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-            continue
-
-        # --- Altitude cycle: extract map and skip oracle ---
-        if altitude_mode:
-            altitude.last_map = extract_altitude_map(grind_payload)
-            # Still persist the output (theory may have been updated)
-            hv.persist_model_output(grind_payload)
-            hv.run_command('git add . && git commit -m "V4.7: altitude cycle"')
-            print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
-
-            _append_jsonl(TELEMETRY_FILE, {
-                "cycle": cycle, "window": current_window,
-                "output_budget": output_budget,
-                "altitude_mode": altitude_mode,
-                "altitude_map_len": len(altitude.last_map),
-                "compression_pass": False,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-            _append_jsonl(COMPRESSION_LOG_FILE, {
-                "cycle": cycle,
-                "event": f"altitude_{altitude_mode}",
-                "map_len": len(altitude.last_map),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             continue
@@ -485,6 +576,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             print(f"  [CONVERGED] Final oracle: {oracle_score:.2f} ({passed}/{total})")
             _append_jsonl(TELEMETRY_FILE, {
                 "cycle": cycle, "window": current_window,
+                "prompt_budget": gradient.prompt_budget,
                 "output_budget": output_budget,
                 "oracle_fixed": round(fixed_score, 4),
                 "oracle_combined": round(oracle_score, 4),
@@ -506,6 +598,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         _append_jsonl(TELEMETRY_FILE, {
             "cycle": cycle,
             "window": current_window,
+            "prompt_budget": gradient.prompt_budget,
             "output_budget": output_budget,
             "oracle_fixed": round(fixed_score, 4),
             "oracle_combined": round(oracle_score, 4),

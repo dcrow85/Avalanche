@@ -510,6 +510,7 @@ def format_cycle_prompt(
     context_window_hud: str | None = None,
     altitude_map: str | None = None,
     max_graveyard_entries: int | None = None,
+    prompt_budget_tokens: int | None = None,
 ) -> list[dict[str, str]]:
     current_data = read_text(DATA_FILE) or "[]"
     current_opinions = read_text(OPINIONS_FILE)
@@ -517,10 +518,6 @@ def format_cycle_prompt(
     current_dead_ends_json = read_text(DEAD_ENDS_JSON_FILE) or json.dumps(blank_dead_ends(), indent=2)
     goal = read_text(GOAL_FILE)
 
-    # Compress SUPERSEDED theories for prompt; log full versions separately
-    compressed_de, _, _, _ = compress_dead_ends_for_prompt(
-        current_dead_ends_json, max_entries=max_graveyard_entries
-    )
     try:
         de_dict = json.loads(current_dead_ends_json) if current_dead_ends_json else {}
     except json.JSONDecodeError:
@@ -591,10 +588,6 @@ def format_cycle_prompt(
     # --- Build user prompt ---
     hud_prefix = f"{context_window_hud}\n\n" if context_window_hud else ""
 
-    altitude_map_section = ""
-    if altitude_map:
-        altitude_map_section = f"\n# Previous Altitude Map\n{altitude_map}\n"
-
     altitude_instruction = ""
     if altitude_mode == "low":
         altitude_instruction = (
@@ -616,18 +609,90 @@ def format_cycle_prompt(
             "Output a ## Altitude Map section (max 300 tokens) instead of solver_py."
         )
 
-    user_prompt = (
-        f"{hud_prefix}"
-        f"{instruction}\n"
-        f"\n# goal.md\n{goal}\n"
-        f"\n# data.json\n{current_data}\n"
-        f"\n# opinions.md\n{current_opinions}\n"
-        f"\n# dead-ends.json\n{compressed_de}\n"
-        f"{hunches_section}"
-        f"{altitude_map_section}"
-        f"\n# historical_ids\n{history_summary(current_state)}\n"
-        f"{altitude_instruction}"
-    )
+    def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
+        if max_chars is None or len(text) <= max_chars:
+            return text
+        if max_chars <= 48:
+            return text[:max_chars]
+        marker = "\n...[truncated for context budget]...\n"
+        available = max_chars - len(marker)
+        if available <= 0:
+            return text[:max_chars]
+        head = max(16, int(available * 0.75))
+        tail = max(0, available - head)
+        if tail == 0:
+            return text[: head + len(marker)] + marker
+        return text[:head].rstrip() + marker + text[-tail:].lstrip()
+
+    def _trim_data_json_for_prompt(data_json: str, max_chars: int | None) -> str:
+        if max_chars is None or len(data_json) <= max_chars:
+            return data_json
+        try:
+            payload = json.loads(data_json)
+        except json.JSONDecodeError:
+            return _truncate_for_prompt(data_json, max_chars)
+        if not isinstance(payload, list):
+            return _truncate_for_prompt(data_json, max_chars)
+        kept = list(payload)
+        while len(kept) > 1:
+            candidate = json.dumps(kept, indent=2)
+            if len(candidate) <= max_chars:
+                return candidate
+            kept = kept[1:]
+        candidate = json.dumps(kept, indent=2)
+        return candidate if len(candidate) <= max_chars else _truncate_for_prompt(candidate, max_chars)
+
+    prompt_budget_chars = prompt_budget_tokens * 4 if prompt_budget_tokens is not None else None
+    graveyard_entries_cap = max_graveyard_entries
+    opinions_cap = max(240, prompt_budget_chars // 4) if prompt_budget_chars else None
+    data_cap = max(160, prompt_budget_chars // 6) if prompt_budget_chars else None
+    hunches_cap = max(80, prompt_budget_chars // 12) if prompt_budget_chars and HUNCHES_ENABLED else None
+    altitude_map_cap = max(180, prompt_budget_chars // 5) if prompt_budget_chars and altitude_map else None
+
+    for _ in range(8):
+        compressed_de, _, _, _ = compress_dead_ends_for_prompt(
+            current_dead_ends_json, max_entries=graveyard_entries_cap
+        )
+        current_data_prompt = _trim_data_json_for_prompt(current_data, data_cap)
+        current_opinions_prompt = _truncate_for_prompt(current_opinions, opinions_cap)
+        current_hunches_prompt = _truncate_for_prompt(current_hunches or "(empty)", hunches_cap)
+        altitude_map_prompt = _truncate_for_prompt(altitude_map or "", altitude_map_cap)
+        hunches_section = (
+            f"\n# hunches.md (subliminal scratchpad)\n{current_hunches_prompt}\n"
+            if HUNCHES_ENABLED
+            else ""
+        )
+        altitude_map_section = (
+            f"\n# Previous Altitude Map\n{altitude_map_prompt}\n"
+            if altitude_map_prompt
+            else ""
+        )
+        user_prompt = (
+            f"{hud_prefix}"
+            f"{instruction}\n"
+            f"\n# goal.md\n{goal}\n"
+            f"\n# data.json\n{current_data_prompt}\n"
+            f"\n# opinions.md\n{current_opinions_prompt}\n"
+            f"\n# dead-ends.json\n{compressed_de}\n"
+            f"{hunches_section}"
+            f"{altitude_map_section}"
+            f"\n# historical_ids\n{history_summary(current_state)}\n"
+            f"{altitude_instruction}"
+        )
+        if prompt_budget_chars is None or len(user_prompt) <= prompt_budget_chars:
+            break
+        if graveyard_entries_cap is not None and graveyard_entries_cap > 3:
+            graveyard_entries_cap -= 1
+            continue
+        if data_cap is not None and data_cap > 120:
+            data_cap = max(120, int(data_cap * 0.8))
+        if opinions_cap is not None and opinions_cap > 160:
+            opinions_cap = max(160, int(opinions_cap * 0.85))
+        if altitude_map_cap is not None and altitude_map_cap > 120:
+            altitude_map_cap = max(120, int(altitude_map_cap * 0.85))
+        if hunches_cap is not None and hunches_cap > 60:
+            hunches_cap = max(60, int(hunches_cap * 0.85))
+
     return [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -692,8 +757,8 @@ def resolve_api_key(api_key_env: str = "") -> tuple[str | None, str]:
     return None, candidate_envs[0] if candidate_envs else "AVALANCHE_API_KEY"
 
 
-def response_format_payload(api_base: str) -> dict[str, object]:
-    response_type = DEFAULT_RESPONSE_FORMAT
+def response_format_payload(api_base: str, response_type_override: str | None = None) -> dict[str, object]:
+    response_type = response_type_override or DEFAULT_RESPONSE_FORMAT
     if not response_type:
         response_type = "json_object" if "haimaker.ai" in api_base.lower() else "json_schema"
     if response_type == "json_object":
@@ -816,6 +881,7 @@ def invoke_openai(
     *,
     api_key_env: str = "",
     max_tokens: int = 1200,
+    response_format_override: str | None = None,
 ) -> dict[str, object]:
     api_key, source_env = resolve_api_key(api_key_env)
     if not api_key:
@@ -826,7 +892,7 @@ def invoke_openai(
         "temperature": DEFAULT_TEMPERATURE,
         "messages": messages,
         "max_tokens": max_tokens,
-        "response_format": response_format_payload(api_base),
+        "response_format": response_format_payload(api_base, response_format_override),
     }
     request = urllib.request.Request(
         f"{api_base.rstrip('/')}/chat/completions",
@@ -915,6 +981,7 @@ def request_cycle_output(
     context_window_hud: str | None = None,
     altitude_map: str | None = None,
     max_graveyard_entries: int | None = None,
+    prompt_budget_tokens: int | None = None,
 ) -> dict[str, object]:
     messages = format_cycle_prompt(
         cycle, max_cycles, mode, current_state, failure_report,
@@ -922,6 +989,7 @@ def request_cycle_output(
         context_window_hud=context_window_hud,
         altitude_map=altitude_map,
         max_graveyard_entries=max_graveyard_entries,
+        prompt_budget_tokens=prompt_budget_tokens,
     )
     if required_falsifier is not None:
         messages = messages + [

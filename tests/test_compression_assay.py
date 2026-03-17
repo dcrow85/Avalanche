@@ -2,6 +2,7 @@
 """Unit tests for compression_assay.py — V4.7 dataclasses and logic."""
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from compression_assay import (
     CompressionPassState,
     GradientState,
     extract_altitude_map,
+    request_altitude_map,
 )
 
 
@@ -251,3 +253,45 @@ class TestExtractAltitudeMap:
         payload = {"opinions_md": f"## Altitude Map\n{long_text}"}
         result = extract_altitude_map(payload)
         assert len(result) <= 1200
+
+
+def test_request_altitude_map_uses_direct_json_object_path(monkeypatch):
+    import compression_assay as ca
+
+    captured: dict[str, object] = {}
+
+    def fake_format_cycle_prompt(*args, **kwargs):
+        captured["prompt_budget_tokens"] = kwargs.get("prompt_budget_tokens")
+        return [
+            {"role": "system", "content": "unused"},
+            {"role": "user", "content": "survey prompt"},
+        ]
+
+    def fake_invoke_openai(messages, model, api_base, **kwargs):
+        captured["messages"] = messages
+        captured["response_format_override"] = kwargs.get("response_format_override")
+        return {"altitude_map": "Map body"}
+
+    monkeypatch.setattr(ca.hv, "format_cycle_prompt", fake_format_cycle_prompt)
+    monkeypatch.setattr(ca.hv, "invoke_openai", fake_invoke_openai)
+
+    args = argparse.Namespace(
+        max_cycles=20,
+        model="anthropic/claude-haiku-4-5",
+        api_base="https://api.haimaker.ai/v1",
+        api_key_env="HAIMAKER_KEY",
+    )
+    gradient = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+
+    result = request_altitude_map(
+        cycle=10,
+        args=args,
+        gradient=gradient,
+        current_state={},
+        altitude_mode="low",
+        previous_map="",
+    )
+
+    assert result == "Map body"
+    assert captured["prompt_budget_tokens"] == gradient.prompt_budget
+    assert captured["response_format_override"] == "json_object"

@@ -327,12 +327,15 @@ def compress_dead_ends_for_prompt(
     """Compress SUPERSEDED theories to single-line summaries for prompt injection.
 
     ACTIVE entries remain fully expanded. SUPERSEDED basins/families are reduced
-    to a one-line summary. Locals (no status) are always fully rendered.
+    to a one-line summary. Locals (no status) are always fully rendered unless
+    prompt thinning requires them to be dropped.
 
     Args:
         dead_ends_json: Raw JSON string of the dead-ends structure.
-        max_entries: If set, limit total active entries (basins + families + locals)
-            to this many, keeping the most recent (last in list). Minimum 3.
+        max_entries: If set, limit total rendered entries. Thinning is priority
+            ordered: archived summaries drop first, then locals, then active
+            families, then active basins last. Within each tier, preserve the
+            most recent (last in list). Minimum 3.
 
     Returns:
         (compressed_text, active_count, archived_count, estimated_tokens_saved)
@@ -360,19 +363,34 @@ def compress_dead_ends_for_prompt(
 
     locals_ = dead_ends.get("locals", [])
 
-    # Graveyard thinning: limit total active entries when under compression
+    # Graveyard thinning: protect the live hierarchy and drop expendable material first.
     if max_entries is not None:
         cap = max(3, max_entries)
-        all_active = (
-            [("basin", b) for b in active_basins]
-            + [("family", f) for f in active_families]
-            + [("local", l) for l in locals_]
+        rendered_count = (
+            len(active_basins)
+            + len(active_families)
+            + len(locals_)
+            + len(archived_basins)
+            + len(archived_families)
         )
-        if len(all_active) > cap:
-            kept = all_active[-cap:]  # keep most recent (last in list)
-            active_basins = [x for tag, x in kept if tag == "basin"]
-            active_families = [x for tag, x in kept if tag == "family"]
-            locals_ = [x for tag, x in kept if tag == "local"]
+        overflow = rendered_count - cap
+
+        def _drop_oldest(items: list[dict], count: int) -> tuple[list[dict], int]:
+            if count <= 0 or not items:
+                return items, count
+            drop = min(len(items), count)
+            return items[drop:], count - drop
+
+        if overflow > 0:
+            archived_basins, overflow = _drop_oldest(archived_basins, overflow)
+        if overflow > 0:
+            archived_families, overflow = _drop_oldest(archived_families, overflow)
+        if overflow > 0:
+            locals_, overflow = _drop_oldest(locals_, overflow)
+        if overflow > 0:
+            active_families, overflow = _drop_oldest(active_families, overflow)
+        if overflow > 0:
+            active_basins, overflow = _drop_oldest(active_basins, overflow)
 
     active_count = len(active_basins) + len(active_families)
     archived_count = len(archived_basins) + len(archived_families)
