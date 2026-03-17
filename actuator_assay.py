@@ -28,12 +28,20 @@ os.environ.pop("AVALANCHE_ACTIVE", None)
 
 import hypervisor_v44 as hv
 from actuator_metrics import (
+    ast_branching_depth,
     delta_c_topological,
     e_ratio,
     epistemic_flux,
     evaluate_solver_fractional,
 )
-from v44_epistemics import blank_state, load_state, merge_state, save_state
+from v43_metrics import solver_ast_decomposition
+from v44_epistemics import (
+    blank_state,
+    compress_dead_ends_for_prompt,
+    load_state,
+    merge_state,
+    save_state,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -42,6 +50,8 @@ from v44_epistemics import blank_state, load_state, merge_state, save_state
 ASSAY_CONFIG_FILE = "assay_config.json"
 ASSAY_LOG_FILE = "assay_log.jsonl"
 ASSAY_REJECTIONS_FILE = "assay_rejections.jsonl"
+FORMAT_FAIL_MAX_RETRIES = 2
+FLUX_MINIMUM = 1.0
 
 FEEDBACK_STERILE = (
     "[GATE] Cycle rejected: E_ratio {e_ratio:.2f} exceeded threshold {threshold:.2f}. "
@@ -119,6 +129,55 @@ def format_feedback(branch: str, e_ratio_val: float, threshold: float,
         return FEEDBACK_RANDOM_STERILE.format(reservoir=reservoir)
 
 
+SURVIVING_BUFFER_SIZE = 10
+
+
+def format_telemetry_hud_rejection(
+    er: float, dc: float, flux: float, oracle_score: float,
+    threshold: float, proposed_solver: str, reservoir: float,
+    surviving_buffer: list[dict[str, float]],
+) -> str:
+    """Quantitative telemetry block for rejected cycles. Numbers only."""
+    decomp = solver_ast_decomposition(proposed_solver)
+    bd = ast_branching_depth(proposed_solver)
+
+    lines = [
+        "[CYCLE REJECTED]",
+        f"AST branching depth: {bd}",
+        f"AST algebraic nodes: {decomp['ast_arithmetic']}",
+        f"Topological action (dC): {dc:.1f}",
+        f"Semantic flux: {flux:.1f}",
+        f"E_ratio: {er:.2f}",
+        f"Threshold: {threshold:.2f}",
+        "---",
+    ]
+    if surviving_buffer:
+        n = len(surviving_buffer)
+        mean_dc = statistics.mean(m["delta_c"] for m in surviving_buffer)
+        mean_bd = statistics.mean(m["branching_depth"] for m in surviving_buffer)
+        mean_alg = statistics.mean(m["algebraic_nodes"] for m in surviving_buffer)
+        lines.append(f"Surviving cycle averages (last {n}):")
+        lines.append(f"  Mean branching depth: {mean_bd:.1f}")
+        lines.append(f"  Mean algebraic nodes: {mean_alg:.1f}")
+        lines.append(f"  Mean dC: {mean_dc:.1f}")
+    else:
+        lines.append("No surviving cycles yet.")
+    return "\n".join(lines)
+
+
+def format_telemetry_hud_survival(
+    er: float, oracle_score: float, oracle_passed: int,
+    oracle_total: int, reservoir: float,
+) -> str:
+    """Short confirmation for surviving cycles. Numbers only."""
+    return (
+        f"[CYCLE SURVIVED]\n"
+        f"E_ratio: {er:.2f}\n"
+        f"Oracle: {oracle_passed}/{oracle_total}\n"
+        f"Reservoir remaining: {reservoir:.0f}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # JSONL helpers
 # ---------------------------------------------------------------------------
@@ -141,6 +200,11 @@ def _load_jsonl(path: str) -> list[dict]:
                 except json.JSONDecodeError:
                     continue
     return records
+
+
+def _estimate_tokens(text: str) -> int:
+    """Rough token estimate: chars / 4."""
+    return max(1, len(text) // 4) if text else 0
 
 
 # ---------------------------------------------------------------------------
@@ -173,8 +237,8 @@ def _restore_workspace(snapshot: dict[str, str]) -> None:
 def run_calibration(
     args: argparse.Namespace,
     rng: random.Random,
-) -> tuple[list[dict], float, float, int]:
-    """Run unconstrained calibration cycles. Returns (metrics, threshold, avg_tokens, last_complexity)."""
+) -> tuple[list[dict], float, str, float, int]:
+    """Run unconstrained calibration cycles. Returns (metrics, threshold, threshold_source, avg_tokens, last_complexity)."""
 
     calibration_metrics: list[dict] = []
     e_ratios: list[float] = []
@@ -210,7 +274,7 @@ def run_calibration(
 
         # Compute assay metrics on this cycle
         curr_dead_ends = grind_payload.get("dead_ends", {})
-        test_cases = [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
+        test_cases = hv.build_fixed_oracle_suite() + [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
         oracle_score, _, _, _ = evaluate_solver_fractional(
             test_cases, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
@@ -282,17 +346,39 @@ def run_calibration(
         print(f"  [CAL] Cycle {cal_cycle}: E_ratio={er:.2f}, tokens={token_counts[-1]}, {result_str}")
 
     # Compute threshold and average tokens
+    # Patch 2026-03-16: require minimum 3 valid E_ratio measurements for
+    # auto-calibration. Run A-5 produced only 1 valid measurement (-2M),
+    # setting a negative threshold that trapped the model in 98.5% rejection.
+    # With insufficient data, fall back to 2× the max observed absolute value
+    # (permissive) rather than a pathological p75.
+    MIN_CAL_POINTS = 3
     avg_tokens = statistics.mean(token_counts) if token_counts else 3000
     if args.e_ratio_threshold > 0:
         threshold = args.e_ratio_threshold
+        threshold_source = "override"
+    elif len(e_ratios) >= MIN_CAL_POINTS:
+        raw_median = statistics.median(e_ratios)
+        ceiling = 10.0 * statistics.median([abs(er) for er in e_ratios])
+        threshold = min(raw_median, ceiling) if raw_median > 0 else raw_median
+        threshold_source = "auto_median_10x_clamp"
     elif e_ratios:
-        sorted_ratios = sorted(e_ratios)
-        idx = int(len(sorted_ratios) * 0.75)
-        threshold = sorted_ratios[min(idx, len(sorted_ratios) - 1)]
+        threshold = max(abs(er) for er in e_ratios) * 2.0
+        threshold_source = "auto_insufficient_data"
+        print(f"  [WARN] Only {len(e_ratios)} calibration E_ratios "
+              f"(need {MIN_CAL_POINTS}). Permissive fallback: {threshold:.2f}")
     else:
-        threshold = 50.0  # fallback
+        threshold = 50_000_000.0
+        threshold_source = "auto_no_data"
+        print(f"  [WARN] No valid calibration E_ratios. Default threshold: {threshold:.2f}")
 
-    return calibration_metrics, threshold, avg_tokens, previous_complexity or 0
+    # Negative thresholds are pathological — clamp to positive
+    if threshold < 0:
+        old = threshold
+        threshold = abs(threshold) * 2.0
+        threshold_source += "_neg_clamped"
+        print(f"  [WARN] Negative threshold {old:.2f} clamped to {threshold:.2f}")
+
+    return calibration_metrics, threshold, threshold_source, avg_tokens, previous_complexity or 0
 
 
 # ---------------------------------------------------------------------------
@@ -312,6 +398,14 @@ def run_gated_loop(
     reservoir = args.reservoir_multiplier * avg_tokens
     cycle = args.calibration_cycles  # continue numbering from calibration
     pending_feedback: str | None = None
+    surviving_metrics_buffer: list[dict[str, float]] = []
+    best_oracle_score: float = 0.0
+    quarantine_active: bool = False
+    quarantine_solver: str | None = None
+    quarantine_score: float = 0.0
+    quarantine_snapshot: dict[str, str] | None = None
+    consecutive_perfect_oracle: int = 0
+    previous_theory_hash: int | None = None
 
     print(f"\n  [GATE] Starting gated phase — Branch {args.branch}")
     print(f"  [GATE] Threshold: {threshold:.2f}, Reservoir: {reservoir:.0f} tokens")
@@ -330,48 +424,64 @@ def run_gated_loop(
         hv.write_status(cycle, 0, "GATED_GRIND")
         print(f"  [GATE] Cycle {cycle} — reservoir={reservoir:.0f}")
 
-        # Request model output (with feedback injection if previous cycle was rejected)
-        try:
-            messages = hv.format_cycle_prompt(
-                cycle, 999, "grind", previous_state
-            )
-            if pending_feedback:
-                messages = _inject_feedback(messages, pending_feedback)
-                pending_feedback = None
-
-            # Use the hypervisor's invoke_openai + validation loop directly
-            retry_messages = list(messages)
-            last_error = "No response received."
-            grind_payload = None
-            for _ in range(hv.SYNC_MAX_TURNS):
-                payload = hv.invoke_openai(
-                    retry_messages, args.model, args.api_base,
-                    api_key_env=args.api_key_env,
+        # Request model output (with feedback injection + FORMAT_FAIL retry)
+        format_retries = 0
+        grind_payload = None
+        for format_attempt in range(FORMAT_FAIL_MAX_RETRIES + 1):
+            try:
+                messages = hv.format_cycle_prompt(
+                    cycle, 999, "grind", previous_state
                 )
-                error = hv.validate_cycle_output(payload, previous_state)
-                if not error:
-                    grind_payload = payload
-                    break
-                last_error = error
-                retry_messages = retry_messages + [{
-                    "role": "user",
-                    "content": f"[SYSTEM LINTER ERROR] Validation failed: {error} Fix and resubmit.",
-                }]
+                if pending_feedback:
+                    messages = _inject_feedback(messages, pending_feedback)
+                    pending_feedback = None
 
-            if grind_payload is None:
-                raise RuntimeError(f"CYCLE_CRASH_FORMAT: {last_error}")
+                # Use the hypervisor's invoke_openai + validation loop directly
+                retry_messages = list(messages)
+                last_error = "No response received."
+                grind_payload = None
+                for _ in range(hv.SYNC_MAX_TURNS):
+                    payload = hv.invoke_openai(
+                        retry_messages, args.model, args.api_base,
+                        api_key_env=args.api_key_env,
+                    )
+                    error = hv.validate_cycle_output(payload, previous_state)
+                    if not error:
+                        grind_payload = payload
+                        break
+                    last_error = error
+                    retry_messages = retry_messages + [{
+                        "role": "user",
+                        "content": f"[SYSTEM LINTER ERROR] Validation failed: {error} Fix and resubmit.",
+                    }]
 
-        except RuntimeError as exc:
-            print(f"  [GATE] FORMAT_FAIL: {exc}")
-            tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
-            reservoir -= max(tokens_used, 1)
-            _append_jsonl(ASSAY_LOG_FILE, {
-                "phase": "gated", "cycle": cycle, "branch": args.branch,
-                "gate_decision": "format_fail", "tokens": tokens_used,
-                "reservoir": reservoir,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-            hv.write_status(cycle, 0, "FORMAT_FAIL", last_result="FAIL", last_error=str(exc))
+                if grind_payload is None:
+                    raise RuntimeError(f"CYCLE_CRASH_FORMAT: {last_error}")
+                break  # Success — exit format retry loop
+
+            except RuntimeError as exc:
+                attempt_tokens = hv._cycle_usage.get("api_total_tokens_cycle", 0)
+                reservoir -= max(attempt_tokens, 1)
+                format_retries += 1
+
+                if format_attempt < FORMAT_FAIL_MAX_RETRIES:
+                    print(f"  [GATE] FORMAT_FAIL (retry {format_retries}/{FORMAT_FAIL_MAX_RETRIES}): {exc}")
+                    hv.reset_cycle_usage()
+                    continue
+                else:
+                    print(f"  [GATE] FORMAT_FATAL after {format_retries} retries: {exc}")
+                    _append_jsonl(ASSAY_LOG_FILE, {
+                        "phase": "gated", "cycle": cycle, "branch": args.branch,
+                        "gate_decision": "format_fatal",
+                        "format_fail": True,
+                        "format_retries": format_retries,
+                        "tokens_consumed_this_cycle": attempt_tokens,
+                        "reservoir_remaining": round(reservoir, 0),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+                    hv.write_status(cycle, 0, "FORMAT_FATAL", last_result="FAIL", last_error=str(exc))
+
+        if grind_payload is None:
             continue
 
         # Write proposed solver temporarily to evaluate fractionally
@@ -381,7 +491,7 @@ def run_gated_loop(
         # Temporarily write solver so fractional oracle can load it
         hv.write_text(hv.SOLVER_FILE, proposed_solver + "\n")
 
-        test_cases = [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
+        test_cases = hv.build_fixed_oracle_suite() + [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
         oracle_score, passed, total, failure_report = evaluate_solver_fractional(
             test_cases, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
@@ -394,35 +504,146 @@ def run_gated_loop(
         flux = epistemic_flux(prev_dead_ends, proposed_dead_ends, oracle_score)
         er = e_ratio(dc, flux)
 
-        # Apply gate
-        if args.branch == "A":
-            rejected, reason = gate_decision_a(er, threshold, rng)
-        elif args.branch == "B":
-            rejected, reason = gate_decision_b(er, threshold, rng)
-        else:
-            rejected, reason = gate_decision_c(er, threshold, rng,
-                                                rejection_rate=rejection_rate)
+        # Gate decision defaults (may be overridden by quarantine recovery)
+        rejected = False
+        reason = ""
 
-        tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
-        reservoir -= max(tokens_used, 1)
+        # --- QUARANTINE RECOVERY CHECK (skipped in ungated mode) ---
+        if quarantine_active and not getattr(args, 'no_gate', False):
+            tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
+            reservoir -= max(tokens_used, 1)
+            if flux >= FLUX_MINIMUM:
+                # Theory updated — accept quarantined solver + current theory
+                print(f"  [QUARANTINE] RESOLVED: flux={flux:.1f} >= {FLUX_MINIMUM}. Accepting quarantined solver.")
+                proposed_solver = quarantine_solver
+                oracle_score = quarantine_score
+                best_oracle_score = max(best_oracle_score, quarantine_score)
+                quarantine_active = False
+                quarantine_solver = None
+                quarantine_score = 0.0
+                quarantine_snapshot = None
+                _append_jsonl(ASSAY_LOG_FILE, {
+                    "phase": "gated", "cycle": cycle, "branch": args.branch,
+                    "gate_decision": "quarantine_resolved",
+                    "oracle_score": round(oracle_score, 4),
+                    "flux": round(flux, 4),
+                    "tokens_consumed_this_cycle": tokens_used,
+                    "reservoir_remaining": round(reservoir, 0),
+                    "quarantine_active": False,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                hv.write_status(cycle, 0, "QUARANTINE_RESOLVED")
+                # Fall through to ACCEPTED path below (skip gate)
+                rejected = False
+                reason = "quarantine_resolved"
+                # Skip normal gate — jump past gate block
+            else:
+                # Theory not updated — discard quarantined solver
+                print(f"  [QUARANTINE] FAILED: flux={flux:.1f} < {FLUX_MINIMUM}. Discarding quarantined solver.")
+                _restore_workspace(quarantine_snapshot)
+                _append_jsonl(ASSAY_LOG_FILE, {
+                    "phase": "gated", "cycle": cycle, "branch": args.branch,
+                    "gate_decision": "quarantine_failed",
+                    "oracle_score": round(oracle_score, 4),
+                    "flux": round(flux, 4),
+                    "tokens_consumed_this_cycle": tokens_used,
+                    "reservoir_remaining": round(reservoir, 0),
+                    "quarantine_active": False,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                quarantine_active = False
+                quarantine_solver = None
+                quarantine_score = 0.0
+                quarantine_snapshot = None
+                hv.write_status(cycle, 0, "QUARANTINE_FAILED")
+                print(f"  [GATE] QUARANTINE_FAILED cycle {cycle}: flux={flux:.1f}")
+                continue  # Discard this cycle, move on
 
-        # Log the gate decision
+        # --- QUARANTINE TRIGGER CHECK (skipped in ungated mode) ---
+        if not getattr(args, 'no_gate', False) and not quarantine_active and oracle_score > best_oracle_score and flux < FLUX_MINIMUM:
+            tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
+            reservoir -= max(tokens_used, 1)
+            print(f"  [QUARANTINE] TRIGGERED: oracle={oracle_score:.2f} > best={best_oracle_score:.2f}, "
+                  f"flux={flux:.1f} < {FLUX_MINIMUM}")
+            quarantine_active = True
+            quarantine_solver = proposed_solver
+            quarantine_score = oracle_score
+            quarantine_snapshot = workspace_snapshot
+            _restore_workspace(workspace_snapshot)
+            _append_jsonl(ASSAY_LOG_FILE, {
+                "phase": "gated", "cycle": cycle, "branch": args.branch,
+                "gate_decision": "quarantined",
+                "oracle_score": round(oracle_score, 4),
+                "best_oracle_score": round(best_oracle_score, 4),
+                "flux": round(flux, 4),
+                "delta_c": round(dc, 4),
+                "e_ratio": round(er, 4),
+                "tokens_consumed_this_cycle": tokens_used,
+                "reservoir_remaining": round(reservoir, 0),
+                "quarantine_active": True,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            pending_feedback = (
+                f"[QUARANTINE] Oracle hit: {oracle_score:.2f} ({passed}/{total}). "
+                f"Flux: {flux:.3f}. Your solver produced empirical results "
+                f"without theoretical backing. You have ONE cycle to update "
+                f"your theory to explain this solver. If flux remains below "
+                f"{FLUX_MINIMUM}, the solver is annihilated."
+            )
+            hv.write_status(cycle, 0, "QUARANTINED")
+            print(f"  [GATE] QUARANTINED cycle {cycle}: oracle={oracle_score:.2f}, flux={flux:.1f}")
+            continue
+
+        # Apply gate (skipped if quarantine recovery already set the outcome)
+        if getattr(args, 'no_gate', False) and reason != "quarantine_resolved":
+            rejected = False
+            reason = "ungated"
+            tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
+            reservoir -= max(tokens_used, 1)
+        elif reason != "quarantine_resolved":
+            if args.branch == "A":
+                rejected, reason = gate_decision_a(er, threshold, rng)
+            elif args.branch == "B":
+                rejected, reason = gate_decision_b(er, threshold, rng)
+            else:
+                rejected, reason = gate_decision_c(er, threshold, rng,
+                                                    rejection_rate=rejection_rate)
+            tokens_used = hv._cycle_usage.get("api_total_tokens_cycle", 0)
+            reservoir -= max(tokens_used, 1)
+
+        # Compute theory counts for logging
+        current_de_json = hv.read_text(hv.DEAD_ENDS_JSON_FILE) or "{}"
+        _, active_count, archived_count, _ = compress_dead_ends_for_prompt(current_de_json)
+        decomp_log = solver_ast_decomposition(proposed_solver)
+
+        # Log the gate decision (full spec schema)
         log_entry = {
-            "phase": "gated",
             "cycle": cycle,
-            "branch": args.branch,
-            "gate_decision": "rejected" if rejected else "accepted",
-            "gate_reason": reason,
-            "e_ratio": round(er, 4),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "reservoir_remaining": round(reservoir, 0),
+            "tokens_consumed_this_cycle": tokens_used,
+            "theory_tokens": _estimate_tokens(json.dumps(proposed_dead_ends)),
+            "solver_tokens": _estimate_tokens(proposed_solver),
+            "format_fail": False,
+            "format_retries": format_retries,
+            "ast_branching_depth": ast_branching_depth(proposed_solver),
+            "ast_algebraic_nodes": decomp_log["ast_arithmetic"],
             "delta_c": round(dc, 4),
             "flux": round(flux, 4),
+            "e_ratio": round(er, 4),
+            "gate_decision": "rejected" if rejected else "accepted",
+            "gate_reason": reason,
             "oracle_score": round(oracle_score, 4),
             "oracle_passed": passed,
             "oracle_total": total,
+            "oracle_max": total,
+            "quarantine_active": quarantine_active,
+            "active_theories": active_count,
+            "archived_theories": archived_count,
+            "prompt_context_tokens": hv._cycle_usage.get("api_prompt_tokens_cycle", 0),
             "threshold": round(threshold, 4),
-            "tokens": tokens_used,
-            "reservoir": round(reservoir, 0),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "branch": args.branch,
+            "phase": "gated",
         }
         _append_jsonl(ASSAY_LOG_FILE, log_entry)
 
@@ -442,8 +663,14 @@ def run_gated_loop(
             # Restore workspace to pre-cycle state
             _restore_workspace(workspace_snapshot)
 
-            # Set feedback for next cycle
-            pending_feedback = format_feedback(args.branch, er, threshold, reservoir)
+            # Set feedback for next cycle — telemetry HUD for A/B, null for C
+            if args.branch in ("A", "B"):
+                pending_feedback = format_telemetry_hud_rejection(
+                    er, dc, flux, oracle_score, threshold,
+                    proposed_solver, reservoir, surviving_metrics_buffer,
+                )
+            else:
+                pending_feedback = format_feedback(args.branch, er, threshold, reservoir)
 
             hv.write_status(cycle, 0, "GATED_REJECTED", last_result="REJECTED",
                             last_error=f"E_ratio={er:.2f} ({reason})")
@@ -507,7 +734,55 @@ def run_gated_loop(
                             last_error=output[-500:], metrics=metrics)
             print(f"  [GATE] ACCEPTED+FAIL cycle {cycle}: E_ratio={er:.2f}")
 
-    # Reservoir exhausted
+        # Track surviving cycle metrics + update best oracle
+        decomp = solver_ast_decomposition(proposed_solver)
+        surviving_metrics_buffer.append({
+            "e_ratio": er,
+            "delta_c": dc,
+            "flux": flux,
+            "oracle_score": oracle_score,
+            "branching_depth": float(ast_branching_depth(proposed_solver)),
+            "algebraic_nodes": float(decomp["ast_arithmetic"]),
+        })
+        if len(surviving_metrics_buffer) > SURVIVING_BUFFER_SIZE:
+            surviving_metrics_buffer.pop(0)
+        best_oracle_score = max(best_oracle_score, oracle_score)
+
+        # --- CONVERGENCE DETECTION ---
+        current_theory = hv.read_text(hv.OPINIONS_FILE).strip()
+        current_hash = hash(current_theory)
+        if oracle_score >= 1.0 and current_hash == previous_theory_hash:
+            consecutive_perfect_oracle += 1
+        else:
+            consecutive_perfect_oracle = 0 if oracle_score < 1.0 else 1
+        previous_theory_hash = current_hash
+
+        if consecutive_perfect_oracle >= 5:
+            print(f"\n  [CONVERGED] 5 consecutive perfect oracle cycles with stable theory.")
+            print(f"  [CONVERGED] Final oracle: {oracle_score:.2f} ({passed}/{total})")
+            _append_jsonl(ASSAY_LOG_FILE, {
+                "phase": "gated", "cycle": cycle, "branch": args.branch,
+                "gate_decision": "converged",
+                "oracle_score": round(oracle_score, 4),
+                "consecutive_perfect": consecutive_perfect_oracle,
+                "reservoir_remaining": round(reservoir, 0),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            hv.write_status(cycle, 0, "CONVERGED", last_result="SOLVED")
+            print(f"\n  [ASSAY] CONVERGED after {cycle} total cycles.")
+            return
+
+        # Survival telemetry for next cycle
+        pending_feedback = format_telemetry_hud_survival(
+            er, oracle_score, passed, total, reservoir,
+        )
+
+    # Reservoir exhausted — discard any active quarantine
+    if quarantine_active:
+        print(f"  [QUARANTINE] Reservoir exhausted during quarantine. Discarding quarantined solver.")
+        if quarantine_snapshot:
+            _restore_workspace(quarantine_snapshot)
+        quarantine_active = False
     hv.write_status(cycle, 0, "RESERVOIR_EXHAUSTED", last_result="COMPLETE")
     print(f"\n  [ASSAY] Reservoir exhausted after {cycle} total cycles.")
 
@@ -544,6 +819,10 @@ def parse_args() -> argparse.Namespace:
                         help="Oracle test cases per cycle")
     parser.add_argument("--response-format", choices=["json_schema", "json_object"],
                         default=None, help="Override API response format")
+    parser.add_argument("--hunches", action="store_true",
+                        help="Enable subliminal ledger (hunches.md)")
+    parser.add_argument("--no-gate", action="store_true",
+                        help="Phase 2 mode: accept every cycle, skip E_ratio gate")
     return parser.parse_args()
 
 
@@ -573,6 +852,10 @@ def main() -> None:
     rng = random.Random(effective_seed)
     hv._rng.seed(effective_seed)
 
+    # Enable hunches if requested
+    if args.hunches:
+        hv.HUNCHES_ENABLED = True
+
     # Set up workspace
     workspace_root = Path(args.workspace_root).resolve()
     workspace = workspace_root / f"branch-{args.branch}-run-{args.run_id}"
@@ -582,7 +865,10 @@ def main() -> None:
     hv.setup_workspace()
 
     # Add assay-specific files to gitignore so git clean -fd won't delete them
-    assay_ignores = {ASSAY_CONFIG_FILE, ASSAY_LOG_FILE, ASSAY_REJECTIONS_FILE}
+    from v44_epistemics import SUPERSEDED_LOG_FILE
+    assay_ignores = {ASSAY_CONFIG_FILE, ASSAY_LOG_FILE, ASSAY_REJECTIONS_FILE, SUPERSEDED_LOG_FILE}
+    if args.hunches:
+        assay_ignores.add(hv.HUNCHES_FILE)
     gitignore_path = ".gitignore"
     existing = set()
     if os.path.exists(gitignore_path):
@@ -602,7 +888,7 @@ def main() -> None:
 
     # --- Phase 1: Calibration ---
     print(f"\n  [PHASE 1] Calibration burn ({args.calibration_cycles} cycles)")
-    cal_metrics, threshold, avg_tokens, last_complexity = run_calibration(args, rng)
+    cal_metrics, threshold, threshold_source, avg_tokens, last_complexity = run_calibration(args, rng)
 
     # For Branch C, compute rejection rate from Branch A if not provided
     rejection_rate = args.rejection_rate
@@ -613,19 +899,20 @@ def main() -> None:
 
     # Write frozen config
     config = {
-        "branch": args.branch,
+        "branch": f"{args.branch}-v4.5",
         "run_id": args.run_id,
         "model": args.model,
         "seed": effective_seed,
         "calibration_cycles": args.calibration_cycles,
         "reservoir_multiplier": args.reservoir_multiplier,
         "e_ratio_threshold": round(threshold, 4),
-        "e_ratio_threshold_source": "override" if args.e_ratio_threshold > 0 else "auto_p75",
+        "e_ratio_threshold_source": threshold_source,
         "avg_tokens_per_cycle": round(avg_tokens, 0),
         "token_reservoir": round(args.reservoir_multiplier * avg_tokens, 0),
         "rejection_rate": round(rejection_rate, 4) if args.branch == "C" else None,
         "tests_per_cycle": args.tests_per_cycle,
         "calibration_e_ratios": [round(m.get("e_ratio", 0), 4) for m in cal_metrics],
+        "hunches_enabled": args.hunches,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     hv.write_json(ASSAY_CONFIG_FILE, config)

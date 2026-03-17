@@ -316,6 +316,101 @@ def history_summary(state: dict[str, object]) -> str:
     return " | ".join(parts) if parts else "No historical dead-end ids yet."
 
 
+SUPERSEDED_LOG_FILE = "superseded_theories.jsonl"
+
+
+def compress_dead_ends_for_prompt(
+    dead_ends_json: str,
+) -> tuple[str, int, int, int]:
+    """Compress SUPERSEDED theories to single-line summaries for prompt injection.
+
+    ACTIVE entries remain fully expanded. SUPERSEDED basins/families are reduced
+    to a one-line summary. Locals (no status) are always fully rendered.
+
+    Returns:
+        (compressed_text, active_count, archived_count, estimated_tokens_saved)
+    """
+    try:
+        dead_ends = json.loads(dead_ends_json) if dead_ends_json else {}
+    except json.JSONDecodeError:
+        dead_ends = {}
+
+    active_basins = []
+    archived_basins = []
+    for basin in dead_ends.get("basins", []):
+        if str(basin.get("status", "ACTIVE")) == "SUPERSEDED":
+            archived_basins.append(basin)
+        else:
+            active_basins.append(basin)
+
+    active_families = []
+    archived_families = []
+    for family in dead_ends.get("families", []):
+        if str(family.get("status", "ACTIVE")) == "SUPERSEDED":
+            archived_families.append(family)
+        else:
+            active_families.append(family)
+
+    locals_ = dead_ends.get("locals", [])
+
+    active_count = len(active_basins) + len(active_families)
+    archived_count = len(archived_basins) + len(archived_families)
+
+    # Build the active-only JSON (full detail)
+    active_de = {
+        "basins": active_basins,
+        "families": active_families,
+        "locals": locals_,
+    }
+    active_json = json.dumps(active_de, indent=2)
+
+    # Build archived summaries (one line each)
+    archived_lines = []
+    for basin in archived_basins:
+        bid = str(basin.get("id", "?"))
+        claim = str(basin.get("claim", "?"))
+        archived_lines.append(f"[SUPERSEDED] basin {bid}: {claim}")
+    for family in archived_families:
+        fid = str(family.get("id", "?"))
+        claim = str(family.get("claim", "?"))
+        archived_lines.append(f"[SUPERSEDED] family {fid}: {claim}")
+
+    # Estimate tokens saved
+    original_len = len(dead_ends_json) if dead_ends_json else 0
+    compressed_len = len(active_json) + sum(len(line) for line in archived_lines)
+    tokens_saved = max(0, (original_len - compressed_len) // 4)
+
+    # Assemble
+    header = f"[ACTIVE_THEORIES: {active_count} | ARCHIVED: {archived_count} | TOKENS_SAVED: ~{tokens_saved}]"
+    parts = [header, active_json]
+    if archived_lines:
+        parts.append("")
+        parts.append("# Archived (superseded, compressed):")
+        parts.extend(archived_lines)
+
+    compressed_text = "\n".join(parts)
+    return compressed_text, active_count, archived_count, tokens_saved
+
+
+def log_superseded_theories(dead_ends: dict, log_path: str) -> None:
+    """Append full SUPERSEDED entries to a JSONL file for post-run analysis."""
+    from datetime import datetime, timezone
+    superseded = []
+    for basin in dead_ends.get("basins", []):
+        if str(basin.get("status", "ACTIVE")) == "SUPERSEDED":
+            superseded.append({"tier": "basin", **basin})
+    for family in dead_ends.get("families", []):
+        if str(family.get("status", "ACTIVE")) == "SUPERSEDED":
+            superseded.append({"tier": "family", **family})
+    if superseded:
+        with open(log_path, "a", encoding="utf-8", newline="\n") as f:
+            record = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "entries": superseded,
+            }
+            f.write(json.dumps(record) + "\n")
+
+
 def dead_end_metrics(
     previous_active: dict[str, list[dict[str, object]]],
     current_active: dict[str, list[dict[str, object]]],

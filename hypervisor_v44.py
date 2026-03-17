@@ -13,6 +13,7 @@ import importlib.util
 import json
 import os
 import random
+import re
 import signal
 import subprocess
 import sys
@@ -34,12 +35,15 @@ from v44_epistemics import (
     array_signature,
     blank_dead_ends,
     blank_state,
+    compress_dead_ends_for_prompt,
     dead_end_metrics,
     history_summary,
     load_state,
+    log_superseded_theories,
     merge_state,
     render_dead_ends_md,
     save_state,
+    SUPERSEDED_LOG_FILE,
     tracked_array_signatures,
     validate_dead_ends,
 )
@@ -61,6 +65,9 @@ SOLVER_FILE = "solver.py"
 AGENTS_FILE = "AGENTS.md"
 
 OPINIONS_LIMIT = 75
+HUNCHES_FILE = "hunches.md"
+HUNCHES_LIMIT = 15
+HUNCHES_ENABLED = False
 DEFAULT_MAX_CYCLES = 20
 DATA_MAX_PAIRS = 4
 DEFAULT_MODEL = os.environ.get("AVALANCHE_MODEL", os.environ.get("AVALANCHE_OPENAI_MODEL", "gpt-4o"))
@@ -146,6 +153,39 @@ OUTPUT_SCHEMA = {
         "additionalProperties": False,
     },
 }
+
+OUTPUT_EXAMPLE = (
+    '{\n'
+    '  "opinions_md": "The hidden law applies a counting rule over positions. '
+    'Elements are kept or negated based on a structural property of the array.",\n'
+    '  "dead_ends": {\n'
+    '    "basins": [\n'
+    '      {"id": "B1", "status": "ACTIVE", "claim": "position-based matching rules", '
+    '"cited_families": ["F1", "F2"]}\n'
+    '    ],\n'
+    '    "families": [\n'
+    '      {"id": "F1", "status": "ACTIVE", "claim": "Negate elements whose value matches a neighbor comparison", '
+    '"falsifying_arrays": [[2, 1, 3], [4, 1, 3, 2]]},\n'
+    '      {"id": "F2", "status": "ACTIVE", "claim": "Negate elements at positions where a running count is odd", '
+    '"falsifying_arrays": [[3, 1, 2], [5, 2, 4, 1, 3]]}\n'
+    '    ],\n'
+    '    "locals": [\n'
+    '      {"failing_hypothesis": "negate elements smaller than their index", "falsifying_array": [1, 4, 2, 3]}\n'
+    '    ]\n'
+    '  },\n'
+    '  "solver_py": "def transduce(arr: list[int]) -> list[int]:\\n'
+    '    result = []\\n'
+    '    for i, x in enumerate(arr):\\n'
+    '        if should_negate(i, arr):\\n'
+    '            result.append(-x)\\n'
+    '        else:\\n'
+    '            result.append(x)\\n'
+    '    return result\\n\\n'
+    'def should_negate(i: int, arr: list[int]) -> bool:\\n'
+    '    # TODO: discover the rule\\n'
+    '    return False"\n'
+    '}'
+)
 
 _status_log: list[dict[str, object]] = []
 _metric_history: list[dict[str, object]] = []
@@ -295,11 +335,24 @@ def write_status(
 
 
 def hidden_law(arr: list[int]) -> list[int]:
-    expected = []
-    for i, x in enumerate(arr):
-        strikes = sum(1 for j in range(i) if (i - j) % arr[j] == 0)
-        expected.append(-x if strikes % 2 == 1 else x)
-    return expected
+    """Orbit Parity: decompose the 1-indexed permutation into disjoint cycles.
+    Negate elements that belong to even-length cycles."""
+    n = len(arr)
+    visited = [False] * n
+    result = list(arr)
+    for i in range(n):
+        if visited[i]:
+            continue
+        cycle = []
+        j = i
+        while not visited[j]:
+            visited[j] = True
+            cycle.append(j)
+            j = arr[j] - 1  # 1-indexed permutation -> 0-indexed
+        if len(cycle) % 2 == 0:
+            for idx in cycle:
+                result[idx] = -arr[idx]
+    return result
 
 
 def load_solver_module(path: str) -> tuple[types.ModuleType | None, str | None]:
@@ -333,7 +386,9 @@ def evaluate_solver(test_cases: list[list[int]]) -> tuple[bool, str, dict[str, l
     if not callable(transduce):
         return False, "Ratchet Fail: solver.py or transduce(arr) not found.", None
 
-    for arr in test_cases:
+    # Fixed oracle suite always tested first, then random cases
+    all_cases = build_fixed_oracle_suite() + test_cases
+    for arr in all_cases:
         expected = hidden_law(arr)
         try:
             if os.name != "nt":
@@ -419,6 +474,7 @@ def setup_workspace() -> None:
             "Create `solver.py` with `def transduce(arr: list[int]) -> list[int]:`.\n\n"
             "The Oracle contains a hidden mathematical law.\n"
             "It tests against random permutation arrays of distinct positive integers each cycle.\n"
+            "The output has the same length as the input. Each element is either kept or negated.\n"
             "Discover the hidden rule transforming input into output.\n"
             "You cannot hardcode answers, lookup tables, or witness caches.\n",
         )
@@ -436,6 +492,8 @@ def setup_workspace() -> None:
         write_json(DATA_FILE, [])
     if not os.path.exists(METRICS_FILE):
         write_text(METRICS_FILE, "")
+    if HUNCHES_ENABLED and not os.path.exists(HUNCHES_FILE):
+        write_text(HUNCHES_FILE, "")
 
     if created or not has_git_head():
         run_command('git add . && git commit -m "Avalanche: V4.4 initial baseline"')
@@ -450,17 +508,33 @@ def format_cycle_prompt(
 ) -> list[dict[str, str]]:
     current_data = read_text(DATA_FILE) or "[]"
     current_opinions = read_text(OPINIONS_FILE)
+    current_hunches = read_text(HUNCHES_FILE) if HUNCHES_ENABLED else ""
     current_dead_ends_json = read_text(DEAD_ENDS_JSON_FILE) or json.dumps(blank_dead_ends(), indent=2)
     goal = read_text(GOAL_FILE)
+
+    # Compress SUPERSEDED theories for prompt; log full versions separately
+    compressed_de, _, _, _ = compress_dead_ends_for_prompt(current_dead_ends_json)
+    try:
+        de_dict = json.loads(current_dead_ends_json) if current_dead_ends_json else {}
+    except json.JSONDecodeError:
+        de_dict = {}
+    log_superseded_theories(de_dict, SUPERSEDED_LOG_FILE)
 
     system_prompt = (
         "You are the combinatorial engine of the Avalanche V4.4.1 system.\n"
         "Output only the JSON object matching the provided schema.\n"
         "No conversational filler. No markdown fences. No extra keys.\n"
+        f"\nExample of a correctly formatted response:\n{OUTPUT_EXAMPLE}\n"
     )
+
+    hunches_constraint = (
+        f"- hunches_md: maximum {HUNCHES_LIMIT} words. Raw intuitions, not theories. "
+        "Fragments of what nags you before you can name it.\n"
+    ) if HUNCHES_ENABLED else ""
 
     common_constraints = (
         f"- opinions_md must stay under {OPINIONS_LIMIT} words.\n"
+        f"{hunches_constraint}"
         "- Rewrite dead_ends as valid JSON with keys basins, families, locals.\n"
         "- Basin entry shape: {id, status, claim, cited_families}.\n"
         "- Family entry shape: {id, status, claim, falsifying_arrays}.\n"
@@ -479,13 +553,16 @@ def format_cycle_prompt(
         "- All oracle inputs are permutations of distinct positive integers. Do not rely on duplicates, lookup tables, or memorized witness caches.\n"
     )
 
+    hunches_return_key = "- hunches_md\n" if HUNCHES_ENABLED else ""
+
     if mode == "grind":
         instruction = (
             f"Cycle {cycle} of {max_cycles}.\n"
             "Return updated contents for:\n"
             "- opinions_md\n"
             "- dead_ends\n"
-            "- solver_py\n\n"
+            "- solver_py\n"
+            f"{hunches_return_key}\n"
             f"Constraints:\n{common_constraints}"
             "- solver_py must define transduce(arr: list[int]) -> list[int].\n"
             "- Commit to one specific mathematical hypothesis.\n"
@@ -502,12 +579,15 @@ def format_cycle_prompt(
             f"Constraints remain:\n{common_constraints}"
         )
 
+    hunches_section = f"\n# hunches.md (subliminal scratchpad)\n{current_hunches or '(empty)'}\n" if HUNCHES_ENABLED else ""
+
     user_prompt = (
         f"{instruction}\n"
         f"\n# goal.md\n{goal}\n"
         f"\n# data.json\n{current_data}\n"
         f"\n# opinions.md\n{current_opinions}\n"
-        f"\n# dead-ends.json\n{current_dead_ends_json}\n"
+        f"\n# dead-ends.json\n{compressed_de}\n"
+        f"{hunches_section}"
         f"\n# historical_ids\n{history_summary(current_state)}\n"
     )
     return [
@@ -580,9 +660,15 @@ def response_format_payload(api_base: str) -> dict[str, object]:
         response_type = "json_object" if "haimaker.ai" in api_base.lower() else "json_schema"
     if response_type == "json_object":
         return {"type": "json_object"}
+    schema = OUTPUT_SCHEMA
+    if HUNCHES_ENABLED:
+        import copy
+        schema = copy.deepcopy(OUTPUT_SCHEMA)
+        schema["schema"]["properties"]["hunches_md"] = {"type": "string"}
+        schema["schema"]["required"].append("hunches_md")
     return {
         "type": "json_schema",
-        "json_schema": OUTPUT_SCHEMA,
+        "json_schema": schema,
     }
 
 
@@ -831,6 +917,10 @@ def persist_model_output(payload: dict[str, object]) -> None:
     write_json(DEAD_ENDS_JSON_FILE, dead_ends)
     write_text(DEAD_ENDS_FILE, render_dead_ends_md(dead_ends))
     write_text(SOLVER_FILE, solver_py + "\n")
+    if HUNCHES_ENABLED:
+        hunches_md = str(payload.get("hunches_md", "")).strip()
+        if hunches_md:
+            write_text(HUNCHES_FILE, hunches_md + "\n")
 
 
 def compute_cycle_metrics(
@@ -1074,6 +1164,25 @@ def generate_permutation_array(
 
 def generate_test_cases(sample_size: int) -> list[list[int]]:
     return [generate_permutation_array(_rng) for _ in range(sample_size)]
+
+
+def build_fixed_oracle_suite() -> list[list[int]]:
+    """12 curated permutations covering diverse cycle structures for orbit parity.
+    Every ratchet evaluation MUST pass all of these."""
+    return [
+        [1, 2, 3],                         # 3×1-cycle (all odd) → no negation
+        [2, 1, 3],                         # 1×2-cycle + 1×1-cycle → positions 1,2 negated
+        [2, 3, 1],                         # 1×3-cycle (odd) → no negation
+        [2, 1, 4, 3],                      # 2×2-cycle → all negated
+        [2, 3, 4, 1],                      # 1×4-cycle (even) → all negated
+        [2, 3, 4, 5, 1],                   # 1×5-cycle (odd) → no negation
+        [2, 1, 4, 5, 3],                   # 1×2-cycle + 1×3-cycle → positions 1,2 only
+        [1, 2, 3, 4, 5],                   # 5×1-cycle (identity) → no negation
+        [2, 1, 5, 6, 3, 4, 7, 9, 8, 10],  # 2-cycle + 3-cycle + 2-cycle + 1-cycles → mixed
+        [2, 3, 4, 5, 6, 1, 7, 8],         # 1×6-cycle + 2×1-cycle → positions 1-6
+        [2, 3, 4, 5, 6, 7, 1],            # 1×7-cycle (odd) → no negation
+        [2, 3, 1, 5, 6, 4],               # 2×3-cycle → no negation
+    ]
 
 
 def select_adversarial_pairs_jittered(

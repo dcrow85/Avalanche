@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from actuator_metrics import (
     EPSILON,
     _dead_end_diff,
+    ast_branching_depth,
     delta_c_topological,
     e_ratio,
     epistemic_flux,
@@ -263,3 +264,37 @@ def test_evaluate_fractional_crash():
         assert "Crash" in failure or "boom" in failure
     finally:
         os.unlink(path)
+
+
+# ---------------------------------------------------------------------------
+# ast_branching_depth
+# ---------------------------------------------------------------------------
+
+def test_ast_branching_depth_flat():
+    """Flat code with no branches → 0."""
+    code = "def f(x):\n    return x * 2 + 3\n"
+    assert ast_branching_depth(code) == 0
+
+
+def test_ast_branching_depth_nested():
+    """Nested if/for → reports max depth of a branching node."""
+    code = (
+        "def f(arr):\n"
+        "    for i in range(len(arr)):\n"
+        "        if arr[i] > 0:\n"
+        "            for j in range(i):\n"
+        "                if arr[j] < arr[i]:\n"
+        "                    pass\n"
+    )
+    result = ast_branching_depth(code)
+    assert result >= 4, f"Expected depth >= 4 for deeply nested code, got {result}"
+
+
+def test_ast_branching_depth_empty():
+    """Empty string → 0."""
+    assert ast_branching_depth("") == 0
+
+
+def test_ast_branching_depth_syntax_error():
+    """Syntax error → 0 graceful fallback."""
+    assert ast_branching_depth("def f(:\n  broken") == 0

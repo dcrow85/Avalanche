@@ -56,6 +56,19 @@ def delta_c_topological(solver_code: str) -> float:
     return penalty - reward
 
 
+def ast_branching_depth(solver_code: str) -> int:
+    """Maximum nesting depth of branching nodes in the solver AST."""
+    try:
+        tree = ast.parse(solver_code or "")
+    except SyntaxError:
+        return 0
+    max_depth = 0
+    for node, depth in _walk_with_depth(tree):
+        if isinstance(node, BRANCHING_NODES):
+            max_depth = max(max_depth, depth)
+    return max_depth
+
+
 # ---------------------------------------------------------------------------
 # Epistemic Flux — structural diff of dead-end hierarchy
 # ---------------------------------------------------------------------------
