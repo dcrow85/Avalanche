@@ -1041,6 +1041,21 @@ def persist_model_output(payload: dict[str, object]) -> None:
             write_text(HUNCHES_FILE, hunches_md + "\n")
 
 
+def persist_dead_end_workspace(state: dict[str, object]) -> None:
+    """Reconcile workspace dead-end files with the canonical in-memory state.
+
+    Call after any path that resets git state (git reset --hard) and then
+    fails to persist new model output (FORMAT_FAIL, exception recovery).
+    Ensures dead-ends.json and dead-ends.md reflect the current accumulated
+    state rather than stale data from the last git commit.
+    """
+    active_de = state.get("active", blank_dead_ends())
+    if not isinstance(active_de, dict):
+        active_de = blank_dead_ends()
+    write_json(DEAD_ENDS_JSON_FILE, active_de)
+    write_text(DEAD_ENDS_FILE, render_dead_ends_md(active_de))
+
+
 def compute_cycle_metrics(
     cycle: int,
     previous_opinions: str,
@@ -1241,6 +1256,7 @@ def main() -> None:
         except RuntimeError as exc:
             last_error = str(exc)
             write_status(cycle, target_cycles, "FORMAT_FAIL", last_result="FAIL", last_error=last_error)
+            persist_dead_end_workspace(previous_state)
             continue
 
         persist_model_output(fail_payload)

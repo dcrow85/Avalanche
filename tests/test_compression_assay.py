@@ -24,110 +24,110 @@ from compression_assay import (
 
 class TestGradientStateLinear:
     def test_initial_window(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
-        assert g.current_window == 1200
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+        assert g.current_prompt_budget == 1200
 
     def test_tick_shrinks(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         g.tick()
-        assert g.current_window < 1200
+        assert g.current_prompt_budget < 1200
 
     def test_reaches_floor(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         for _ in range(200):
             g.tick()
-        assert g.current_window == 400
+        assert g.current_prompt_budget == 400
 
     def test_midpoint(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         for _ in range(50):
             g.tick()
         # At 50% progress: 1200 - 800 * 0.5 = 800
-        assert g.current_window == 800
+        assert g.current_prompt_budget == 800
 
     def test_monotonically_decreasing(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
-        windows = [g.current_window]
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+        windows = [g.current_prompt_budget]
         for _ in range(100):
             g.tick()
-            windows.append(g.current_window)
+            windows.append(g.current_prompt_budget)
         for i in range(len(windows) - 1):
             assert windows[i] >= windows[i + 1]
 
 
 class TestGradientStateLog:
     def test_reaches_floor(self):
-        g = GradientState(initial_window=1200, floor=400, decay="log", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="log", total_cycles=100)
         for _ in range(100):
             g.tick()
-        assert g.current_window == 400
+        assert g.current_prompt_budget == 400
 
     def test_drops_faster_initially(self):
-        g_lin = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
-        g_log = GradientState(initial_window=1200, floor=400, decay="log", total_cycles=100)
+        g_lin = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+        g_log = GradientState(initial_prompt_budget=1200, floor=400, decay="log", total_cycles=100)
         for _ in range(10):
             g_lin.tick()
             g_log.tick()
         # Log decay drops faster initially
-        assert g_log.current_window < g_lin.current_window
+        assert g_log.current_prompt_budget < g_lin.current_prompt_budget
 
     def test_monotonically_decreasing(self):
-        g = GradientState(initial_window=1200, floor=400, decay="log", total_cycles=100)
-        windows = [g.current_window]
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="log", total_cycles=100)
+        windows = [g.current_prompt_budget]
         for _ in range(100):
             g.tick()
-            windows.append(g.current_window)
+            windows.append(g.current_prompt_budget)
         for i in range(len(windows) - 1):
             assert windows[i] >= windows[i + 1]
 
 
 class TestGradientStateStepped:
     def test_holds_then_drops(self):
-        g = GradientState(initial_window=1200, floor=400, decay="stepped", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="stepped", total_cycles=100)
         # First 24 cycles should be at initial
         for _ in range(24):
             g.tick()
-        assert g.current_window == 1200
+        assert g.current_prompt_budget == 1200
         # Cycle 25 should drop
         g.tick()
-        assert g.current_window < 1200
+        assert g.current_prompt_budget < 1200
 
     def test_reaches_floor(self):
-        g = GradientState(initial_window=1200, floor=400, decay="stepped", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="stepped", total_cycles=100)
         for _ in range(100):
             g.tick()
-        assert g.current_window == 400
+        assert g.current_prompt_budget == 400
 
 
 class TestGradientBudgets:
-    def test_prompt_budget_60_percent(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
-        assert g.prompt_budget == 720
-        assert g.output_budget == 480
+    def test_prompt_budget_equals_current(self):
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+        assert g.prompt_budget == 1200  # initial, before any tick
+        assert g.output_budget == 1200  # fixed, never shrinks
 
-    def test_budget_at_floor(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+    def test_prompt_budget_at_floor(self):
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         for _ in range(200):
             g.tick()
-        assert g.prompt_budget == 240
-        assert g.output_budget == 160
+        assert g.prompt_budget == 400  # floor
+        assert g.output_budget == 1200  # fixed, unchanged
 
-    def test_budgets_sum_to_window(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
-        for _ in range(50):
+    def test_output_budget_never_changes(self):
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+        for _ in range(100):
             g.tick()
-        assert g.prompt_budget + g.output_budget == g.current_window
+            assert g.output_budget == 1200
 
 
 class TestGraveyardThinning:
     def test_max_entries_at_full_window(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         # 1200 * 0.15 = 180 / 80 = 2 -> clamped to 3
         # Actually: 180 // 80 = 2, max(3, 2) = 3
         assert g.max_graveyard_entries >= 3
 
     def test_max_entries_decreases(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         initial = g.max_graveyard_entries
         for _ in range(100):
             g.tick()
@@ -135,7 +135,7 @@ class TestGraveyardThinning:
         assert final <= initial
 
     def test_minimum_3_entries(self):
-        g = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+        g = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
         for _ in range(200):
             g.tick()
         assert g.max_graveyard_entries >= 3
@@ -150,50 +150,85 @@ class TestCompressionPass:
         p = CompressionPassState(stagnation_window=3)
         assert not p.should_trigger()
 
-    def test_no_trigger_insufficient_data(self):
+    def test_no_trigger_insufficient_stall(self):
         p = CompressionPassState(stagnation_window=3)
-        p.record(0.5)
-        p.record(0.5)
+        p.record(0.5, cycle=1)
+        p.record(0.5, cycle=2)
+        # Only 1 stall cycle (second record is not improvement), need 3
         assert not p.should_trigger()
 
-    def test_triggers_on_stagnation(self):
+    def test_triggers_after_stagnation_window(self):
         p = CompressionPassState(stagnation_window=3)
-        p.record(0.5)
-        p.record(0.5)
-        p.record(0.5)
+        p.record(0.5, cycle=1)   # best = 0.5, stall = 0
+        p.record(0.5, cycle=2)   # no improvement, stall = 1
+        p.record(0.5, cycle=3)   # stall = 2
+        p.record(0.4, cycle=4)   # stall = 3 (worse score)
         assert p.should_trigger()
 
-    def test_no_trigger_if_changing(self):
+    def test_no_trigger_if_improving(self):
         p = CompressionPassState(stagnation_window=3)
-        p.record(0.5)
-        p.record(0.5)
-        p.record(0.6)
+        p.record(0.5, cycle=1)
+        p.record(0.5, cycle=2)
+        p.record(0.6, cycle=3)   # improvement resets stall
         assert not p.should_trigger()
+        assert p.stall_count == 0
+
+    def test_improvement_resets_stall(self):
+        p = CompressionPassState(stagnation_window=3)
+        p.record(0.5, cycle=1)
+        p.record(0.4, cycle=2)   # stall = 1
+        p.record(0.4, cycle=3)   # stall = 2
+        p.record(0.6, cycle=4)   # improvement! stall = 0
+        p.record(0.5, cycle=5)   # stall = 1
+        assert not p.should_trigger()
+        assert p.stall_count == 1
+        assert p.best_oracle_fixed == 0.6
+        assert p.best_oracle_cycle == 4
 
     def test_reset_after_trigger(self):
         p = CompressionPassState(stagnation_window=3)
-        p.record(0.5)
-        p.record(0.5)
-        p.record(0.5)
+        p.record(0.5, cycle=1)
+        p.record(0.5, cycle=2)
+        p.record(0.5, cycle=3)
+        p.record(0.5, cycle=4)
         assert p.should_trigger()
         p.mark_triggered()
         assert not p.should_trigger()
         assert p.triggered_count == 1
+        assert p.stall_count == 0
+        # best_oracle_fixed is NOT reset — cumulative
+        assert p.best_oracle_fixed == 0.5
 
-    def test_sliding_window(self):
-        p = CompressionPassState(stagnation_window=3)
-        p.record(0.3)
-        p.record(0.5)
-        p.record(0.5)
-        p.record(0.5)
-        # Window: [0.5, 0.5, 0.5] — should trigger
+    def test_max_passes_cap(self):
+        p = CompressionPassState(stagnation_window=2, max_passes=2)
+        # Trigger pass 1
+        p.record(0.5, cycle=1)
+        p.record(0.5, cycle=2)
+        p.record(0.5, cycle=3)
         assert p.should_trigger()
+        p.mark_triggered()
+        # Trigger pass 2
+        p.record(0.5, cycle=4)
+        p.record(0.5, cycle=5)
+        assert p.should_trigger()
+        p.mark_triggered()
+        # Pass 3 should NOT trigger — capped
+        p.record(0.5, cycle=6)
+        p.record(0.5, cycle=7)
+        assert not p.should_trigger()
+        assert p.triggered_count == 2
 
-    def test_keeps_window_size(self):
-        p = CompressionPassState(stagnation_window=3)
-        for _ in range(10):
-            p.record(0.5)
-        assert len(p.recent_scores) == 3
+    def test_tracks_best_oracle(self):
+        p = CompressionPassState(stagnation_window=5)
+        p.record(0.12, cycle=1)
+        p.record(0.24, cycle=5)
+        p.record(0.18, cycle=10)
+        assert p.best_oracle_fixed == 0.24
+        assert p.best_oracle_cycle == 5
+
+    def test_target_compression_stored(self):
+        p = CompressionPassState(target_compression=0.75)
+        assert p.target_compression == 0.75
 
 
 # ---------------------------------------------------------------------------
@@ -281,7 +316,7 @@ def test_request_altitude_map_uses_direct_json_object_path(monkeypatch):
         api_base="https://api.haimaker.ai/v1",
         api_key_env="HAIMAKER_KEY",
     )
-    gradient = GradientState(initial_window=1200, floor=400, decay="linear", total_cycles=100)
+    gradient = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
 
     result = request_altitude_map(
         cycle=10,

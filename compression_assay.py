@@ -59,81 +59,92 @@ SYSTEM_PROMPT = (
 
 @dataclass
 class GradientState:
-    """Tracks the shrinking context window."""
-    initial_window: int = 1200
+    """Tracks the shrinking prompt budget. Output budget stays fixed at 1200.
+
+    The gradient compresses only the prompt side: fewer data pairs,
+    shorter opinions, thinner graveyard. The model always has full
+    output space to produce the JSON schema.
+    """
+    initial_prompt_budget: int = 1200
     floor: int = 400
     decay: str = "linear"  # "linear", "log", or "stepped"
     total_cycles: int = 200
-    current_window: int = 0  # set in __post_init__
+    current_prompt_budget: int = 0  # set in __post_init__
     cycle_count: int = 0
+    output_budget: int = 1200  # fixed — never shrinks
 
     def __post_init__(self):
-        if self.current_window == 0:
-            self.current_window = self.initial_window
+        if self.current_prompt_budget == 0:
+            self.current_prompt_budget = self.initial_prompt_budget
 
     def tick(self) -> int:
-        """Advance one cycle, return new window size."""
+        """Advance one cycle, return new prompt budget."""
         self.cycle_count += 1
-        span = self.initial_window - self.floor
+        span = self.initial_prompt_budget - self.floor
 
         if self.decay == "linear":
             progress = min(1.0, self.cycle_count / max(1, self.total_cycles))
-            self.current_window = max(self.floor, int(self.initial_window - span * progress))
+            self.current_prompt_budget = max(self.floor, int(self.initial_prompt_budget - span * progress))
 
         elif self.decay == "log":
             # Logarithmic decay: fast initial drop, slow tail
             progress = min(1.0, self.cycle_count / max(1, self.total_cycles))
-            # log(1 + progress * (e-1)) / log(e) = log(1 + progress * (e-1))
             log_progress = math.log(1.0 + progress * (math.e - 1.0))
-            self.current_window = max(self.floor, int(self.initial_window - span * log_progress))
+            self.current_prompt_budget = max(self.floor, int(self.initial_prompt_budget - span * log_progress))
 
         elif self.decay == "stepped":
-            # Plateau-drop: hold for 25% of cycles, drop linearly over 10%, repeat
+            # Plateau-drop: hold for 25% of cycles, then step down
             step_size = max(1, self.total_cycles // 4)
             steps_completed = self.cycle_count // step_size
             max_steps = 4
             steps_completed = min(steps_completed, max_steps)
-            self.current_window = max(self.floor, int(self.initial_window - span * steps_completed / max_steps))
+            self.current_prompt_budget = max(self.floor, int(self.initial_prompt_budget - span * steps_completed / max_steps))
 
-        return self.current_window
+        return self.current_prompt_budget
 
     @property
     def prompt_budget(self) -> int:
-        return int(self.current_window * 0.6)
-
-    @property
-    def output_budget(self) -> int:
-        return self.current_window - self.prompt_budget
+        return self.current_prompt_budget
 
     @property
     def max_graveyard_entries(self) -> int:
-        graveyard_budget = int(self.current_window * 0.15)
+        graveyard_budget = int(self.current_prompt_budget * 0.15)
         return max(3, graveyard_budget // 80)
 
 
 @dataclass
 class CompressionPassState:
-    """Tracks oracle stagnation for compression pass triggering."""
-    stagnation_window: int = 8
-    target_compression: float = 0.5
-    recent_scores: list[float] = field(default_factory=list)
-    triggered_count: int = 0
+    """Tracks oracle stagnation for compression pass triggering.
 
-    def record(self, oracle_score: float) -> None:
-        """Append score, keep last stagnation_window entries."""
-        self.recent_scores.append(round(oracle_score, 4))
-        if len(self.recent_scores) > self.stagnation_window:
-            self.recent_scores.pop(0)
+    Fires after stagnation_window consecutive working cycles with no
+    improvement in oracle_fixed. Capped at max_passes per run.
+    """
+    stagnation_window: int = 15
+    target_compression: float = 0.5
+    max_passes: int = 3
+    triggered_count: int = 0
+    best_oracle_fixed: float = 0.0
+    best_oracle_cycle: int = 0
+    stall_count: int = 0
+
+    def record(self, oracle_fixed: float, cycle: int = 0) -> None:
+        """Record an oracle_fixed score. Resets stall if score improves."""
+        if oracle_fixed > self.best_oracle_fixed:
+            self.best_oracle_fixed = oracle_fixed
+            self.best_oracle_cycle = cycle
+            self.stall_count = 0
+        else:
+            self.stall_count += 1
 
     def should_trigger(self) -> bool:
-        """True if last stagnation_window scores are all identical (stagnant)."""
-        if len(self.recent_scores) < self.stagnation_window:
+        """True if stalled for stagnation_window cycles and passes remain."""
+        if self.triggered_count >= self.max_passes:
             return False
-        return len(set(self.recent_scores)) == 1
+        return self.stall_count >= self.stagnation_window
 
     def mark_triggered(self) -> None:
         self.triggered_count += 1
-        self.recent_scores.clear()
+        self.stall_count = 0
 
 
 @dataclass
@@ -210,32 +221,60 @@ def run_compression_pass(
     gradient: GradientState,
     passes: CompressionPassState,
 ) -> None:
-    """Directed distillation cycle. Model compresses its theory."""
+    """Directed distillation cycle.
+
+    The model compresses its theory state to target_compression of its
+    current size.  This is NOT metacognitive reflection — it is directed
+    distillation.  The model must preserve basin/family structure and
+    strongest hypotheses while shedding redundancy.
+    """
     current_theory = hv.read_text(hv.OPINIONS_FILE) or ""
     current_dead_ends = hv.read_text(hv.DEAD_ENDS_JSON_FILE) or "{}"
-    target_len = int(len(current_theory) * passes.target_compression)
+    theory_len_before = len(current_theory)
+    target_len = int(theory_len_before * passes.target_compression)
+
+    # Include first 2 rows of data.json for structural reference
+    data_slice = ""
+    try:
+        data_raw = hv.read_text(hv.DATA_FILE) or "[]"
+        data_rows = json.loads(data_raw)
+        if isinstance(data_rows, list) and len(data_rows) >= 2:
+            data_slice = json.dumps(data_rows[:2], indent=2)
+        elif isinstance(data_rows, list):
+            data_slice = json.dumps(data_rows, indent=2)
+    except (json.JSONDecodeError, OSError):
+        pass
 
     prompt = (
-        f"COMPRESSION PASS: Your theory has grown too large for the shrinking context window.\n\n"
-        f"Current theory length: {len(current_theory)} characters\n"
-        f"Target length: {target_len} characters\n\n"
-        f"Rewrite your theory to fit within {target_len} characters. Preserve your strongest hypotheses "
-        f"and most important dead-end exclusions. Drop speculative content and redundant phrasing.\n"
-        f"Output ONLY the JSON object with a single key 'opinions_md' containing the compressed theory text."
+        f"COMPRESSION PASS #{passes.triggered_count + 1} — Cycle {cycle}\n\n"
+        f"Your best oracle score so far: {passes.best_oracle_fixed:.4f} "
+        f"(achieved at cycle {passes.best_oracle_cycle}). "
+        f"You have stalled for {passes.stall_count} cycles without improvement.\n\n"
+        f"Compress the current theory state to {int(passes.target_compression * 100)}% "
+        f"of its present size.\n"
+        f"Current theory length: {theory_len_before} characters\n"
+        f"Target length: ≤{target_len} characters\n\n"
+        f"Rules:\n"
+        f"- Preserve basin/family distinctions and your strongest active hypotheses.\n"
+        f"- Preserve any structural observations about the data (cycle structure, "
+        f"positional relationships, etc.).\n"
+        f"- Remove redundant phrasing, speculative asides, and stale observations.\n"
+        f"- Do NOT add new hypotheses. This is distillation, not exploration.\n"
+        f"- Output ONLY the JSON object with a single key 'opinions_md' containing "
+        f"the compressed theory text."
     )
+
+    user_content = prompt + f"\n\n# Current opinions.md\n{current_theory}"
+    user_content += f"\n\n# Current dead-ends.json\n{current_dead_ends}"
+    if data_slice:
+        user_content += f"\n\n# First 2 rows of data.json (structural reference)\n{data_slice}"
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": (
-                prompt
-                + f"\n\n# Current opinions.md\n{current_theory}"
-                + f"\n\n# Current dead-ends.json\n{current_dead_ends}"
-            ),
-        },
+        {"role": "user", "content": user_content},
     ]
 
+    compressed = ""
     try:
         result = hv.invoke_openai(
             messages, args.model, args.api_base,
@@ -246,20 +285,43 @@ def run_compression_pass(
         if compressed:
             hv.write_text(hv.OPINIONS_FILE, compressed + "\n")
             hv.run_command('git add . && git commit -m "V4.7: compression pass"')
-            print(f"  [COMPRESS] Cycle {cycle}: {len(current_theory)} -> {len(compressed)} chars")
+            print(f"  [COMPRESS] Cycle {cycle}: {theory_len_before} -> {len(compressed)} chars "
+                  f"(target {target_len}, ratio {len(compressed)/max(theory_len_before,1):.2f})")
         else:
             print(f"  [COMPRESS] Cycle {cycle}: empty result, skipping")
     except RuntimeError as exc:
         print(f"  [COMPRESS] Cycle {cycle}: FAILED: {exc}")
 
     passes.mark_triggered()
+    theory_len_after = len(compressed) if compressed else theory_len_before
 
     _append_jsonl(COMPRESSION_LOG_FILE, {
         "cycle": cycle,
         "event": "compression_pass",
-        "theory_len_before": len(current_theory),
+        "pass_number": passes.triggered_count,
+        "theory_len_before": theory_len_before,
+        "theory_len_after": theory_len_after,
         "target_len": target_len,
+        "target_compression": passes.target_compression,
+        "compression_ratio_actual": round(theory_len_after / max(theory_len_before, 1), 4),
+        "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
+        "stall_count_at_trigger": passes.stall_count,
         "triggered_count": passes.triggered_count,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    _append_jsonl(TELEMETRY_FILE, {
+        "cycle": cycle,
+        "prompt_budget": gradient.prompt_budget,
+        "output_budget": gradient.output_budget,
+        "cycle_type": "compression_pass",
+        "compression_pass": True,
+        "pass_number": passes.triggered_count,
+        "theory_len_before": theory_len_before,
+        "theory_len_after": theory_len_after,
+        "compression_ratio_actual": round(theory_len_after / max(theory_len_before, 1), 4),
+        "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
+        "stall_count": passes.stall_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
 
@@ -280,8 +342,8 @@ def request_altitude_map(
         current_state,
         altitude_mode=altitude_mode,
         context_window_hud=(
-            f"Context budget: {gradient.output_budget} tokens (output limit). "
-            f"Window: {gradient.current_window}/{gradient.initial_window}."
+            f"Prompt budget: {gradient.prompt_budget}/{gradient.initial_prompt_budget} tokens. "
+            f"Output budget: {gradient.output_budget} tokens (fixed)."
         ),
         altitude_map=previous_map or None,
         max_graveyard_entries=gradient.max_graveyard_entries,
@@ -329,12 +391,16 @@ def run_compression_loop(args: argparse.Namespace) -> str:
     hv._rng.seed(args.seed + args.run_id)
 
     gradient = GradientState(
-        initial_window=args.initial_window,
+        initial_prompt_budget=args.initial_window,
         floor=args.floor,
         decay=args.decay,
         total_cycles=args.max_cycles,
     )
-    passes = CompressionPassState(stagnation_window=args.stagnation_window)
+    passes = CompressionPassState(
+        stagnation_window=args.stagnation_window,
+        target_compression=args.compression_target,
+        max_passes=args.max_passes,
+    )
     altitude = AltitudeState(frequency=args.altitude_frequency)
 
     # Convergence state
@@ -344,10 +410,14 @@ def run_compression_loop(args: argparse.Namespace) -> str:
     previous_complexity: int = 0
 
     print(f"\n  [V4.7] Starting compression loop")
-    print(f"  [V4.7] Gradient: {args.initial_window} -> {args.floor} ({args.decay})")
+    print(f"  [V4.7] Prompt gradient: {args.initial_window} -> {args.floor} ({args.decay})")
+    print(f"  [V4.7] Output budget: {gradient.output_budget} (fixed)")
     print(f"  [V4.7] Features: gradient={'ON' if not args.no_gradient else 'OFF'}, "
           f"passes={'ON' if not args.no_passes else 'OFF'}, "
           f"altitude={'ON' if not args.no_altitude else 'OFF'}")
+    if not args.no_passes:
+        print(f"  [V4.7] Compression passes: stagnation={args.stagnation_window}, "
+              f"target={args.compression_target:.0%}, max={args.max_passes}")
 
     for cycle in range(1, args.max_cycles + 1):
         hv.reset_cycle_usage()
@@ -360,12 +430,12 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         else:
             gradient.cycle_count = cycle
 
-        current_window = gradient.current_window
-        output_budget = gradient.output_budget
+        prompt_budget = gradient.prompt_budget
+        output_budget = gradient.output_budget  # fixed at 1200
 
         # --- Compression pass check (before altitude, before normal cycle) ---
         if not args.no_passes and passes.should_trigger():
-            print(f"  [V4.7] Cycle {cycle} — COMPRESSION PASS (window={current_window})")
+            print(f"  [V4.7] Cycle {cycle} — COMPRESSION PASS (prompt_budget={prompt_budget})")
             hv.write_status(cycle, args.max_cycles, "COMPRESSION_PASS")
             run_compression_pass(cycle, args, gradient, passes)
             continue
@@ -377,16 +447,16 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         mode_label = f"ALTITUDE_{altitude_mode.upper()}" if altitude_mode else "GRIND"
         hv.write_status(cycle, args.max_cycles, mode_label)
-        print(f"  [V4.7] Cycle {cycle}/{args.max_cycles} — {mode_label} (window={current_window}, budget={output_budget})")
+        print(f"  [V4.7] Cycle {cycle}/{args.max_cycles} — {mode_label} (prompt={prompt_budget}, output={output_budget})")
 
         # --- Build prompt kwargs ---
         prompt_kwargs: dict[str, Any] = {
             "context_window_hud": (
-                f"Context budget: {output_budget} tokens (output limit). "
-                f"Window: {current_window}/{gradient.initial_window}."
+                f"Prompt budget: {prompt_budget}/{gradient.initial_prompt_budget} tokens. "
+                f"Output budget: {output_budget} tokens (fixed)."
             ),
             "max_graveyard_entries": gradient.max_graveyard_entries,
-            "prompt_budget_tokens": gradient.prompt_budget,
+            "prompt_budget_tokens": prompt_budget,
         }
         if altitude_mode:
             prompt_kwargs["altitude_mode"] = altitude_mode
@@ -418,8 +488,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             if altitude_text is None:
                 _append_jsonl(TELEMETRY_FILE, {
                     "cycle": cycle,
-                    "window": current_window,
-                    "prompt_budget": gradient.prompt_budget,
+                    "prompt_budget": prompt_budget,
                     "output_budget": output_budget,
                     "altitude_mode": altitude_mode,
                     "event": "altitude_fatal",
@@ -430,8 +499,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
 
             _append_jsonl(TELEMETRY_FILE, {
-                "cycle": cycle, "window": current_window,
-                "prompt_budget": gradient.prompt_budget,
+                "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
                 "altitude_mode": altitude_mode,
                 "altitude_map_len": len(altitude.last_map),
@@ -475,8 +543,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         if grind_payload is None:
             _append_jsonl(TELEMETRY_FILE, {
-                "cycle": cycle, "window": current_window,
-                "prompt_budget": gradient.prompt_budget,
+                "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
                 "event": "format_fatal",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -504,7 +571,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         )
 
         # Record fixed score for compression pass trigger
-        passes.record(fixed_score)
+        passes.record(fixed_score, cycle)
 
         # Restore solver, then do full persist + ratchet
         hv.write_text(hv.SOLVER_FILE, workspace_snapshot["solver_py"])
@@ -551,6 +618,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             except RuntimeError as exc:
                 print(f"  [V4.7] SYNC FORMAT_FAIL: {exc}")
                 current_state = previous_state
+                hv.persist_dead_end_workspace(current_state)
 
             save_state(hv.DEAD_END_STATE_FILE, current_state)
             metrics = hv.compute_cycle_metrics(
@@ -575,8 +643,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             print(f"\n  [CONVERGED] 5 consecutive perfect oracle cycles with stable theory.")
             print(f"  [CONVERGED] Final oracle: {oracle_score:.2f} ({passed}/{total})")
             _append_jsonl(TELEMETRY_FILE, {
-                "cycle": cycle, "window": current_window,
-                "prompt_budget": gradient.prompt_budget,
+                "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
                 "oracle_fixed": round(fixed_score, 4),
                 "oracle_combined": round(oracle_score, 4),
@@ -597,9 +664,9 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         _append_jsonl(TELEMETRY_FILE, {
             "cycle": cycle,
-            "window": current_window,
-            "prompt_budget": gradient.prompt_budget,
+            "prompt_budget": prompt_budget,
             "output_budget": output_budget,
+            "cycle_type": "grind",
             "oracle_fixed": round(fixed_score, 4),
             "oracle_combined": round(oracle_score, 4),
             "altitude_mode": None,
@@ -608,7 +675,11 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "theory_len": theory_len,
             "dead_end_count": dead_end_count,
             "graveyard_entries_shown": gradient.max_graveyard_entries if not args.no_gradient else None,
+            "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
             "best_oracle": round(best_oracle_score, 4),
+            "stall_count": passes.stall_count,
+            "passes_triggered": passes.triggered_count,
+            "passes_remaining": passes.max_passes - passes.triggered_count,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
@@ -660,8 +731,12 @@ def parse_args() -> argparse.Namespace:
                         help="Disable compression gradient (fixed window)")
 
     # Compression passes
-    parser.add_argument("--stagnation-window", type=int, default=8,
-                        help="Consecutive identical oracle scores to trigger compression pass")
+    parser.add_argument("--stagnation-window", type=int, default=15,
+                        help="Consecutive cycles without oracle improvement to trigger compression pass")
+    parser.add_argument("--compression-target", type=float, default=0.5,
+                        help="Target compression ratio for compression passes (0.5 = compress to 50%%)")
+    parser.add_argument("--max-passes", type=int, default=3,
+                        help="Maximum compression passes per run")
     parser.add_argument("--no-passes", action="store_true",
                         help="Disable compression passes")
 

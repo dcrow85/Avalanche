@@ -314,6 +314,7 @@ def run_calibration(
             except RuntimeError as exc:
                 print(f"  [CAL] SYNC FORMAT_FAIL: {exc}")
                 current_state = previous_state
+                hv.persist_dead_end_workspace(current_state)
 
             save_state(hv.DEAD_END_STATE_FILE, current_state)
 
@@ -717,6 +718,7 @@ def run_gated_loop(
             except RuntimeError as exc:
                 print(f"  [GATE] SYNC FORMAT_FAIL: {exc}")
                 current_state = previous_state
+                hv.persist_dead_end_workspace(current_state)
 
             save_state(hv.DEAD_END_STATE_FILE, current_state)
             metrics = hv.compute_cycle_metrics(
