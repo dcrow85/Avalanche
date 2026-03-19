@@ -608,6 +608,17 @@ def format_cycle_prompt(
             "What family of approaches is absent from your dead ends? Identify the negative space. "
             "Output a ## Altitude Map section (max 300 tokens) instead of solver_py."
         )
+    elif altitude_mode == "survey":
+        altitude_instruction = (
+            "\n\nALTITUDE SURVEY: Compare your current theory against your dead-end history.\n"
+            "1. List your three most recent dead-end families.\n"
+            "2. State your current active theory.\n"
+            "3. Describe what is structurally similar across all four.\n"
+            "4. Describe one important structural difference between the active theory "
+            "and the dead-end families.\n"
+            "5. Based on that comparison, state one search direction you have not yet "
+            "tested directly."
+        )
 
     def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
         if max_chars is None or len(text) <= max_chars:
@@ -775,6 +786,12 @@ def response_format_payload(api_base: str, response_type_override: str | None = 
     }
 
 
+def uses_openai_max_completion_tokens(api_base: str, model: str) -> bool:
+    host = api_base.lower()
+    model_slug = model.lower()
+    return "api.openai.com" in host and model_slug.startswith("gpt-5")
+
+
 def reset_cycle_usage() -> None:
     for key in _cycle_usage:
         _cycle_usage[key] = 0
@@ -891,9 +908,12 @@ def invoke_openai(
         "model": model,
         "temperature": DEFAULT_TEMPERATURE,
         "messages": messages,
-        "max_tokens": max_tokens,
         "response_format": response_format_payload(api_base, response_format_override),
     }
+    if uses_openai_max_completion_tokens(api_base, model):
+        payload["max_completion_tokens"] = max_tokens
+    else:
+        payload["max_tokens"] = max_tokens
     request = urllib.request.Request(
         f"{api_base.rstrip('/')}/chat/completions",
         data=json.dumps(payload).encode("utf-8"),

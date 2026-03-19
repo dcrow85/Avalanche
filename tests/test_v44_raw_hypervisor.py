@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import urllib.request
 
 
 def load_module():
@@ -87,3 +88,104 @@ def test_format_cycle_prompt_applies_prompt_budget(monkeypatch, tmp_path):
     assert "old family" not in trimmed_prompt
     assert "local 0" not in trimmed_prompt
     assert "...[truncated for context budget]..." in trimmed_prompt
+
+
+def test_invoke_openai_uses_max_completion_tokens_for_openai_gpt5(monkeypatch):
+    hv = load_module()
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            payload = {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "opinions_md": "ok",
+                                    "solver_py": "def transduce(arr):\n    return arr\n",
+                                    "dead_ends": {"basins": [], "families": [], "locals": []},
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    def fake_urlopen(request, timeout=300):
+        captured["url"] = request.full_url
+        captured["body"] = json.loads(request.data.decode("utf-8"))
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+
+    hv.invoke_openai(
+        [{"role": "user", "content": "ping"}],
+        "gpt-5.4-mini",
+        "https://api.openai.com/v1",
+        api_key_env="OPENAI_API_KEY",
+        max_tokens=123,
+    )
+
+    body = captured["body"]
+    assert body["max_completion_tokens"] == 123
+    assert "max_tokens" not in body
+
+
+def test_invoke_openai_uses_max_tokens_for_non_openai_or_non_gpt5(monkeypatch):
+    hv = load_module()
+    monkeypatch.setenv("HAIMAKER_KEY", "test-key")
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            payload = {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "opinions_md": "ok",
+                                    "solver_py": "def transduce(arr):\n    return arr\n",
+                                    "dead_ends": {"basins": [], "families": [], "locals": []},
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    def fake_urlopen(request, timeout=300):
+        captured["body"] = json.loads(request.data.decode("utf-8"))
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+
+    hv.invoke_openai(
+        [{"role": "user", "content": "ping"}],
+        "anthropic/claude-haiku-4-5",
+        "https://api.haimaker.ai/v1",
+        api_key_env="HAIMAKER_KEY",
+        max_tokens=456,
+    )
+
+    body = captured["body"]
+    assert body["max_tokens"] == 456
+    assert "max_completion_tokens" not in body

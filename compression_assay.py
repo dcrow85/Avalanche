@@ -19,6 +19,8 @@ import math
 import os
 import random
 import re
+import signal
+import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -42,6 +44,17 @@ from v44_epistemics import (
 TELEMETRY_FILE = "telemetry.jsonl"
 COMPRESSION_LOG_FILE = "compression_log.jsonl"
 FORMAT_FAIL_MAX_RETRIES = 2
+COMPRESSION_DATA_SLICE_ROWS = 2  # Rows from data.json shown during compression passes
+
+# Compression pass slot schema — per-slot character budgets
+COMPRESSION_SLOTS = {
+    "core_rule":     120,  # Current best active rule, one sentence
+    "alt_rule":      80,   # Structurally different approach, one sentence (may be empty)
+    "key_exclusion": 95,   # One important falsified pattern, one sentence
+    "uncertainty":   75,   # Main unresolved ambiguity, one sentence
+}
+COMPRESSION_SLOT_KEYS = set(COMPRESSION_SLOTS.keys())
+COMPRESSION_MIN_RENDER_LEN = 220  # Smallest viable slot-rendered summary worth preserving
 
 # Decay functions expect total_cycles to be set; we compute it from
 # the gradient floor, initial window, and max_cycles.
@@ -123,13 +136,13 @@ class CompressionPassState:
     target_compression: float = 0.5
     max_passes: int = 3
     triggered_count: int = 0
-    best_oracle_fixed: float = 0.0
+    best_oracle_fixed: float | None = None
     best_oracle_cycle: int = 0
     stall_count: int = 0
 
     def record(self, oracle_fixed: float, cycle: int = 0) -> None:
         """Record an oracle_fixed score. Resets stall if score improves."""
-        if oracle_fixed > self.best_oracle_fixed:
+        if self.best_oracle_fixed is None or oracle_fixed > self.best_oracle_fixed:
             self.best_oracle_fixed = oracle_fixed
             self.best_oracle_cycle = cycle
             self.stall_count = 0
@@ -151,6 +164,7 @@ class CompressionPassState:
 class AltitudeState:
     """Tracks periodic metacognitive survey cycles."""
     frequency: int = 10
+    prompt_style: str = "survey"  # "survey" (factual comparison) or "rotating" (low/medium/high)
     altitudes: list[str] = field(default_factory=lambda: ["low", "medium", "high"])
     current_index: int = 0
     last_map: str = ""
@@ -159,6 +173,8 @@ class AltitudeState:
         return cycle > 0 and cycle % self.frequency == 0
 
     def next_altitude(self) -> str:
+        if self.prompt_style == "survey":
+            return "survey"
         alt = self.altitudes[self.current_index % len(self.altitudes)]
         self.current_index += 1
         return alt
@@ -171,6 +187,83 @@ class AltitudeState:
 def _append_jsonl(path: str, record: dict) -> None:
     with open(path, "a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(record) + "\n")
+
+
+def _max_rendered_slot_len() -> int:
+    """Maximum rendered opinions.md length if every slot uses its full budget."""
+    max_slots = {key: ("x" * max_chars) for key, max_chars in COMPRESSION_SLOTS.items()}
+    return len(_render_opinions_from_slots(max_slots))
+
+
+def _compression_target_len(theory_len_before: int, target_compression: float) -> int:
+    """Target rendered length for a compression pass.
+
+    Keep the ratio-based target, but never set a rendered budget smaller than
+    the calibrated minimum viable slot summary. This is intentionally lower
+    than the full-cap slot ceiling so an accepted pass can still be genuinely
+    shorter than the input theory.
+    """
+    ratio_target = int(theory_len_before * target_compression)
+    return max(ratio_target, COMPRESSION_MIN_RENDER_LEN)
+
+
+def _cycle_usage_aliases() -> dict[str, int]:
+    """Mirror hypervisor token counters into shorter, assay-friendly names."""
+    return {
+        "call_count": int(hv._cycle_usage.get("api_call_count_cycle", 0)),
+        "prompt_tokens": int(hv._cycle_usage.get("api_prompt_tokens_cycle", 0)),
+        "completion_tokens": int(hv._cycle_usage.get("api_completion_tokens_cycle", 0)),
+        "total_tokens": int(hv._cycle_usage.get("api_total_tokens_cycle", 0)),
+        "reasoning_tokens": int(hv._cycle_usage.get("api_reasoning_tokens_cycle", 0)),
+    }
+
+
+def _load_status_progress(default_max_cycles: int) -> tuple[int, int]:
+    """Best-effort read of the current cycle/max_cycles from status.json."""
+    status_path = Path(hv.STATUS_FILE)
+    if not status_path.exists():
+        return 0, default_max_cycles
+    try:
+        payload = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0, default_max_cycles
+    try:
+        cycle = int(payload.get("cycle", 0) or 0)
+    except (TypeError, ValueError):
+        cycle = 0
+    try:
+        max_cycles = int(payload.get("max_cycles", default_max_cycles) or default_max_cycles)
+    except (TypeError, ValueError):
+        max_cycles = default_max_cycles
+    return cycle, max_cycles
+
+
+def _write_terminal_marker(
+    phase: str,
+    last_result: str,
+    last_error: str,
+    default_max_cycles: int,
+) -> None:
+    """Persist a terminal status/telemetry marker after an unexpected exit path."""
+    cycle, max_cycles = _load_status_progress(default_max_cycles)
+    hv.write_status(
+        cycle,
+        max_cycles,
+        phase,
+        last_result=last_result,
+        last_error=last_error,
+    )
+    _append_jsonl(
+        TELEMETRY_FILE,
+        {
+            "cycle": cycle,
+            "event": "terminal_marker",
+            "phase": phase,
+            "last_result": last_result,
+            "last_error": last_error,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -215,115 +308,269 @@ def extract_altitude_map(payload: dict[str, object]) -> str:
 # Compression pass
 # ---------------------------------------------------------------------------
 
+def _render_opinions_from_slots(slots: dict[str, str]) -> str:
+    """Render opinions.md from compression pass slot values."""
+    lines = []
+    if slots.get("core_rule"):
+        lines.append(f"Core rule: {slots['core_rule']}")
+    if slots.get("alt_rule"):
+        lines.append(f"Alternative: {slots['alt_rule']}")
+    if slots.get("key_exclusion"):
+        lines.append(f"Key exclusion: {slots['key_exclusion']}")
+    if slots.get("uncertainty"):
+        lines.append(f"Uncertainty: {slots['uncertainty']}")
+    return "\n".join(lines)
+
+
+def _check_alt_rule_duplication(core: str, alt: str) -> bool:
+    """Return True if alt_rule is trivially duplicative of core_rule."""
+    if not core or not alt:
+        return False
+    c = core.lower().strip()
+    a = alt.lower().strip()
+    # Exact match
+    if c == a:
+        return True
+    # One is a substring of the other
+    if c in a or a in c:
+        return True
+    # High token overlap — tokenize on whitespace, reject if ≥80% overlap
+    c_tokens = set(c.split())
+    a_tokens = set(a.split())
+    if not c_tokens or not a_tokens:
+        return False
+    overlap = len(c_tokens & a_tokens)
+    smaller = min(len(c_tokens), len(a_tokens))
+    if smaller > 0 and overlap / smaller >= 0.8:
+        return True
+    return False
+
+
+def _validate_compression_slots(
+    raw: dict[str, object], target_len: int, theory_len_before: int
+) -> tuple[dict[str, str] | None, str]:
+    """Validate compression pass slot output.
+
+    Returns (slots, rejection_reason). slots is None if validation fails.
+    """
+    # Check exactly the required keys
+    raw_keys = set(raw.keys())
+    missing_keys = COMPRESSION_SLOT_KEYS - raw_keys
+    if missing_keys:
+        return None, f"missing_keys: {sorted(missing_keys)}"
+    extra_keys = raw_keys - COMPRESSION_SLOT_KEYS
+    if extra_keys:
+        return None, f"extra_keys: {sorted(extra_keys)}"
+
+    # Extract and validate types + per-slot budgets
+    slots: dict[str, str] = {}
+    for key, max_chars in COMPRESSION_SLOTS.items():
+        val = raw[key]
+        if not isinstance(val, str):
+            return None, f"{key}_not_string: {type(val).__name__}"
+        val = val.strip()
+        slots[key] = val
+        if len(val) > max_chars:
+            return None, f"{key}_overflow: {len(val)}/{max_chars}"
+
+    # Render and check total length
+    rendered = _render_opinions_from_slots(slots)
+    if len(rendered) > target_len:
+        return None, f"rendered_overflow: {len(rendered)}/{target_len}"
+    if len(rendered) >= theory_len_before:
+        return None, f"not_shorter_than_input: {len(rendered)}/{theory_len_before}"
+
+    # core_rule must not be empty
+    if not slots.get("core_rule"):
+        return None, "core_rule_empty"
+
+    # alt_rule duplication check
+    if slots.get("alt_rule") and _check_alt_rule_duplication(
+        slots["core_rule"], slots["alt_rule"]
+    ):
+        return None, "alt_rule_duplicates_core"
+
+    return slots, ""
+
+
 def run_compression_pass(
     cycle: int,
     args: argparse.Namespace,
     gradient: GradientState,
     passes: CompressionPassState,
 ) -> None:
-    """Directed distillation cycle.
+    """Slot-based working-memory compression pass (v3).
 
-    The model compresses its theory state to target_compression of its
-    current size.  This is NOT metacognitive reflection — it is directed
-    distillation.  The model must preserve basin/family structure and
-    strongest hypotheses while shedding redundancy.
+    The model fills exactly four slots instead of writing free prose.
+    The harness renders opinions.md from those slots.  dead-ends.json
+    stays frozen — this compresses working memory only.
     """
     current_theory = hv.read_text(hv.OPINIONS_FILE) or ""
     current_dead_ends = hv.read_text(hv.DEAD_ENDS_JSON_FILE) or "{}"
     theory_len_before = len(current_theory)
-    target_len = int(theory_len_before * passes.target_compression)
+    pre_pass_theory_hash = hashlib.md5(current_theory.encode()).hexdigest()[:8]
+    target_len = _compression_target_len(theory_len_before, passes.target_compression)
 
-    # Include first 2 rows of data.json for structural reference
+    # Most recent rows from data.json for stall context
     data_slice = ""
     try:
         data_raw = hv.read_text(hv.DATA_FILE) or "[]"
         data_rows = json.loads(data_raw)
-        if isinstance(data_rows, list) and len(data_rows) >= 2:
-            data_slice = json.dumps(data_rows[:2], indent=2)
+        if isinstance(data_rows, list) and len(data_rows) >= COMPRESSION_DATA_SLICE_ROWS:
+            data_slice = json.dumps(data_rows[-COMPRESSION_DATA_SLICE_ROWS:], indent=2)
         elif isinstance(data_rows, list):
             data_slice = json.dumps(data_rows, indent=2)
     except (json.JSONDecodeError, OSError):
         pass
 
+    slot_spec = ", ".join(f'"{k}": max {v} chars' for k, v in COMPRESSION_SLOTS.items())
+
     prompt = (
         f"COMPRESSION PASS #{passes.triggered_count + 1} — Cycle {cycle}\n\n"
-        f"Your best oracle score so far: {passes.best_oracle_fixed:.4f} "
-        f"(achieved at cycle {passes.best_oracle_cycle}). "
-        f"You have stalled for {passes.stall_count} cycles without improvement.\n\n"
-        f"Compress the current theory state to {int(passes.target_compression * 100)}% "
-        f"of its present size.\n"
-        f"Current theory length: {theory_len_before} characters\n"
-        f"Target length: ≤{target_len} characters\n\n"
-        f"Rules:\n"
-        f"- Preserve basin/family distinctions and your strongest active hypotheses.\n"
-        f"- Preserve any structural observations about the data (cycle structure, "
-        f"positional relationships, etc.).\n"
-        f"- Remove redundant phrasing, speculative asides, and stale observations.\n"
-        f"- Do NOT add new hypotheses. This is distillation, not exploration.\n"
-        f"- Output ONLY the JSON object with a single key 'opinions_md' containing "
-        f"the compressed theory text."
+        f"Best oracle: {passes.best_oracle_fixed or 0:.4f} (cycle {passes.best_oracle_cycle}). "
+        f"Stalled for {passes.stall_count} cycles.\n\n"
+        f"Fill exactly four slots. Do not write an essay. Do not explain.\n"
+        f"Output a JSON object with exactly these keys:\n"
+        f"  {slot_spec}\n\n"
+        f"Current opinions.md length is {theory_len_before} chars.\n"
+        f"Slot rules:\n"
+        f"- core_rule: your current best active rule. One sentence, max 120 chars.\n"
+        f"- alt_rule: a STRUCTURALLY DIFFERENT approach — not a variant, threshold "
+        f"tweak, or parameterization of core_rule. One sentence, max 80 chars. "
+        f"Leave empty string if no genuinely different alternative exists.\n"
+        f"- key_exclusion: one important falsified family or dead-end pattern. "
+        f"One sentence, max 95 chars.\n"
+        f"- uncertainty: the main unresolved ambiguity. One sentence, max 75 chars.\n\n"
+        f"Constraints:\n"
+        f"- Total rendered opinions.md budget is {target_len} chars including labels/newlines.\n"
+        f"- The rendered opinions.md must be strictly shorter than the current {theory_len_before}-char opinions.md.\n"
+        f"- Each slot must respect its character budget. Overflow = rejection.\n"
+        f"- No extra keys. No extra text. Only the four slots.\n"
+        f"- Shorter is better.\n"
+        f"- Any non-compliant output will be rejected and your current theory preserved."
     )
 
     user_content = prompt + f"\n\n# Current opinions.md\n{current_theory}"
     user_content += f"\n\n# Current dead-ends.json\n{current_dead_ends}"
     if data_slice:
-        user_content += f"\n\n# First 2 rows of data.json (structural reference)\n{data_slice}"
+        user_content += (f"\n\n# Most recent {COMPRESSION_DATA_SLICE_ROWS} rows of data.json "
+                         f"(recent contradictions)\n{data_slice}")
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
 
-    compressed = ""
+    # --- Call API and validate ---
+    raw_result: dict[str, object] = {}
+    accepted = False
+    rejection_reason = ""
+    rendered = ""
+    slots: dict[str, str] = {}
+
     try:
-        result = hv.invoke_openai(
+        raw_result = hv.invoke_openai(
             messages, args.model, args.api_base,
             api_key_env=args.api_key_env,
             max_tokens=gradient.output_budget,
         )
-        compressed = str(result.get("opinions_md", "")).strip()
-        if compressed:
-            hv.write_text(hv.OPINIONS_FILE, compressed + "\n")
-            hv.run_command('git add . && git commit -m "V4.7: compression pass"')
-            print(f"  [COMPRESS] Cycle {cycle}: {theory_len_before} -> {len(compressed)} chars "
-                  f"(target {target_len}, ratio {len(compressed)/max(theory_len_before,1):.2f})")
+
+        validated_slots, rejection_reason = _validate_compression_slots(
+            raw_result, target_len, theory_len_before
+        )
+
+        if validated_slots is not None:
+            slots = validated_slots
+            rendered = _render_opinions_from_slots(slots)
+            hv.write_text(hv.OPINIONS_FILE, rendered + "\n")
+            hv.run_command('git add . && git commit -m "V4.7: compression pass (slot)"')
+            accepted = True
+            print(f"  [COMPRESS] Cycle {cycle}: ACCEPTED — {theory_len_before} -> "
+                  f"{len(rendered)} chars (target {target_len})")
         else:
-            print(f"  [COMPRESS] Cycle {cycle}: empty result, skipping")
+            # Rejection — preserve original
+            rendered = ""
+            slots = {k: str(raw_result.get(k, "")) for k in COMPRESSION_SLOT_KEYS}
+            print(f"  [COMPRESS] Cycle {cycle}: REJECTED — {rejection_reason}. "
+                  f"Original preserved.")
+
     except RuntimeError as exc:
+        rejection_reason = f"api_error: {exc}"
         print(f"  [COMPRESS] Cycle {cycle}: FAILED: {exc}")
 
+    # --- Telemetry (capture stall BEFORE mark_triggered zeroes it) ---
+    stall_count_at_trigger = passes.stall_count
     passes.mark_triggered()
-    theory_len_after = len(compressed) if compressed else theory_len_before
 
-    _append_jsonl(COMPRESSION_LOG_FILE, {
+    theory_len_after = len(rendered) if accepted else theory_len_before
+    post_pass_theory = hv.read_text(hv.OPINIONS_FILE).strip()
+    post_pass_theory_hash = hashlib.md5(post_pass_theory.encode()).hexdigest()[:8]
+
+    raw_slot_json = json.dumps(raw_result) if raw_result else ""
+    rendered_attempt = _render_opinions_from_slots(slots) if slots else ""
+    overshoot = max(0, len(rendered_attempt) - target_len) if rendered_attempt else 0
+
+    log_entry = {
         "cycle": cycle,
         "event": "compression_pass",
+        "accepted": accepted,
+        "rejection_reason": rejection_reason,
         "pass_number": passes.triggered_count,
-        "theory_len_before": theory_len_before,
-        "theory_len_after": theory_len_after,
-        "target_len": target_len,
         "target_compression": passes.target_compression,
-        "compression_ratio_actual": round(theory_len_after / max(theory_len_before, 1), 4),
-        "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
-        "stall_count_at_trigger": passes.stall_count,
+        "target_len": target_len,
+        "theory_len_before": theory_len_before,
+        "theory_len_rendered_attempt": len(rendered_attempt),
+        "theory_len_after": theory_len_after,
+        "raw_slot_json_len": len(raw_slot_json),
+        "overshoot_chars": overshoot,
+        "core_rule_len": len(slots.get("core_rule", "")),
+        "alt_rule_len": len(slots.get("alt_rule", "")),
+        "key_exclusion_len": len(slots.get("key_exclusion", "")),
+        "uncertainty_len": len(slots.get("uncertainty", "")),
+        "slot_values": slots,
+        "rendered_preview": rendered_attempt[:300],
+        "pre_pass_theory_hash": pre_pass_theory_hash,
+        "post_pass_theory_hash": post_pass_theory_hash,
+        "best_oracle_fixed": round(passes.best_oracle_fixed or 0, 4),
+        "best_oracle_cycle": passes.best_oracle_cycle,
+        "stall_count_at_trigger": stall_count_at_trigger,
         "triggered_count": passes.triggered_count,
+        "data_slice_rows": COMPRESSION_DATA_SLICE_ROWS,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    }
+    _append_jsonl(COMPRESSION_LOG_FILE, log_entry)
 
-    _append_jsonl(TELEMETRY_FILE, {
+    pass_telem = {
         "cycle": cycle,
         "prompt_budget": gradient.prompt_budget,
         "output_budget": gradient.output_budget,
         "cycle_type": "compression_pass",
         "compression_pass": True,
+        "accepted": accepted,
+        "rejection_reason": rejection_reason,
         "pass_number": passes.triggered_count,
+        "target_compression": passes.target_compression,
+        "target_len": target_len,
         "theory_len_before": theory_len_before,
+        "theory_len_rendered_attempt": len(rendered_attempt),
         "theory_len_after": theory_len_after,
+        "raw_slot_json_len": len(raw_slot_json),
+        "overshoot_chars": overshoot,
+        "core_rule_len": len(slots.get("core_rule", "")),
+        "alt_rule_len": len(slots.get("alt_rule", "")),
+        "key_exclusion_len": len(slots.get("key_exclusion", "")),
+        "uncertainty_len": len(slots.get("uncertainty", "")),
         "compression_ratio_actual": round(theory_len_after / max(theory_len_before, 1), 4),
-        "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
-        "stall_count": passes.stall_count,
+        "best_oracle_fixed": round(passes.best_oracle_fixed or 0, 4),
+        "best_oracle_cycle": passes.best_oracle_cycle,
+        "stall_count_at_trigger": stall_count_at_trigger,
+        "pre_pass_theory_hash": pre_pass_theory_hash,
+        "post_pass_theory_hash": post_pass_theory_hash,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    }
+    pass_telem.update(hv._cycle_usage)
+    pass_telem.update(_cycle_usage_aliases())
+    _append_jsonl(TELEMETRY_FILE, pass_telem)
 
 
 def request_altitude_map(
@@ -333,8 +580,13 @@ def request_altitude_map(
     current_state: dict[str, object],
     altitude_mode: str,
     previous_map: str,
-) -> str:
-    """Run a metacognitive survey without invoking the solver schema."""
+) -> dict[str, str]:
+    """Run a metacognitive survey without invoking the solver schema.
+
+    Returns dict with keys:
+        "map": altitude map text (always present)
+        "opinions_md": updated theory text (survey mode only, may be empty)
+    """
     prompt_messages = hv.format_cycle_prompt(
         cycle,
         args.max_cycles,
@@ -349,16 +601,25 @@ def request_altitude_map(
         max_graveyard_entries=gradient.max_graveyard_entries,
         prompt_budget_tokens=gradient.prompt_budget,
     )
+
+    if altitude_mode == "survey":
+        system_content = (
+            "You are the metacognitive survey instrument of Avalanche V4.7.\n"
+            "Output only a single raw JSON object with exactly two keys:\n"
+            "  altitude_map: your structured comparison analysis (string)\n"
+            "  opinions_md: your updated theory incorporating any new direction (string)\n"
+            "No markdown fences. No extra keys."
+        )
+    else:
+        system_content = (
+            "You are the metacognitive survey instrument of Avalanche V4.7.\n"
+            "Output only a single raw JSON object with exactly one key: altitude_map.\n"
+            "The altitude_map value must be a plain string containing the survey text.\n"
+            "No markdown fences. No extra keys."
+        )
+
     altitude_messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are the metacognitive survey instrument of Avalanche V4.7.\n"
-                "Output only a single raw JSON object with exactly one key: altitude_map.\n"
-                "The altitude_map value must be a plain string containing the survey text.\n"
-                "No markdown fences. No extra keys."
-            ),
-        },
+        {"role": "system", "content": system_content},
         prompt_messages[-1],
     ]
     payload = hv.invoke_openai(
@@ -377,7 +638,11 @@ def request_altitude_map(
     altitude_text = altitude_text.strip()
     if not altitude_text:
         raise RuntimeError("Altitude response did not include altitude_map.")
-    return altitude_text[:1200]
+
+    result = {"map": altitude_text[:1200], "opinions_md": ""}
+    if altitude_mode == "survey":
+        result["opinions_md"] = str(payload.get("opinions_md", "")).strip()
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -401,7 +666,10 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         target_compression=args.compression_target,
         max_passes=args.max_passes,
     )
-    altitude = AltitudeState(frequency=args.altitude_frequency)
+    altitude = AltitudeState(
+        frequency=args.altitude_frequency,
+        prompt_style=args.altitude_prompt,
+    )
 
     # Convergence state
     consecutive_perfect: int = 0
@@ -415,9 +683,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
     print(f"  [V4.7] Features: gradient={'ON' if not args.no_gradient else 'OFF'}, "
           f"passes={'ON' if not args.no_passes else 'OFF'}, "
           f"altitude={'ON' if not args.no_altitude else 'OFF'}")
+    if not args.no_altitude:
+        print(f"  [V4.7] Altitude: every {args.altitude_frequency} cycles, "
+              f"prompt={args.altitude_prompt}")
     if not args.no_passes:
         print(f"  [V4.7] Compression passes: stagnation={args.stagnation_window}, "
               f"target={args.compression_target:.0%}, max={args.max_passes}")
+        print(f"  [V4.7] Compression input gate: min opinions len={args.compression_min_input_len}")
 
     for cycle in range(1, args.max_cycles + 1):
         hv.reset_cycle_usage()
@@ -435,10 +707,26 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         # --- Compression pass check (before altitude, before normal cycle) ---
         if not args.no_passes and passes.should_trigger():
-            print(f"  [V4.7] Cycle {cycle} — COMPRESSION PASS (prompt_budget={prompt_budget})")
-            hv.write_status(cycle, args.max_cycles, "COMPRESSION_PASS")
-            run_compression_pass(cycle, args, gradient, passes)
-            continue
+            current_theory_len = len(previous_opinions)
+            if current_theory_len < args.compression_min_input_len:
+                print(
+                    f"  [V4.7] Cycle {cycle} — compression deferred "
+                    f"(theory_len={current_theory_len} < min={args.compression_min_input_len})"
+                )
+                _append_jsonl(COMPRESSION_LOG_FILE, {
+                    "cycle": cycle,
+                    "event": "compression_deferred_short_input",
+                    "theory_len_before": current_theory_len,
+                    "compression_min_input_len": args.compression_min_input_len,
+                    "stall_count": passes.stall_count,
+                    "pass_number": passes.triggered_count + 1,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+            else:
+                print(f"  [V4.7] Cycle {cycle} — COMPRESSION PASS (prompt_budget={prompt_budget})")
+                hv.write_status(cycle, args.max_cycles, "COMPRESSION_PASS")
+                run_compression_pass(cycle, args, gradient, passes)
+                continue
 
         # --- Altitude check ---
         altitude_mode = None
@@ -465,10 +753,10 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         # --- Altitude cycle: extract map and skip oracle ---
         if altitude_mode:
-            altitude_text = None
+            altitude_result = None
             for format_attempt in range(FORMAT_FAIL_MAX_RETRIES + 1):
                 try:
-                    altitude_text = request_altitude_map(
+                    altitude_result = request_altitude_map(
                         cycle, args, gradient, previous_state, altitude_mode, altitude.last_map
                     )
                     break
@@ -485,7 +773,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                         last_result="FAIL",
                         last_error=str(exc),
                     )
-            if altitude_text is None:
+            if altitude_result is None:
                 _append_jsonl(TELEMETRY_FILE, {
                     "cycle": cycle,
                     "prompt_budget": prompt_budget,
@@ -495,23 +783,42 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
                 continue
-            altitude.last_map = altitude_text
-            print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
+            altitude.last_map = altitude_result["map"]
+            opinions_before = previous_opinions
+            opinions_updated = False
 
-            _append_jsonl(TELEMETRY_FILE, {
+            # Survey mode: write updated opinions.md if the model produced one
+            if altitude_result.get("opinions_md"):
+                hv.write_text(hv.OPINIONS_FILE, altitude_result["opinions_md"])
+                hv.run_command('git add opinions.md && git commit -m "V4.7: altitude reorientation"')
+                opinions_updated = True
+                print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars, "
+                      f"opinions updated ({len(opinions_before)}->{len(altitude_result['opinions_md'])} chars)")
+            else:
+                print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
+
+            altitude_telem = {
                 "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
+                "cycle_type": f"altitude_{altitude_mode}",
                 "altitude_mode": altitude_mode,
                 "altitude_map_len": len(altitude.last_map),
                 "altitude_map": altitude.last_map,
+                "opinions_updated": opinions_updated,
+                "opinions_len_before": len(opinions_before),
+                "opinions_len_after": len(altitude_result.get("opinions_md", "")) if opinions_updated else len(opinions_before),
                 "compression_pass": False,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            }
+            altitude_telem.update(hv._cycle_usage)
+            altitude_telem.update(_cycle_usage_aliases())
+            _append_jsonl(TELEMETRY_FILE, altitude_telem)
             _append_jsonl(COMPRESSION_LOG_FILE, {
                 "cycle": cycle,
                 "event": f"altitude_{altitude_mode}",
                 "map_len": len(altitude.last_map),
                 "altitude_map": altitude.last_map,
+                "opinions_updated": opinions_updated,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             continue
@@ -662,7 +969,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                          len(proposed_dead_ends.get("families", [])) + \
                          len(proposed_dead_ends.get("locals", []))
 
-        _append_jsonl(TELEMETRY_FILE, {
+        grind_telem = {
             "cycle": cycle,
             "prompt_budget": prompt_budget,
             "output_budget": output_budget,
@@ -675,13 +982,18 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "theory_len": theory_len,
             "dead_end_count": dead_end_count,
             "graveyard_entries_shown": gradient.max_graveyard_entries if not args.no_gradient else None,
-            "best_oracle_fixed": round(passes.best_oracle_fixed, 4),
+            "best_oracle_fixed": round(passes.best_oracle_fixed or 0, 4),
             "best_oracle": round(best_oracle_score, 4),
             "stall_count": passes.stall_count,
             "passes_triggered": passes.triggered_count,
             "passes_remaining": passes.max_passes - passes.triggered_count,
+            "compression_input_eligible": theory_len >= args.compression_min_input_len,
+            "compression_min_input_len": args.compression_min_input_len,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        }
+        grind_telem.update(hv._cycle_usage)
+        grind_telem.update(_cycle_usage_aliases())
+        _append_jsonl(TELEMETRY_FILE, grind_telem)
 
     # Max cycles reached
     hv.write_status(args.max_cycles, args.max_cycles, "MAX_CYCLES", last_result="COMPLETE")
@@ -737,12 +1049,17 @@ def parse_args() -> argparse.Namespace:
                         help="Target compression ratio for compression passes (0.5 = compress to 50%%)")
     parser.add_argument("--max-passes", type=int, default=3,
                         help="Maximum compression passes per run")
+    parser.add_argument("--compression-min-input-len", type=int, default=240,
+                        help="Only trigger passes when opinions.md is at least this long")
     parser.add_argument("--no-passes", action="store_true",
                         help="Disable compression passes")
 
     # Altitude cycles
     parser.add_argument("--altitude-frequency", type=int, default=10,
                         help="Altitude survey every N cycles")
+    parser.add_argument("--altitude-prompt", choices=["survey", "rotating"],
+                        default="survey",
+                        help="Altitude prompt style: 'survey' (factual comparison) or 'rotating' (low/medium/high)")
     parser.add_argument("--no-altitude", action="store_true",
                         help="Disable altitude cycles")
 
@@ -751,48 +1068,70 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    try:
+        # Set response format if overridden
+        if args.response_format:
+            hv.DEFAULT_RESPONSE_FORMAT = args.response_format
 
-    # Set response format if overridden
-    if args.response_format:
-        hv.DEFAULT_RESPONSE_FORMAT = args.response_format
+        # Enable hunches if requested
+        if args.hunches:
+            hv.HUNCHES_ENABLED = True
 
-    # Enable hunches if requested
-    if args.hunches:
-        hv.HUNCHES_ENABLED = True
+        # Set up workspace
+        workspace_root = Path(args.workspace_root).resolve()
+        workspace = workspace_root / f"run-{args.run_id}"
+        workspace.mkdir(parents=True, exist_ok=True)
+        os.chdir(workspace)
 
-    # Set up workspace
-    workspace_root = Path(args.workspace_root).resolve()
-    workspace = workspace_root / f"run-{args.run_id}"
-    workspace.mkdir(parents=True, exist_ok=True)
-    os.chdir(workspace)
+        hv.setup_workspace()
 
-    hv.setup_workspace()
+        def _signal_exit(signum: int, _frame: object) -> None:
+            signame = signal.Signals(signum).name
+            _write_terminal_marker(
+                phase=signame,
+                last_result="FAIL",
+                last_error=f"Process received {signame}",
+                default_max_cycles=args.max_cycles,
+            )
+            raise SystemExit(128 + signum)
 
-    # Add assay-specific files to gitignore
-    from v44_epistemics import SUPERSEDED_LOG_FILE
-    assay_ignores = {TELEMETRY_FILE, COMPRESSION_LOG_FILE, SUPERSEDED_LOG_FILE}
-    if args.hunches:
-        assay_ignores.add(hv.HUNCHES_FILE)
-    gitignore_path = ".gitignore"
-    existing = set()
-    if os.path.exists(gitignore_path):
-        existing = {line.strip() for line in hv.read_text(gitignore_path).splitlines() if line.strip()}
-    new_entries = assay_ignores - existing
-    if new_entries:
-        hv.write_text(gitignore_path, "\n".join(sorted(existing | assay_ignores)) + "\n")
-        hv.run_command('git add .gitignore && git commit -m "V4.7: add telemetry files to gitignore"')
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(sig, _signal_exit)
 
-    # Load any existing metric history (for continuation support)
-    hv._metric_history, _ = hv.load_existing_metric_history()
+        # Add assay-specific files to gitignore
+        from v44_epistemics import SUPERSEDED_LOG_FILE
+        assay_ignores = {TELEMETRY_FILE, COMPRESSION_LOG_FILE, SUPERSEDED_LOG_FILE}
+        if args.hunches:
+            assay_ignores.add(hv.HUNCHES_FILE)
+        gitignore_path = ".gitignore"
+        existing = set()
+        if os.path.exists(gitignore_path):
+            existing = {line.strip() for line in hv.read_text(gitignore_path).splitlines() if line.strip()}
+        new_entries = assay_ignores - existing
+        if new_entries:
+            hv.write_text(gitignore_path, "\n".join(sorted(existing | assay_ignores)) + "\n")
+            hv.run_command('git add .gitignore && git commit -m "V4.7: add telemetry files to gitignore"')
 
-    print(f"\n  === COMPRESSION ASSAY V4.7: Run {args.run_id} ===")
-    print(f"  Workspace: {workspace}")
-    print(f"  Model: {args.model}")
-    print(f"  Seed: {args.seed + args.run_id}")
+        # Load any existing metric history (for continuation support)
+        hv._metric_history, _ = hv.load_existing_metric_history()
 
-    status = run_compression_loop(args)
+        print(f"\n  === COMPRESSION ASSAY V4.7: Run {args.run_id} ===")
+        print(f"  Workspace: {workspace}")
+        print(f"  Model: {args.model}")
+        print(f"  Seed: {args.seed + args.run_id}")
 
-    print(f"\n  === V4.7 COMPLETE: {status} ===")
+        status = run_compression_loop(args)
+
+        print(f"\n  === V4.7 COMPLETE: {status} ===")
+    except Exception as exc:
+        traceback.print_exc()
+        _write_terminal_marker(
+            phase="CRASH",
+            last_result="FAIL",
+            last_error=f"{type(exc).__name__}: {exc}",
+            default_max_cycles=args.max_cycles,
+        )
+        raise
 
 
 if __name__ == "__main__":
