@@ -18,3 +18,4 @@ pytest-cache-files-*/
 .coverage
 htmlcov/
 local-runs/archive/
+temp/

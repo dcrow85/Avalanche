@@ -14,8 +14,10 @@ from compression_assay import (
     AltitudeState,
     CompressionPassState,
     GradientState,
+    ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES,
     _compression_target_len,
     _cycle_usage_aliases,
+    _effective_graveyard_entry_cap,
     _max_rendered_slot_len,
     _load_status_progress,
     _write_terminal_marker,
@@ -287,6 +289,11 @@ class TestAltitude:
         assert a.next_altitude() == "survey"
         assert a.next_altitude() == "survey"
 
+    def test_negative_space_mode_always_returns_negative_space(self):
+        a = AltitudeState(frequency=5, prompt_style="negative-space")
+        assert a.next_altitude() == "negative-space"
+        assert a.next_altitude() == "negative-space"
+
     def test_default_prompt_style_is_survey(self):
         a = AltitudeState()
         assert a.prompt_style == "survey"
@@ -297,6 +304,18 @@ class TestAltitude:
         assert a.should_fire(3)
         assert not a.should_fire(4)
         assert a.should_fire(6)
+
+
+class TestAltitudeSurveyGraveyardCap:
+    def test_survey_mode_raises_graveyard_cap(self):
+        assert _effective_graveyard_entry_cap(3, "survey") == ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES
+
+    def test_negative_space_mode_raises_graveyard_cap(self):
+        assert _effective_graveyard_entry_cap(3, "negative-space") == ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES
+
+    def test_non_survey_mode_keeps_original_cap(self):
+        assert _effective_graveyard_entry_cap(3, "low") == 3
+        assert _effective_graveyard_entry_cap(5, None) == 5
 
 
 # ---------------------------------------------------------------------------
@@ -444,6 +463,50 @@ def test_request_altitude_map_survey_mode_empty_opinions(monkeypatch):
 
     assert result["map"] == "Analysis only"
     assert result["opinions_md"] == ""
+
+
+def test_request_altitude_map_negative_space_mode_returns_opinions(monkeypatch):
+    import compression_assay as ca
+
+    captured: dict[str, object] = {}
+
+    def fake_format_cycle_prompt(*args, **kwargs):
+        return [
+            {"role": "system", "content": "unused"},
+            {"role": "user", "content": "negative space prompt"},
+        ]
+
+    def fake_invoke_openai(messages, model, api_base, **kwargs):
+        captured["system_content"] = messages[0]["content"]
+        return {
+            "altitude_map": "Untested structure lies between elements.",
+            "opinions_md": "Investigate relational structure between elements.",
+        }
+
+    monkeypatch.setattr(ca.hv, "format_cycle_prompt", fake_format_cycle_prompt)
+    monkeypatch.setattr(ca.hv, "invoke_openai", fake_invoke_openai)
+
+    args = argparse.Namespace(
+        max_cycles=20,
+        model="anthropic/claude-haiku-4-5",
+        api_base="https://api.haimaker.ai/v1",
+        api_key_env="HAIMAKER_KEY",
+    )
+    gradient = GradientState(initial_prompt_budget=1200, floor=400, decay="linear", total_cycles=100)
+
+    result = request_altitude_map(
+        cycle=10,
+        args=args,
+        gradient=gradient,
+        current_state={},
+        altitude_mode="negative-space",
+        previous_map="",
+    )
+
+    assert result["map"] == "Untested structure lies between elements."
+    assert result["opinions_md"] == "Investigate relational structure between elements."
+    assert "two keys" in captured["system_content"]
+    assert "opinions_md" in captured["system_content"]
 
 
 # ---------------------------------------------------------------------------

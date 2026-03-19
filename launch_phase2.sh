@@ -18,12 +18,14 @@
 set -euo pipefail
 cd /opt/avalanche
 
-export HAIMAKER_KEY=sk-OSrn0y2DNNgyVDZYj6m3Uw
+: "${HAIMAKER_KEY:?HAIMAKER_KEY must be set in the environment before launching Phase 2.}"
 
 WORKSPACE="/opt/avalanche/runs/v47-phase2"
 SCRIPT="/opt/avalanche/compression_assay.py"
 LOGDIR="$WORKSPACE/logs"
+PIDDIR="$WORKSPACE/pids"
 mkdir -p "$LOGDIR"
+mkdir -p "$PIDDIR"
 
 echo "=== V4.7 Phase 2: Altitude-Only Graveyard Reading ==="
 echo "Workspace: $WORKSPACE"
@@ -32,7 +34,7 @@ echo ""
 # Altitude every 10 cycles (2 replicates)
 for RUN_ID in 50 51; do
     echo "Launching run-$RUN_ID (altitude every 10, survey prompt)..."
-    nohup python3 "$SCRIPT" \
+    nohup python3 -u "$SCRIPT" \
         --run-id "$RUN_ID" \
         --workspace-root "$WORKSPACE" \
         --max-cycles 200 \
@@ -41,6 +43,7 @@ for RUN_ID in 50 51; do
         --altitude-frequency 10 \
         --altitude-prompt survey \
         > "$LOGDIR/run-${RUN_ID}.log" 2>&1 &
+    echo "$!" > "$PIDDIR/run-${RUN_ID}.pid"
     echo "  PID: $!"
     sleep 2
 done
@@ -48,7 +51,7 @@ done
 # Altitude every 15 cycles (2 replicates)
 for RUN_ID in 52 53; do
     echo "Launching run-$RUN_ID (altitude every 15, survey prompt)..."
-    nohup python3 "$SCRIPT" \
+    nohup python3 -u "$SCRIPT" \
         --run-id "$RUN_ID" \
         --workspace-root "$WORKSPACE" \
         --max-cycles 200 \
@@ -57,6 +60,7 @@ for RUN_ID in 52 53; do
         --altitude-frequency 15 \
         --altitude-prompt survey \
         > "$LOGDIR/run-${RUN_ID}.log" 2>&1 &
+    echo "$!" > "$PIDDIR/run-${RUN_ID}.pid"
     echo "  PID: $!"
     sleep 2
 done

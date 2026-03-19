@@ -90,6 +90,27 @@ def test_format_cycle_prompt_applies_prompt_budget(monkeypatch, tmp_path):
     assert "...[truncated for context budget]..." in trimmed_prompt
 
 
+def test_format_cycle_prompt_negative_space_altitude_instruction(monkeypatch, tmp_path):
+    hv = load_module()
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / hv.GOAL_FILE).write_text("Find the hidden law.", encoding="utf-8")
+    (tmp_path / hv.DATA_FILE).write_text("[]", encoding="utf-8")
+    (tmp_path / hv.OPINIONS_FILE).write_text("Current theory.", encoding="utf-8")
+    (tmp_path / hv.DEAD_ENDS_JSON_FILE).write_text(json.dumps(hv.blank_dead_ends(), indent=2), encoding="utf-8")
+
+    prompt = hv.format_cycle_prompt(
+        10,
+        200,
+        "grind",
+        hv.blank_state(),
+        altitude_mode="negative-space",
+    )[-1]["content"]
+
+    assert "ALTITUDE SURVEY (NEGATIVE SPACE)" in prompt
+    assert "Do not describe what failed." in prompt
+    assert "what remains untested" in prompt
+
+
 def test_invoke_openai_uses_max_completion_tokens_for_openai_gpt5(monkeypatch):
     hv = load_module()
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")

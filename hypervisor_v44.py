@@ -619,6 +619,14 @@ def format_cycle_prompt(
             "5. Based on that comparison, state one search direction you have not yet "
             "tested directly."
         )
+    elif altitude_mode == "negative-space":
+        altitude_instruction = (
+            "\n\nALTITUDE SURVEY (NEGATIVE SPACE): Read your ruled-out approaches and your current theory.\n"
+            "Do not describe what failed.\n"
+            "Describe what kind of idea or approach has not been tested yet.\n"
+            "Then propose one specific search direction based on what remains untested.\n"
+            "Make the direction actionable enough that the next working cycle could explore it."
+        )
 
     def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
         if max_chars is None or len(text) <= max_chars:

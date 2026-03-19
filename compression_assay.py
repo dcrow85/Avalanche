@@ -55,6 +55,7 @@ COMPRESSION_SLOTS = {
 }
 COMPRESSION_SLOT_KEYS = set(COMPRESSION_SLOTS.keys())
 COMPRESSION_MIN_RENDER_LEN = 220  # Smallest viable slot-rendered summary worth preserving
+ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES = 12  # Let survey mode see enough fossils to compare structure
 
 # Decay functions expect total_cycles to be set; we compute it from
 # the gradient floor, initial window, and max_cycles.
@@ -164,7 +165,7 @@ class CompressionPassState:
 class AltitudeState:
     """Tracks periodic metacognitive survey cycles."""
     frequency: int = 10
-    prompt_style: str = "survey"  # "survey" (factual comparison) or "rotating" (low/medium/high)
+    prompt_style: str = "survey"  # "survey", "negative-space", or "rotating" (low/medium/high)
     altitudes: list[str] = field(default_factory=lambda: ["low", "medium", "high"])
     current_index: int = 0
     last_map: str = ""
@@ -173,8 +174,8 @@ class AltitudeState:
         return cycle > 0 and cycle % self.frequency == 0
 
     def next_altitude(self) -> str:
-        if self.prompt_style == "survey":
-            return "survey"
+        if self.prompt_style != "rotating":
+            return self.prompt_style
         alt = self.altitudes[self.current_index % len(self.altitudes)]
         self.current_index += 1
         return alt
@@ -216,6 +217,13 @@ def _cycle_usage_aliases() -> dict[str, int]:
         "total_tokens": int(hv._cycle_usage.get("api_total_tokens_cycle", 0)),
         "reasoning_tokens": int(hv._cycle_usage.get("api_reasoning_tokens_cycle", 0)),
     }
+
+
+def _effective_graveyard_entry_cap(base_cap: int, altitude_mode: str | None) -> int:
+    """Raise the graveyard cap for survey altitude so the prompt can see recent fossils."""
+    if altitude_mode in {"survey", "negative-space"}:
+        return max(base_cap, ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES)
+    return base_cap
 
 
 def _load_status_progress(default_max_cycles: int) -> tuple[int, int]:
@@ -585,7 +593,7 @@ def request_altitude_map(
 
     Returns dict with keys:
         "map": altitude map text (always present)
-        "opinions_md": updated theory text (survey mode only, may be empty)
+        "opinions_md": updated theory text (survey/negative-space modes only, may be empty)
     """
     prompt_messages = hv.format_cycle_prompt(
         cycle,
@@ -602,7 +610,7 @@ def request_altitude_map(
         prompt_budget_tokens=gradient.prompt_budget,
     )
 
-    if altitude_mode == "survey":
+    if altitude_mode in {"survey", "negative-space"}:
         system_content = (
             "You are the metacognitive survey instrument of Avalanche V4.7.\n"
             "Output only a single raw JSON object with exactly two keys:\n"
@@ -640,7 +648,7 @@ def request_altitude_map(
         raise RuntimeError("Altitude response did not include altitude_map.")
 
     result = {"map": altitude_text[:1200], "opinions_md": ""}
-    if altitude_mode == "survey":
+    if altitude_mode in {"survey", "negative-space"}:
         result["opinions_md"] = str(payload.get("opinions_md", "")).strip()
     return result
 
@@ -743,7 +751,9 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 f"Prompt budget: {prompt_budget}/{gradient.initial_prompt_budget} tokens. "
                 f"Output budget: {output_budget} tokens (fixed)."
             ),
-            "max_graveyard_entries": gradient.max_graveyard_entries,
+            "max_graveyard_entries": _effective_graveyard_entry_cap(
+                gradient.max_graveyard_entries, altitude_mode
+            ),
             "prompt_budget_tokens": prompt_budget,
         }
         if altitude_mode:
@@ -1057,9 +1067,9 @@ def parse_args() -> argparse.Namespace:
     # Altitude cycles
     parser.add_argument("--altitude-frequency", type=int, default=10,
                         help="Altitude survey every N cycles")
-    parser.add_argument("--altitude-prompt", choices=["survey", "rotating"],
+    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating"],
                         default="survey",
-                        help="Altitude prompt style: 'survey' (factual comparison) or 'rotating' (low/medium/high)")
+                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), or 'rotating' (low/medium/high)")
     parser.add_argument("--no-altitude", action="store_true",
                         help="Disable altitude cycles")
 
