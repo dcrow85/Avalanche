@@ -316,6 +316,38 @@ def history_summary(state: dict[str, object]) -> str:
     return " | ".join(parts) if parts else "No historical dead-end ids yet."
 
 
+def detect_work_event(
+    previous_active: dict[str, list[dict[str, object]]],
+    current_active: dict[str, list[dict[str, object]]],
+) -> bool:
+    """Return True if a structurally meaningful change occurred in dead-end state.
+
+    Triggers on: new basin/family ID appeared, or existing basin/family was superseded.
+    Does NOT trigger on local changes alone (too noisy).
+    """
+    prev_basin_ids = _collect_ids(previous_active.get("basins", []))
+    curr_basin_ids = _collect_ids(current_active.get("basins", []))
+    prev_family_ids = _collect_ids(previous_active.get("families", []))
+    curr_family_ids = _collect_ids(current_active.get("families", []))
+
+    # New basin or family appeared
+    if curr_basin_ids - prev_basin_ids or curr_family_ids - prev_family_ids:
+        return True
+
+    # Basin or family was superseded (status changed from ACTIVE to SUPERSEDED)
+    for tier_key in ("basins", "families"):
+        prev_items = {str(item.get("id", "")): item for item in previous_active.get(tier_key, []) if item.get("id")}
+        curr_items = {str(item.get("id", "")): item for item in current_active.get(tier_key, []) if item.get("id")}
+        for item_id in prev_items:
+            if item_id in curr_items:
+                prev_status = str(prev_items[item_id].get("status", "ACTIVE"))
+                curr_status = str(curr_items[item_id].get("status", "ACTIVE"))
+                if prev_status == "ACTIVE" and curr_status == "SUPERSEDED":
+                    return True
+
+    return False
+
+
 SUPERSEDED_LOG_FILE = "superseded_theories.jsonl"
 
 

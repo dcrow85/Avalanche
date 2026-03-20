@@ -355,6 +355,60 @@ def hidden_law(arr: list[int]) -> list[int]:
     return result
 
 
+# ---------------------------------------------------------------------------
+# AST structure metrics (V4.7.1 calorimeter)
+# ---------------------------------------------------------------------------
+
+def solver_ast_node_count(code: str) -> int:
+    """Count total AST nodes in solver code."""
+    try:
+        tree = ast.parse(code or "")
+    except SyntaxError:
+        return 0
+    return sum(1 for _ in ast.walk(tree))
+
+
+def _normalize_ast_node(node: ast.AST) -> str:
+    """Return a structural label for an AST node, stripping variable names and literals."""
+    label = type(node).__name__
+    # Preserve operator types for BinOp/UnaryOp/BoolOp/Compare
+    if isinstance(node, ast.BinOp) and hasattr(node, "op"):
+        label += f":{type(node.op).__name__}"
+    elif isinstance(node, ast.UnaryOp) and hasattr(node, "op"):
+        label += f":{type(node.op).__name__}"
+    elif isinstance(node, ast.BoolOp) and hasattr(node, "op"):
+        label += f":{type(node.op).__name__}"
+    elif isinstance(node, ast.Compare) and hasattr(node, "ops"):
+        ops = ",".join(type(op).__name__ for op in node.ops)
+        label += f":{ops}"
+    return label
+
+
+def solver_ast_structure_hash(code: str) -> str:
+    """Hash the structural shape of solver AST, invariant to variable names and literals.
+
+    Returns an 8-character hex digest. Empty/unparseable code returns empty string.
+    """
+    try:
+        tree = ast.parse(code or "")
+    except SyntaxError:
+        return ""
+    # Build a parenthesized structural representation
+    parts: list[str] = []
+    for node in ast.walk(tree):
+        parts.append(_normalize_ast_node(node))
+    if not parts:
+        return ""
+    import hashlib
+    structural_repr = "|".join(parts)
+    return hashlib.md5(structural_repr.encode()).hexdigest()[:8]
+
+
+# Mutable state for cross-cycle AST tracking (set from compression_assay)
+_previous_ast_node_count: int = 0
+_previous_ast_structure_hash: str = ""
+
+
 def load_solver_module(path: str) -> tuple[types.ModuleType | None, str | None]:
     if not os.path.exists(path):
         return None, "solver.py not found."
@@ -1105,12 +1159,25 @@ def compute_cycle_metrics(
     delta_c = current_complexity - (previous_complexity or 0)
     turbulence = classify_turbulence(d_sem, delta_c) if previous_complexity is not None else "BOOTSTRAP"
 
+    # AST structure metrics (V4.7.1)
+    global _previous_ast_node_count, _previous_ast_structure_hash
+    node_count = solver_ast_node_count(attempted_solver_code)
+    structure_hash = solver_ast_structure_hash(attempted_solver_code)
+    node_delta = abs(node_count - _previous_ast_node_count) if _previous_ast_node_count else 0
+    hash_changed = (structure_hash != _previous_ast_structure_hash) if _previous_ast_structure_hash else False
+    _previous_ast_node_count = node_count
+    _previous_ast_structure_hash = structure_hash
+
     metrics = {
         "cycle_metric": cycle,
         "opinions_word_count": len(current_opinions.split()),
         "opinions_jaccard_distance": round(d_sem, 4),
         "solver_ast_complexity": current_complexity,
         "solver_ast_delta": delta_c,
+        "solver_ast_node_count": node_count,
+        "solver_ast_structure_hash": structure_hash,
+        "solver_ast_node_delta": node_delta,
+        "solver_ast_hash_changed": hash_changed,
         "turbulence_state": turbulence,
         "ptolemaic_ratio": round(
             current_complexity / max(1, len(current_active.get("families", []))),

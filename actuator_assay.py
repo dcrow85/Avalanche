@@ -275,7 +275,7 @@ def run_calibration(
         # Compute assay metrics on this cycle
         curr_dead_ends = grind_payload.get("dead_ends", {})
         test_cases = hv.build_fixed_oracle_suite() + [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
-        oracle_score, _, _, _ = evaluate_solver_fractional(
+        oracle_score, _, _, _, _, _ = evaluate_solver_fractional(
             test_cases, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
         dc = delta_c_topological(attempted_solver)
@@ -493,7 +493,7 @@ def run_gated_loop(
         hv.write_text(hv.SOLVER_FILE, proposed_solver + "\n")
 
         test_cases = hv.build_fixed_oracle_suite() + [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
-        oracle_score, passed, total, failure_report = evaluate_solver_fractional(
+        oracle_score, passed, total, failure_report, _, _ = evaluate_solver_fractional(
             test_cases, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
 

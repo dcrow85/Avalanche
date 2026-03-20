@@ -32,6 +32,7 @@ os.environ.pop("AVALANCHE_ACTIVE", None)
 import hypervisor_v44 as hv
 from actuator_metrics import evaluate_solver_fractional
 from v44_epistemics import (
+    detect_work_event,
     load_state,
     merge_state,
     save_state,
@@ -43,6 +44,7 @@ from v44_epistemics import (
 
 TELEMETRY_FILE = "telemetry.jsonl"
 COMPRESSION_LOG_FILE = "compression_log.jsonl"
+OPINIONS_HISTORY_FILE = "opinions_history.jsonl"
 FORMAT_FAIL_MAX_RETRIES = 2
 COMPRESSION_DATA_SLICE_ROWS = 2  # Rows from data.json shown during compression passes
 
@@ -217,6 +219,37 @@ def _cycle_usage_aliases() -> dict[str, int]:
         "total_tokens": int(hv._cycle_usage.get("api_total_tokens_cycle", 0)),
         "reasoning_tokens": int(hv._cycle_usage.get("api_reasoning_tokens_cycle", 0)),
     }
+
+
+def _hamming_distance(a: list[bool], b: list[bool]) -> int:
+    """Hamming distance between two boolean vectors of equal length."""
+    if len(a) != len(b):
+        raise ValueError(f"Vectors must be same length: {len(a)} != {len(b)}")
+    return sum(x != y for x, y in zip(a, b))
+
+
+def _log_opinions_history(
+    cycle: int,
+    cycle_type: str,
+    opinions_text: str,
+    opinions_text_hash: str,
+) -> None:
+    """Append one row to opinions_history.jsonl."""
+    _append_jsonl(OPINIONS_HISTORY_FILE, {
+        "cycle": cycle,
+        "cycle_type": cycle_type,
+        "opinions_text": opinions_text,
+        "opinions_text_hash": opinions_text_hash,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+
+def _snapshot_dead_ends(cycle: int, current_state: dict[str, object]) -> None:
+    """Write dead_ends_snapshot_cycle_<N>.json on work events."""
+    snapshot_path = f"dead_ends_snapshot_cycle_{cycle}.json"
+    active_de = current_state.get("active", {})
+    with open(snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(active_de, f, indent=2)
 
 
 def _effective_graveyard_entry_cap(base_cap: int, altitude_mode: str | None) -> int:
@@ -548,6 +581,9 @@ def run_compression_pass(
     }
     _append_jsonl(COMPRESSION_LOG_FILE, log_entry)
 
+    # Log opinions history for compression pass
+    _log_opinions_history(cycle, "compression_pass", post_pass_theory, post_pass_theory_hash)
+
     pass_telem = {
         "cycle": cycle,
         "prompt_budget": gradient.prompt_budget,
@@ -574,6 +610,8 @@ def run_compression_pass(
         "stall_count_at_trigger": stall_count_at_trigger,
         "pre_pass_theory_hash": pre_pass_theory_hash,
         "post_pass_theory_hash": post_pass_theory_hash,
+        "theory_hash": post_pass_theory_hash,
+        "opinions_text_hash": post_pass_theory_hash,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     pass_telem.update(hv._cycle_usage)
@@ -684,6 +722,11 @@ def run_compression_loop(args: argparse.Namespace) -> str:
     previous_theory_hash: str | None = None
     best_oracle_score: float = 0.0
     previous_complexity: int = 0
+
+    # Calorimeter state (V4.7.1)
+    previous_fixed_vector: list[bool] | None = None
+    previous_ast_node_count: int = 0
+    previous_ast_structure_hash: str = ""
 
     print(f"\n  [V4.7] Starting compression loop")
     print(f"  [V4.7] Prompt gradient: {args.initial_window} -> {args.floor} ({args.decay})")
@@ -807,6 +850,11 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             else:
                 print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
 
+            # Log opinions history for altitude cycle
+            alt_opinions_text = hv.read_text(hv.OPINIONS_FILE).strip()
+            alt_opinions_hash = hashlib.md5(alt_opinions_text.encode()).hexdigest()[:8]
+            _log_opinions_history(cycle, f"altitude_{altitude_mode}", alt_opinions_text, alt_opinions_hash)
+
             altitude_telem = {
                 "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
@@ -818,6 +866,8 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 "opinions_len_before": len(opinions_before),
                 "opinions_len_after": len(altitude_result.get("opinions_md", "")) if opinions_updated else len(opinions_before),
                 "compression_pass": False,
+                "theory_hash": alt_opinions_hash,
+                "opinions_text_hash": alt_opinions_hash,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             altitude_telem.update(hv._cycle_usage)
@@ -876,14 +926,14 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         # Oracle: fixed suite for compression pass trigger
         fixed_suite = hv.build_fixed_oracle_suite()
-        fixed_score, fixed_passed, fixed_total, _ = evaluate_solver_fractional(
+        fixed_score, fixed_passed, fixed_total, _, fixed_vector, fixed_failure_cat = evaluate_solver_fractional(
             fixed_suite, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
 
         # Oracle: combined (fixed + random) for ratchet/telemetry
         random_cases = [hv.generate_permutation_array(rng) for _ in range(args.tests_per_cycle)]
         all_cases = fixed_suite + random_cases
-        oracle_score, passed, total, failure_report = evaluate_solver_fractional(
+        oracle_score, passed, total, failure_report, _, _ = evaluate_solver_fractional(
             all_cases, hv.hidden_law, str(Path(hv.SOLVER_FILE))
         )
 
@@ -973,12 +1023,44 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         best_oracle_score = max(best_oracle_score, oracle_score)
 
-        # --- Telemetry ---
+        # --- Calorimeter sensors (V4.7.1) ---
         theory_len = len(current_theory)
+        opinions_text_hash = current_hash[:8]
         dead_end_count = len(proposed_dead_ends.get("basins", [])) + \
                          len(proposed_dead_ends.get("families", [])) + \
                          len(proposed_dead_ends.get("locals", []))
 
+        # S_t: Hamming surprise on fixed suite
+        hamming = None
+        if previous_fixed_vector is not None and len(fixed_vector) == len(previous_fixed_vector):
+            hamming = _hamming_distance(previous_fixed_vector, fixed_vector)
+        previous_fixed_vector = list(fixed_vector)
+
+        # AST_t: code structure movement
+        ast_node_count = hv.solver_ast_node_count(proposed_solver)
+        ast_structure_hash = hv.solver_ast_structure_hash(proposed_solver)
+        ast_node_delta = abs(ast_node_count - previous_ast_node_count) if previous_ast_node_count else 0
+        ast_hash_changed = (ast_structure_hash != previous_ast_structure_hash) if previous_ast_structure_hash else False
+        previous_ast_node_count = ast_node_count
+        previous_ast_structure_hash = ast_structure_hash
+
+        # W_t: work event proxy
+        current_active = current_state.get("active", {})
+        if not isinstance(current_active, dict):
+            current_active = {}
+        prev_active = previous_state.get("active", {})
+        if not isinstance(prev_active, dict):
+            prev_active = {}
+        work_event = detect_work_event(prev_active, current_active)
+
+        # Work-event snapshot
+        if work_event:
+            _snapshot_dead_ends(cycle, current_state)
+
+        # Opinions history
+        _log_opinions_history(cycle, "grind", current_theory, opinions_text_hash)
+
+        # --- Telemetry ---
         grind_telem = {
             "cycle": cycle,
             "prompt_budget": prompt_budget,
@@ -988,7 +1070,8 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "oracle_combined": round(oracle_score, 4),
             "altitude_mode": None,
             "compression_pass": False,
-            "theory_hash": current_hash[:8],
+            "theory_hash": opinions_text_hash,
+            "opinions_text_hash": opinions_text_hash,
             "theory_len": theory_len,
             "dead_end_count": dead_end_count,
             "graveyard_entries_shown": gradient.max_graveyard_entries if not args.no_gradient else None,
@@ -999,6 +1082,15 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "passes_remaining": passes.max_passes - passes.triggered_count,
             "compression_input_eligible": theory_len >= args.compression_min_input_len,
             "compression_min_input_len": args.compression_min_input_len,
+            # Calorimeter sensors
+            "fixed_suite_vector": fixed_vector,
+            "hamming_distance": hamming,
+            "first_failure_category": fixed_failure_cat,
+            "solver_ast_node_count": ast_node_count,
+            "solver_ast_structure_hash": ast_structure_hash,
+            "solver_ast_node_delta": ast_node_delta,
+            "solver_ast_hash_changed": ast_hash_changed,
+            "work_event": work_event,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         grind_telem.update(hv._cycle_usage)
@@ -1110,7 +1202,7 @@ def main() -> None:
 
         # Add assay-specific files to gitignore
         from v44_epistemics import SUPERSEDED_LOG_FILE
-        assay_ignores = {TELEMETRY_FILE, COMPRESSION_LOG_FILE, SUPERSEDED_LOG_FILE}
+        assay_ignores = {TELEMETRY_FILE, COMPRESSION_LOG_FILE, OPINIONS_HISTORY_FILE, SUPERSEDED_LOG_FILE}
         if args.hunches:
             assay_ignores.add(hv.HUNCHES_FILE)
         gitignore_path = ".gitignore"

@@ -21,6 +21,33 @@
 
     <section class="section">
       <div class="section-header">
+        <div class="section-title">Dossier</div>
+        <div class="section-meta">Curated context for this run</div>
+      </div>
+      <div class="section-body">
+        <div class="dossier-grid" id="dossier-grid">
+          <article class="dossier-card">
+            <div class="telemetry-label">Program Line</div>
+            <div class="telemetry-value">Indexed Run</div>
+          </article>
+          <article class="dossier-card">
+            <div class="telemetry-label">Witness Type</div>
+            <div class="telemetry-value">Unclassified</div>
+          </article>
+          <article class="dossier-card dossier-wide">
+            <div class="telemetry-label">Why It Matters</div>
+            <div class="dossier-copy">No curated summary yet.</div>
+          </article>
+          <article class="dossier-card dossier-wide">
+            <div class="telemetry-label">Current Read</div>
+            <div class="dossier-copy">Inspect the playback and dead-end surfaces below.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
         <div class="section-title">Run State</div>
         <div class="section-meta" id="run-timestamp">Timestamp pending</div>
       </div>
@@ -84,6 +111,34 @@
   <script>
     let runPayload = null;
     let snapshotIndex = -1;
+
+    const RUN_DOSSIER_REGISTRY = {
+      "run-12": {
+        programLine: "Compression / recovery",
+        witnessType: "Archive Witness",
+        whyItMatters: "Recovered a thicker ontology after a long collapse, showing that basin return is possible.",
+        currentRead: "The important feature of run-12 is recovery: the same organism lost a deeper basin, wandered, and later found its way back.",
+      },
+      "run-39": {
+        programLine: "Structural lifecycle",
+        witnessType: "Archive Witness",
+        whyItMatters: "Compression promoted the run into suffix logic, then the branch decayed back into a cheaper local basin while preserving the fossil.",
+        currentRead: "Run-39 is the clean witness for basin birth, active tenure, decline, and tombstoned preservation in the graveyard.",
+      },
+      "run-51": {
+        programLine: "Phase 2 / graveyard legibility",
+        witnessType: "Archive Witness",
+        whyItMatters: "The richest graveyard witness in the project: the active theory saturated while probes kept reading directional structure from its fossils.",
+        currentRead: "Run-51 closed as a baseline for survey altitude and became the main source for probe work on horizons, spiral history, and grafts.",
+      },
+      "run-55": {
+        programLine: "Phase 2b / negative-space altitude",
+        witnessType: "Live Witness",
+        whyItMatters: "Current one-ridge test for whether negative-space prompting can push the organism beyond local comparison into more structural search.",
+        currentRead: "Run-55 moved into rank-position territory early; the open question is whether it can widen again or merely settle on the next ridge.",
+      },
+    };
+
     const LIVE_ROUTE_BY_RUN = {
       "terrarium-v44-codex-perm-53-01": "/live/ava-53/",
       "terrarium-v44-codex-perm-54-01": "/live/ava-54/",
@@ -110,6 +165,26 @@
           <div class="telemetry-value">${value}</div>
         </div>
       `;
+    }
+
+    function dossierCard(label, value, wide = false) {
+      const extraClass = wide ? " dossier-wide" : "";
+      const body = wide ? `<div class="dossier-copy">${value}</div>` : `<div class="telemetry-value">${value}</div>`;
+      return `
+        <article class="dossier-card${extraClass}">
+          <div class="telemetry-label">${label}</div>
+          ${body}
+        </article>
+      `;
+    }
+
+    function dossierFor(slug) {
+      return RUN_DOSSIER_REGISTRY[slug] || {
+        programLine: "Indexed Run",
+        witnessType: "Unclassified",
+        whyItMatters: "No curated summary yet.",
+        currentRead: "Inspect the playback and dead-end surfaces below.",
+      };
     }
 
     function setAlertState(snapshot) {
@@ -168,6 +243,7 @@
       const run = await res.json();
       runPayload = run;
       const liveLink = LIVE_ROUTE_BY_RUN[run.name] || null;
+      const dossier = dossierFor(slug);
 
       document.getElementById("run-name").textContent = run.name;
       document.getElementById("run-subtitle").textContent = `${run.organism} // ${run.phase || "UNKNOWN"} // ${run.last_result || "IN-FLIGHT"}`;
@@ -175,6 +251,13 @@
       document.getElementById("opinions-meta").textContent = `${run.opinions_words || 0} words`;
       document.getElementById("deadends-meta").textContent = `${run.dead_ends_words || 0} words`;
       document.getElementById("error-content").textContent = run.last_error || "No terminal error recorded.";
+
+      document.getElementById("dossier-grid").innerHTML = [
+        dossierCard("Program Line", dossier.programLine),
+        dossierCard("Witness Type", dossier.witnessType),
+        dossierCard("Why It Matters", dossier.whyItMatters, true),
+        dossierCard("Current Read", dossier.currentRead, true),
+      ].join("");
 
       const latest = run.latest_metrics || {};
       document.getElementById("run-summary").innerHTML = [

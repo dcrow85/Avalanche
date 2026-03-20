@@ -166,37 +166,75 @@ def _alarm_handler(signum, frame):
     raise _SolverTimeout()
 
 
+FAILURE_CATEGORIES = ("timeout", "crash", "wrong_shape", "wrong_values", "no_output", "other")
+
+
+def _classify_failure_category(
+    failure_report: str,
+    *,
+    result: object = None,
+    is_timeout: bool = False,
+    is_crash: bool = False,
+    is_load_error: bool = False,
+) -> str:
+    """Classify the first failure into a deterministic category."""
+    if is_timeout:
+        return "timeout"
+    if is_crash:
+        return "crash"
+    if is_load_error:
+        return "no_output"
+    if result is not None and not isinstance(result, list):
+        return "wrong_shape"
+    if result is not None and isinstance(result, list):
+        return "wrong_values"
+    # Fallback: classify from message text
+    lower = failure_report.lower()
+    if "timeout" in lower or "timed out" in lower:
+        return "timeout"
+    if "crash" in lower or "import crash" in lower:
+        return "crash"
+    if "not found" in lower or "no transduce" in lower:
+        return "no_output"
+    return "other"
+
+
 def evaluate_solver_fractional(
     test_cases: list[list[int]],
     hidden_law_fn,
     solver_path: str,
-) -> tuple[float, int, int, str]:
+) -> tuple[float, int, int, str, list[bool], str]:
     """Run all test cases (no short-circuit) and return fractional score.
 
     Returns:
-        (score, passed_count, total_count, first_failure_report)
+        (score, passed_count, total_count, first_failure_report,
+         per_case_results, first_failure_category)
     """
+    n = len(test_cases)
+
     # Load solver module
     module_name = f"_assay_solver_{os.getpid()}_{datetime.now(timezone.utc).timestamp()}"
     if not os.path.exists(solver_path):
-        return 0.0, 0, len(test_cases), "solver.py not found"
+        return 0.0, 0, n, "solver.py not found", [False] * n, "no_output"
 
     spec = importlib.util.spec_from_file_location(module_name, solver_path)
     if spec is None or spec.loader is None:
-        return 0.0, 0, len(test_cases), "Unable to load solver module"
+        return 0.0, 0, n, "Unable to load solver module", [False] * n, "no_output"
 
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
     except Exception as exc:
-        return 0.0, 0, len(test_cases), f"Import crash: {exc}"
+        return 0.0, 0, n, f"Import crash: {exc}", [False] * n, "crash"
 
     transduce = getattr(module, "transduce", None)
     if not callable(transduce):
-        return 0.0, 0, len(test_cases), "No transduce function"
+        return 0.0, 0, n, "No transduce function", [False] * n, "no_output"
 
     passed = 0
     first_failure = ""
+    first_failure_cat = ""
+    per_case: list[bool] = []
     use_alarm = os.name != "nt"
 
     for arr in test_cases:
@@ -213,19 +251,31 @@ def evaluate_solver_fractional(
             else:
                 result = transduce(arr.copy())
         except _SolverTimeout:
+            per_case.append(False)
             if not first_failure:
                 first_failure = f"Timeout on {arr}"
+                first_failure_cat = "timeout"
             continue
         except Exception as exc:
+            per_case.append(False)
             if not first_failure:
                 first_failure = f"Crash on {arr}: {exc}"
+                first_failure_cat = "crash"
             continue
 
         if isinstance(result, list) and result == expected:
             passed += 1
-        elif not first_failure:
-            first_failure = f"Input: {arr}, Expected: {expected}, Got: {result}"
+            per_case.append(True)
+        else:
+            per_case.append(False)
+            if not first_failure:
+                first_failure = f"Input: {arr}, Expected: {expected}, Got: {result}"
+                first_failure_cat = _classify_failure_category(
+                    first_failure, result=result,
+                )
 
     total = len(test_cases)
     score = passed / total if total > 0 else 0.0
-    return score, passed, total, first_failure
+    if not first_failure_cat and not first_failure:
+        first_failure_cat = "pass" if score == 1.0 else "other"
+    return score, passed, total, first_failure, per_case, first_failure_cat

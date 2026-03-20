@@ -10,6 +10,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from actuator_metrics import (
     EPSILON,
+    _classify_failure_category,
     _dead_end_diff,
     ast_branching_depth,
     delta_c_topological,
@@ -191,13 +192,15 @@ def test_evaluate_fractional_all_pass():
         f.flush()
         path = f.name
     try:
-        score, passed, total, failure = evaluate_solver_fractional(
+        score, passed, total, failure, per_case, fail_cat = evaluate_solver_fractional(
             [[1, 2, 3], [4, 5, 6]], _simple_law, path
         )
         assert score == 1.0
         assert passed == 2
         assert total == 2
         assert failure == ""
+        assert per_case == [True, True]
+        assert fail_cat == "pass"
     finally:
         os.unlink(path)
 
@@ -218,7 +221,7 @@ def test_evaluate_fractional_partial_pass():
         path = f.name
     try:
         cases = [[1, 2, 3], [4, 5, 6, 7], [8, 9]]
-        score, passed, total, failure = evaluate_solver_fractional(
+        score, passed, total, failure, per_case, fail_cat = evaluate_solver_fractional(
             cases, _simple_law, path
         )
         # Cases [1,2,3] and [8,9] pass (len<=3), [4,5,6,7] fails
@@ -226,18 +229,22 @@ def test_evaluate_fractional_partial_pass():
         assert total == 3
         assert abs(score - 2 / 3) < 0.01
         assert "Expected" in failure
+        assert per_case == [True, False, True]
+        assert fail_cat == "wrong_values"
     finally:
         os.unlink(path)
 
 
 def test_evaluate_fractional_no_solver():
     """Missing solver file → score 0."""
-    score, passed, total, failure = evaluate_solver_fractional(
+    score, passed, total, failure, per_case, fail_cat = evaluate_solver_fractional(
         [[1, 2]], _simple_law, "/nonexistent/solver.py"
     )
     assert score == 0.0
     assert passed == 0
     assert "not found" in failure
+    assert per_case == [False]
+    assert fail_cat == "no_output"
 
 
 def test_evaluate_fractional_crash():
@@ -255,13 +262,15 @@ def test_evaluate_fractional_crash():
         path = f.name
     try:
         cases = [[1, 2], [3, 4, 5], [6, 7]]
-        score, passed, total, failure = evaluate_solver_fractional(
+        score, passed, total, failure, per_case, fail_cat = evaluate_solver_fractional(
             cases, _simple_law, path
         )
         # [1,2] crashes, [3,4,5] passes, [6,7] crashes
         assert passed == 1
         assert total == 3
         assert "Crash" in failure or "boom" in failure
+        assert per_case == [False, True, False]
+        assert fail_cat == "crash"
     finally:
         os.unlink(path)
 
@@ -298,3 +307,62 @@ def test_ast_branching_depth_empty():
 def test_ast_branching_depth_syntax_error():
     """Syntax error → 0 graceful fallback."""
     assert ast_branching_depth("def f(:\n  broken") == 0
+
+
+# ---------------------------------------------------------------------------
+# Failure category classification (V4.7.1)
+# ---------------------------------------------------------------------------
+
+def test_classify_timeout():
+    assert _classify_failure_category("", is_timeout=True) == "timeout"
+
+
+def test_classify_crash():
+    assert _classify_failure_category("", is_crash=True) == "crash"
+
+
+def test_classify_no_output():
+    assert _classify_failure_category("", is_load_error=True) == "no_output"
+
+
+def test_classify_wrong_shape():
+    assert _classify_failure_category("", result="not a list") == "wrong_shape"
+
+
+def test_classify_wrong_values():
+    assert _classify_failure_category("", result=[1, 2, 3]) == "wrong_values"
+
+
+def test_classify_from_message_timeout():
+    assert _classify_failure_category("Timeout on [1,2,3]") == "timeout"
+
+
+def test_classify_from_message_crash():
+    assert _classify_failure_category("Import crash: SyntaxError") == "crash"
+
+
+def test_classify_from_message_not_found():
+    assert _classify_failure_category("solver.py not found") == "no_output"
+
+
+def test_classify_from_message_unknown():
+    assert _classify_failure_category("Something weird happened") == "other"
+
+
+def test_evaluate_fractional_wrong_shape():
+    """Solver returning non-list → wrong_shape category."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".py", delete=False, dir=tempfile.gettempdir()
+    ) as f:
+        f.write("def transduce(arr):\n    return 'not a list'\n")
+        f.flush()
+        path = f.name
+    try:
+        score, passed, total, failure, per_case, fail_cat = evaluate_solver_fractional(
+            [[1, 2, 3]], _simple_law, path
+        )
+        assert passed == 0
+        assert per_case == [False]
+        assert fail_cat == "wrong_shape"
+    finally:
+        os.unlink(path)
