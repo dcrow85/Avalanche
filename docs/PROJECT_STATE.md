@@ -14,17 +14,20 @@ It is asking:
 ## Current Frontier
 
 Active frontier:
-- `V4.7` on top of the `V4.6` Orbit Parity negative result
-- compression as working-memory intervention
+- `V4.7.1` on top of the `V4.6` Orbit Parity negative result
+- sharp calorimeter instrumentation over `Phase 2b` conditions
 - altitude as graveyard-reading intervention
 - offline probes as a second-order instrument over accumulated state
 
 Current live branch:
-- `run-55` in `v47-phase2b`
+- four-run calorimeter batch in `v471-phase2b-cal`
 
 Current read:
-- negative-space altitude can move a run off pure neighbor logic
-- it currently looks like one-ridge movement, not yet durable widening
+- negative-space altitude is real, but its late effect depends on basin geometry
+- thermodynamic activity and epistemic ascent are not the same thing
+- current batch split:
+  - Haiku climbs local ridges more efficiently
+  - GPT-5.4-mini excavates more densely inside a narrow extremum ontology
 
 ## What Feels Settled
 
@@ -35,6 +38,9 @@ These are strong enough to treat as current project reality:
 - Compression and altitude are both real interventions, but neither is sufficient alone.
 - The graveyard is not a flat failure log; it is a structured, path-dependent negative image.
 - Read-only probes are now a first-class instrument once enough assembly exists.
+- Calorimetric activity measures search motion, not epistemic ascent.
+- Graveyard volume and graveyard depth are not the same thing.
+- A run can be thermodynamically active while ontologically trapped inside one conceptual neighborhood.
 
 ## Key Witness Runs
 
@@ -53,6 +59,8 @@ These are strong enough to treat as current project reality:
 - Cartography is ahead of navigation.
 - The live system still appears ridge-limited.
 - Narrative framing remains a measurement and prompting hazard.
+- Thermodynamic sensors alone are insufficient for intervention targeting; they need a depth / ontology read alongside them.
+- The current responsive-engine taxonomy is incomplete. `ontologically trapped` is now a distinct live regime: high `E_t`, high `S_t` and/or `W_t`, but no escape from one ontology family.
 
 ## What Changed Recently
 
@@ -65,8 +73,14 @@ Major recent additions:
 Most important recent finding:
 - targeted synthetic intermediate tombstones can extend the visible horizon of the graveyard toward cycle structure
 
+New Bridge 2 finding:
+- thermodynamic activity measures search motion, not automatically conceptual ascent. The GPT `V4.7.1` witnesses built large graveyards and high work counts while remaining trapped inside extremum / record ontologies.
+
 Most important recent caution:
 - qualitative progression markers get narrativized and can destroy measurement validity
+
+Leading new intervention hypothesis:
+- a trapped-but-active run may need ontological displacement rather than more sharpening. Working label: `Displace` = explicitly name the exhausted ontology neighborhood and require a theory outside it.
 
 ## Where To Look Next
 

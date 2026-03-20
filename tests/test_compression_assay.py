@@ -23,6 +23,7 @@ from compression_assay import (
     _write_terminal_marker,
     extract_altitude_map,
     request_altitude_map,
+    _persist_altitude_reorientation,
     _render_opinions_from_slots,
     _check_alt_rule_duplication,
     _validate_compression_slots,
@@ -507,6 +508,29 @@ def test_request_altitude_map_negative_space_mode_returns_opinions(monkeypatch):
     assert result["opinions_md"] == "Investigate relational structure between elements."
     assert "two keys" in captured["system_content"]
     assert "opinions_md" in captured["system_content"]
+
+
+def test_persist_altitude_reorientation_forces_add_of_ignored_opinions(monkeypatch):
+    import compression_assay as ca
+
+    captured: dict[str, object] = {}
+
+    def fake_write_text(path, content):
+        captured["path"] = path
+        captured["content"] = content
+
+    def fake_run_command(command, capture=False):
+        captured["command"] = command
+        return True, ""
+
+    monkeypatch.setattr(ca.hv, "write_text", fake_write_text)
+    monkeypatch.setattr(ca.hv, "run_command", fake_run_command)
+
+    _persist_altitude_reorientation("updated theory")
+
+    assert captured["path"] == ca.hv.OPINIONS_FILE
+    assert captured["content"] == "updated theory"
+    assert "git add -f opinions.md" in captured["command"]
 
 
 # ---------------------------------------------------------------------------

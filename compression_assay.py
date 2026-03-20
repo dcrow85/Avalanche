@@ -31,7 +31,9 @@ os.environ.pop("AVALANCHE_ACTIVE", None)
 
 import hypervisor_v44 as hv
 from actuator_metrics import evaluate_solver_fractional
+from v43_metrics import semantic_distance
 from v44_epistemics import (
+    blank_state,
     detect_work_event,
     load_state,
     merge_state,
@@ -244,6 +246,17 @@ def _log_opinions_history(
     })
 
 
+def _dead_ends_claims_text(dead_ends: dict[str, object]) -> str:
+    """Extract all claim/hypothesis text from dead-ends for Probe G distance."""
+    parts: list[str] = []
+    for tier in ("basins", "families", "locals"):
+        for item in dead_ends.get(tier, []):
+            claim = str(item.get("claim", "")).strip()
+            if claim:
+                parts.append(claim)
+    return " ".join(parts)
+
+
 def _snapshot_dead_ends(cycle: int, current_state: dict[str, object]) -> None:
     """Write dead_ends_snapshot_cycle_<N>.json on work events."""
     snapshot_path = f"dead_ends_snapshot_cycle_{cycle}.json"
@@ -252,9 +265,15 @@ def _snapshot_dead_ends(cycle: int, current_state: dict[str, object]) -> None:
         json.dump(active_de, f, indent=2)
 
 
+def _persist_altitude_reorientation(opinions_md: str) -> None:
+    """Persist altitude-driven opinions updates even though opinions.md is gitignored."""
+    hv.write_text(hv.OPINIONS_FILE, opinions_md)
+    hv.run_command('git add -f opinions.md && git commit -m "V4.7: altitude reorientation"')
+
+
 def _effective_graveyard_entry_cap(base_cap: int, altitude_mode: str | None) -> int:
     """Raise the graveyard cap for survey altitude so the prompt can see recent fossils."""
-    if altitude_mode in {"survey", "negative-space"}:
+    if altitude_mode in {"survey", "negative-space", "displace"}:
         return max(base_cap, ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES)
     return base_cap
 
@@ -648,7 +667,7 @@ def request_altitude_map(
         prompt_budget_tokens=gradient.prompt_budget,
     )
 
-    if altitude_mode in {"survey", "negative-space"}:
+    if altitude_mode in {"survey", "negative-space", "displace"}:
         system_content = (
             "You are the metacognitive survey instrument of Avalanche V4.7.\n"
             "Output only a single raw JSON object with exactly two keys:\n"
@@ -686,7 +705,7 @@ def request_altitude_map(
         raise RuntimeError("Altitude response did not include altitude_map.")
 
     result = {"map": altitude_text[:1200], "opinions_md": ""}
-    if altitude_mode in {"survey", "negative-space"}:
+    if altitude_mode in {"survey", "negative-space", "displace"}:
         result["opinions_md"] = str(payload.get("opinions_md", "")).strip()
     return result
 
@@ -842,8 +861,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
             # Survey mode: write updated opinions.md if the model produced one
             if altitude_result.get("opinions_md"):
-                hv.write_text(hv.OPINIONS_FILE, altitude_result["opinions_md"])
-                hv.run_command('git add opinions.md && git commit -m "V4.7: altitude reorientation"')
+                _persist_altitude_reorientation(altitude_result["opinions_md"])
                 opinions_updated = True
                 print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars, "
                       f"opinions updated ({len(opinions_before)}->{len(altitude_result['opinions_md'])} chars)")
@@ -854,6 +872,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             alt_opinions_text = hv.read_text(hv.OPINIONS_FILE).strip()
             alt_opinions_hash = hashlib.md5(alt_opinions_text.encode()).hexdigest()[:8]
             _log_opinions_history(cycle, f"altitude_{altitude_mode}", alt_opinions_text, alt_opinions_hash)
+
+            # Probe G for altitude cycle
+            alt_active_de = previous_state.get("active", {})
+            if not isinstance(alt_active_de, dict):
+                alt_active_de = {}
+            alt_claims_text = _dead_ends_claims_text(alt_active_de)
+            alt_probe_g = round(semantic_distance(alt_opinions_text, alt_claims_text), 4) if alt_claims_text else None
 
             altitude_telem = {
                 "cycle": cycle, "prompt_budget": prompt_budget,
@@ -868,6 +893,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 "compression_pass": False,
                 "theory_hash": alt_opinions_hash,
                 "opinions_text_hash": alt_opinions_hash,
+                "probe_g_distance": alt_probe_g,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             altitude_telem.update(hv._cycle_usage)
@@ -1053,12 +1079,19 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             prev_active = {}
         work_event = detect_work_event(prev_active, current_active)
 
-        # Work-event snapshot
-        if work_event:
+        # Work-event snapshot (or every cycle if requested)
+        if args.snapshot_every_cycle or work_event:
             _snapshot_dead_ends(cycle, current_state)
 
         # Opinions history
         _log_opinions_history(cycle, "grind", current_theory, opinions_text_hash)
+
+        # Probe G: theory/graveyard semantic distance
+        active_de = current_state.get("active", {})
+        if not isinstance(active_de, dict):
+            active_de = {}
+        claims_text = _dead_ends_claims_text(active_de)
+        probe_g_distance = round(semantic_distance(current_theory, claims_text), 4) if claims_text else None
 
         # --- Telemetry ---
         grind_telem = {
@@ -1091,6 +1124,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "solver_ast_node_delta": ast_node_delta,
             "solver_ast_hash_changed": ast_hash_changed,
             "work_event": work_event,
+            "probe_g_distance": probe_g_distance,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         grind_telem.update(hv._cycle_usage)
@@ -1159,11 +1193,19 @@ def parse_args() -> argparse.Namespace:
     # Altitude cycles
     parser.add_argument("--altitude-frequency", type=int, default=10,
                         help="Altitude survey every N cycles")
-    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating"],
+    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating", "displace"],
                         default="survey",
-                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), or 'rotating' (low/medium/high)")
+                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), 'rotating' (low/medium/high), or 'displace' (graveyard-aware interaction surface)")
     parser.add_argument("--no-altitude", action="store_true",
                         help="Disable altitude cycles")
+
+    # Fork / inject / snapshot
+    parser.add_argument("--fork-snapshot", type=str, default=None,
+                        help="Path to frozen snapshot directory to fork (copies opinions.md and dead-ends.json)")
+    parser.add_argument("--inject-graveyard", type=str, default=None,
+                        help="Path to synthetic dead-ends JSON to inject after forking")
+    parser.add_argument("--snapshot-every-cycle", action="store_true",
+                        help="Write graveyard snapshot every cycle (not just on work events)")
 
     return parser.parse_args()
 
@@ -1186,6 +1228,50 @@ def main() -> None:
         os.chdir(workspace)
 
         hv.setup_workspace()
+
+        # Fork from frozen snapshot if requested
+        if args.fork_snapshot:
+            from v44_epistemics import render_dead_ends_md
+            snap_dir = Path(args.fork_snapshot)
+            snap_opinions = snap_dir / "opinions.md"
+            snap_dead_ends = snap_dir / "dead-ends.json"
+            if not snap_opinions.exists():
+                raise FileNotFoundError(f"Fork snapshot missing opinions.md: {snap_opinions}")
+            if not snap_dead_ends.exists():
+                raise FileNotFoundError(f"Fork snapshot missing dead-ends.json: {snap_dead_ends}")
+            # Copy opinions
+            hv.write_text(hv.OPINIONS_FILE, snap_opinions.read_text(encoding="utf-8"))
+            # Copy and render dead-ends
+            de_data = json.loads(snap_dead_ends.read_text(encoding="utf-8"))
+            hv.write_json(hv.DEAD_ENDS_JSON_FILE, de_data)
+            hv.write_text(hv.DEAD_ENDS_FILE, render_dead_ends_md(de_data))
+            # Initialize state with forked graveyard
+            forked_state = merge_state(blank_state(), de_data, cycle=0)
+            save_state(hv.DEAD_END_STATE_FILE, forked_state)
+            hv.run_command(
+                f'git add -f {hv.OPINIONS_FILE} {hv.DEAD_ENDS_JSON_FILE} '
+                f'{hv.DEAD_ENDS_FILE} {hv.DEAD_END_STATE_FILE} && '
+                f'git commit -m "V4.7: fork from snapshot {snap_dir.name}"'
+            )
+            print(f"  Forked from snapshot: {snap_dir}")
+
+        # Inject synthetic graveyard if requested (overwrites fork)
+        if args.inject_graveyard:
+            from v44_epistemics import render_dead_ends_md
+            inject_path = Path(args.inject_graveyard)
+            if not inject_path.exists():
+                raise FileNotFoundError(f"Inject graveyard file not found: {inject_path}")
+            de_data = json.loads(inject_path.read_text(encoding="utf-8"))
+            hv.write_json(hv.DEAD_ENDS_JSON_FILE, de_data)
+            hv.write_text(hv.DEAD_ENDS_FILE, render_dead_ends_md(de_data))
+            injected_state = merge_state(blank_state(), de_data, cycle=0)
+            save_state(hv.DEAD_END_STATE_FILE, injected_state)
+            hv.run_command(
+                f'git add -f {hv.DEAD_ENDS_JSON_FILE} {hv.DEAD_ENDS_FILE} '
+                f'{hv.DEAD_END_STATE_FILE} && '
+                f'git commit -m "V4.7: inject synthetic graveyard {inject_path.name}"'
+            )
+            print(f"  Injected synthetic graveyard: {inject_path}")
 
         def _signal_exit(signum: int, _frame: object) -> None:
             signame = signal.Signals(signum).name

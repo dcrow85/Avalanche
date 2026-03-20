@@ -693,6 +693,48 @@ def format_cycle_prompt(
             "Then propose one specific search direction based on what remains untested.\n"
             "Make the direction actionable enough that the next working cycle could explore it."
         )
+    elif altitude_mode == "displace":
+        # Dynamic graveyard-aware Displace prompt
+        exhausted_families: list[str] = []
+        active_families_list: list[str] = []
+        for fam in de_dict.get("families", []):
+            fid = str(fam.get("id", "?"))
+            claim = str(fam.get("claim", "?"))
+            status = str(fam.get("status", "ACTIVE"))
+            if status == "SUPERSEDED":
+                exhausted_families.append(f"  - {fid}: {claim}")
+            else:
+                active_families_list.append(f"  - {fid}: {claim}")
+        basin_lines: list[str] = []
+        for basin in de_dict.get("basins", []):
+            bid = str(basin.get("id", "?"))
+            claim = str(basin.get("claim", "?"))
+            status = str(basin.get("status", "ACTIVE"))
+            basin_lines.append(f"  - {bid} [{status}]: {claim}")
+        exhausted_block = "\n".join(exhausted_families) if exhausted_families else "  (none yet)"
+        active_block = "\n".join(active_families_list) if active_families_list else "  (none)"
+        basin_block = "\n".join(basin_lines) if basin_lines else "  (none)"
+        altitude_instruction = (
+            "\n\nDISPLACE ALTITUDE: Your graveyard tells a story. Read it.\n\n"
+            f"Explored basins:\n{basin_block}\n\n"
+            f"Exhausted (superseded) families:\n{exhausted_block}\n\n"
+            f"Still-active families:\n{active_block}\n\n"
+            "The approaches above have explored single-feature rules: "
+            "global parity, cycle-length gating, cycle-membership gating, "
+            "local extrema, records, prefix maxima, and similar permutation-intrinsic invariants.\n\n"
+            "Move onto the permutation-structure x array-relative-structure interaction surface. "
+            "Your next theory must depend on BOTH:\n"
+            "  1. Where the permutation sends or draws elements (cycle structure, orbit membership)\n"
+            "  2. Value/order/position structure in the array (relative rank, adjacency, local order)\n\n"
+            "Allowed directions include: movement relative to rank, movement relative to local order, "
+            "cycle role conditioned on array-relative properties, "
+            "permutation action creating or destroying comparative structure.\n\n"
+            "Provide:\n"
+            "  - One specific interaction hypothesis\n"
+            "  - One backup interaction hypothesis\n"
+            "  - Two discriminating test patterns (arrays where the two hypotheses predict different outputs)\n\n"
+            "Update your theory (opinions_md) to reflect the strongest interaction hypothesis."
+        )
 
     def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
         if max_chars is None or len(text) <= max_chars:
@@ -809,6 +851,40 @@ def strip_leading_think_block(text: str) -> str:
     return stripped[end + len("</think>") :].lstrip()
 
 
+def extract_first_balanced_json_object(text: str) -> str:
+    """Return the first balanced JSON object substring, if present.
+
+    This salvages provider outputs that contain a valid JSON object followed by
+    extra fenced blocks or commentary. The scanner is quote-aware so braces
+    inside JSON strings do not terminate extraction early.
+    """
+    start = text.find("{")
+    if start == -1:
+        return text
+
+    depth = 0
+    in_string = False
+    escape = False
+    for index, char in enumerate(text[start:], start=start):
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start:index + 1]
+    return text
+
+
 def normalize_structured_output_text(text: str) -> str:
     normalized = strip_leading_think_block(text).strip()
     if normalized.startswith("```"):
@@ -822,11 +898,8 @@ def normalize_structured_output_text(text: str) -> str:
         m = re.search(r"```(?:json)?\s*\n(.*?)\n\s*```", normalized, re.DOTALL)
         if m:
             normalized = m.group(1).strip()
-    if normalized and normalized[0] != "{":
-        start = normalized.find("{")
-        end = normalized.rfind("}")
-        if start != -1 and end > start:
-            normalized = normalized[start:end + 1]
+    if normalized and "{" in normalized:
+        normalized = extract_first_balanced_json_object(normalized).strip()
     return normalized
 
 
@@ -1109,6 +1182,11 @@ def request_cycle_output(
                 "content": (
                     "[SYSTEM LINTER ERROR] Validation failed: "
                     f"{error} Fix and resubmit strictly adhering to constraints."
+                    "\nStructural retention rule: every basin must cite only family ids present in this same payload."
+                    "\nIf you keep a previously active basin or family, keep its id present or explicitly mark it SUPERSEDED."
+                    "\nDo not drop cited family ids while leaving their basin active."
+                    "\nTracked-array rule: every falsifying array must be globally distinct across all families and locals."
+                    "\nDo not reuse the same falsifying array in two different dead-end entries."
                     + (
                         ""
                         if required_falsifier is None

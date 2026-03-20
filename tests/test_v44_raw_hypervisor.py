@@ -48,6 +48,22 @@ def test_normalize_structured_output_text_strips_markdown_fences():
     assert hv.normalize_structured_output_text(payload) == "{\"ok\": true, \"value\": \"HAIKU_OK\"}"
 
 
+def test_normalize_structured_output_text_salvages_json_before_trailing_code_fence():
+    hv = load_module()
+    payload = (
+        "```json\n"
+        "{\"altitude_map\": \"map\", \"opinions_md\": \"theory\"}\n"
+        "```\n\n"
+        "```python\n"
+        "def transduce(arr):\n"
+        "    return arr\n"
+        "```"
+    )
+    assert hv.normalize_structured_output_text(payload) == (
+        "{\"altitude_map\": \"map\", \"opinions_md\": \"theory\"}"
+    )
+
+
 def test_format_cycle_prompt_applies_prompt_budget(monkeypatch, tmp_path):
     hv = load_module()
     monkeypatch.chdir(tmp_path)
@@ -109,6 +125,75 @@ def test_format_cycle_prompt_negative_space_altitude_instruction(monkeypatch, tm
     assert "ALTITUDE SURVEY (NEGATIVE SPACE)" in prompt
     assert "Do not describe what failed." in prompt
     assert "what remains untested" in prompt
+
+
+def test_request_cycle_output_retry_message_restates_structural_retention(monkeypatch, tmp_path):
+    hv = load_module()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(hv, "count_data_pairs", lambda: 1)
+
+    previous_state = {
+        "active": {
+            "basins": [
+                {
+                    "id": "B1",
+                    "status": "ACTIVE",
+                    "claim": "main basin",
+                    "cited_families": ["F1", "F2"],
+                }
+            ],
+            "families": [
+                {"id": "F1", "status": "ACTIVE", "claim": "family one", "falsifying_arrays": [[1, 2], [2, 1]]},
+                {"id": "F2", "status": "ACTIVE", "claim": "family two", "falsifying_arrays": [[1, 3], [3, 1]]},
+            ],
+            "locals": [],
+        }
+    }
+    calls: list[list[dict[str, str]]] = []
+
+    invalid_payload = {
+        "opinions_md": "short theory",
+        "solver_py": "def transduce(arr):\n    return arr\n",
+        "dead_ends": {
+            "basins": [
+                {
+                    "id": "B1",
+                    "status": "ACTIVE",
+                    "claim": "main basin",
+                    "cited_families": ["F1", "F2"],
+                }
+            ],
+            "families": [],
+            "locals": [],
+        },
+    }
+    valid_payload = {
+        "opinions_md": "short theory",
+        "solver_py": "def transduce(arr):\n    return arr\n",
+        "dead_ends": previous_state["active"],
+    }
+
+    def fake_invoke_openai(messages, *args, **kwargs):
+        calls.append(messages)
+        return invalid_payload if len(calls) == 1 else valid_payload
+
+    monkeypatch.setattr(hv, "invoke_openai", fake_invoke_openai)
+
+    hv.request_cycle_output(
+        1,
+        10,
+        "anthropic/claude-haiku-4-5",
+        "https://api.haimaker.ai/v1",
+        "sync-fail",
+        previous_state,
+        api_key_env="HAIMAKER_KEY",
+    )
+
+    retry_message = calls[1][-1]["content"]
+    assert "Structural retention rule" in retry_message
+    assert "Do not drop cited family ids" in retry_message
+    assert "Tracked-array rule" in retry_message
+    assert "Do not reuse the same falsifying array" in retry_message
 
 
 def test_invoke_openai_uses_max_completion_tokens_for_openai_gpt5(monkeypatch):
