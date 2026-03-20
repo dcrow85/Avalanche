@@ -588,6 +588,9 @@ def format_cycle_prompt(
         de_dict = json.loads(current_dead_ends_json) if current_dead_ends_json else {}
     except json.JSONDecodeError:
         de_dict = {}
+    prior_graveyard_present = bool(
+        de_dict.get("basins") or de_dict.get("families") or de_dict.get("locals")
+    )
     log_superseded_theories(de_dict, SUPERSEDED_LOG_FILE)
 
     system_prompt = (
@@ -602,6 +605,17 @@ def format_cycle_prompt(
         "Fragments of what nags you before you can name it.\n"
     ) if HUNCHES_ENABLED else ""
 
+    resumed_branch_constraint = (
+        "- This branch begins from an imported graveyard. Preserve the inherited active basin and family ids unless tracked evidence forces a supersession.\n"
+        "- On the first cycles, extend the inherited graveyard conservatively instead of clearing or replacing it.\n"
+    ) if prior_graveyard_present and count_data_pairs() == 0 else ""
+
+    cold_start_constraint = (
+        "- On cold start with no oracle failures yet, keep basins, families, and locals empty.\n"
+        if not prior_graveyard_present else
+        "- This is not a blank cold start; the existing graveyard is inherited state and may remain populated before new oracle contradictions arrive.\n"
+    )
+
     common_constraints = (
         f"- opinions_md must stay under {OPINIONS_LIMIT} words.\n"
         f"{hunches_constraint}"
@@ -611,10 +625,11 @@ def format_cycle_prompt(
         "- Local entry shape: {failing_hypothesis, falsifying_array}.\n"
         "- Basin and family status values may only be ACTIVE or SUPERSEDED.\n"
         "- Preserve active basin and family ids unless you explicitly supersede them.\n"
+        f"{resumed_branch_constraint}"
         "- A basin must cite at least 2 family ids.\n"
         "- Each family must carry at least 2 distinct falsifying arrays.\n"
         "- Every tracked falsifying array across families and locals must be globally distinct.\n"
-        "- On cold start with no oracle failures yet, keep basins, families, and locals empty.\n"
+        f"{cold_start_constraint}"
         "- The latest ratchet-killing oracle array must appear in tracked evidence before you are allowed to continue.\n"
         "- Basin claims must be ontology-level plain words only. No arrays, math, or code syntax.\n"
         "- Families must compress mechanisms. Locals are fresh blood, not duplicate family evidence.\n"
@@ -1116,7 +1131,10 @@ def validate_cycle_output(
     if not isinstance(previous_active, dict):
         previous_active = blank_dead_ends()
     errors = validate_dead_ends(dead_ends, previous_active, previous_state)
-    if required_falsifier is None and count_data_pairs() == 0:
+    has_prior_graveyard = bool(
+        previous_active.get("basins") or previous_active.get("families") or previous_active.get("locals")
+    )
+    if required_falsifier is None and count_data_pairs() == 0 and not has_prior_graveyard:
         if dead_ends.get("basins") or dead_ends.get("families") or dead_ends.get("locals"):
             errors.append("Cold start cannot invent dead ends before the first oracle contradiction exists.")
     occam_error = _occam_tax_error(dead_ends, solver_py)

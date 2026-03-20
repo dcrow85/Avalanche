@@ -218,6 +218,24 @@ class TestProbeGDistance:
 
 
 # ---------------------------------------------------------------------------
+# TestForkedColdStart
+# ---------------------------------------------------------------------------
+
+class TestForkedColdStart:
+    def test_validate_cycle_output_allows_inherited_graveyard_before_new_data(self):
+        hv = _load_hv()
+        payload = {
+            "opinions_md": "Inherited theory.",
+            "solver_py": "def transduce(arr: list[int]) -> list[int]:\n    return arr\n",
+            "dead_ends": SAMPLE_DEAD_ENDS,
+        }
+        previous_state = {"active": SAMPLE_DEAD_ENDS, "registry": {"basins": {}, "families": {}, "arrays": {}}}
+        error = hv.validate_cycle_output(payload, previous_state, required_falsifier=None)
+        assert error is not None
+        assert "Cold start cannot invent dead ends" not in error
+
+
+# ---------------------------------------------------------------------------
 # TestForkSnapshot
 # ---------------------------------------------------------------------------
 

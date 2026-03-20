@@ -47,6 +47,7 @@ from v44_epistemics import (
 TELEMETRY_FILE = "telemetry.jsonl"
 COMPRESSION_LOG_FILE = "compression_log.jsonl"
 OPINIONS_HISTORY_FILE = "opinions_history.jsonl"
+SOLVER_HISTORY_FILE = "solver_history.jsonl"
 FORMAT_FAIL_MAX_RETRIES = 2
 COMPRESSION_DATA_SLICE_ROWS = 2  # Rows from data.json shown during compression passes
 
@@ -244,6 +245,59 @@ def _log_opinions_history(
         "opinions_text_hash": opinions_text_hash,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
+
+
+def _solver_snapshot_fields(solver_text: str | None) -> dict[str, object]:
+    """Return solver snapshot fields for solver_history rows."""
+    if solver_text is None:
+        return {
+            "solver_text": None,
+            "ast_hash": None,
+            "ast_node_count": None,
+        }
+    return {
+        "solver_text": solver_text,
+        "ast_hash": hv.solver_ast_structure_hash(solver_text) or None,
+        "ast_node_count": hv.solver_ast_node_count(solver_text) or 0,
+    }
+
+
+def _read_solver_text_or_none() -> str | None:
+    """Read the current workspace solver if present and non-empty."""
+    solver_text = hv.read_text(hv.SOLVER_FILE).rstrip()
+    return solver_text if solver_text else None
+
+
+def _log_solver_history(
+    cycle: int,
+    cycle_type: str,
+    opinions_text: str,
+    *,
+    solver_text: str | None,
+    oracle_vector: list[bool] | None = None,
+    ast_hash: str | None = None,
+    ast_node_count: int | None = None,
+    parse_failure: bool = False,
+    failure_type: str | None = None,
+) -> None:
+    """Append one row to solver_history.jsonl for any cycle type."""
+    snapshot = _solver_snapshot_fields(solver_text)
+    record = {
+        "cycle": cycle,
+        "cycle_type": cycle_type,
+        "solver_text": snapshot["solver_text"],
+        "ast_hash": ast_hash if ast_hash is not None else snapshot["ast_hash"],
+        "ast_node_count": ast_node_count if ast_node_count is not None else snapshot["ast_node_count"],
+        "oracle_vector": oracle_vector,
+        "opinions_text": opinions_text,
+        "opinions_text_hash": hashlib.md5(opinions_text.encode()).hexdigest()[:8],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if parse_failure:
+        record["parse_failure"] = True
+    if failure_type is not None:
+        record["failure_type"] = failure_type
+    _append_jsonl(SOLVER_HISTORY_FILE, record)
 
 
 def _dead_ends_claims_text(dead_ends: dict[str, object]) -> str:
@@ -602,6 +656,12 @@ def run_compression_pass(
 
     # Log opinions history for compression pass
     _log_opinions_history(cycle, "compression_pass", post_pass_theory, post_pass_theory_hash)
+    _log_solver_history(
+        cycle,
+        "compression_pass",
+        post_pass_theory,
+        solver_text=_read_solver_text_or_none(),
+    )
 
     pass_telem = {
         "cycle": cycle,
@@ -846,6 +906,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                         last_error=str(exc),
                     )
             if altitude_result is None:
+                fatal_opinions = hv.read_text(hv.OPINIONS_FILE).strip()
                 _append_jsonl(TELEMETRY_FILE, {
                     "cycle": cycle,
                     "prompt_budget": prompt_budget,
@@ -854,6 +915,14 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                     "event": "altitude_fatal",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
+                _log_solver_history(
+                    cycle,
+                    f"altitude_{altitude_mode}",
+                    fatal_opinions,
+                    solver_text=_read_solver_text_or_none(),
+                    parse_failure=True,
+                    failure_type="ALTITUDE_FATAL",
+                )
                 continue
             altitude.last_map = altitude_result["map"]
             opinions_before = previous_opinions
@@ -899,6 +968,12 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             altitude_telem.update(hv._cycle_usage)
             altitude_telem.update(_cycle_usage_aliases())
             _append_jsonl(TELEMETRY_FILE, altitude_telem)
+            _log_solver_history(
+                cycle,
+                f"altitude_{altitude_mode}",
+                alt_opinions_text,
+                solver_text=_read_solver_text_or_none(),
+            )
             _append_jsonl(COMPRESSION_LOG_FILE, {
                 "cycle": cycle,
                 "event": f"altitude_{altitude_mode}",
@@ -935,12 +1010,25 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                     break
 
         if grind_payload is None:
+            fatal_opinions = hv.read_text(hv.OPINIONS_FILE).strip()
             _append_jsonl(TELEMETRY_FILE, {
                 "cycle": cycle, "prompt_budget": prompt_budget,
                 "output_budget": output_budget,
+                "cycle_type": "grind",
                 "event": "format_fatal",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
+            _log_solver_history(
+                cycle,
+                "grind",
+                fatal_opinions,
+                solver_text=None,
+                oracle_vector=None,
+                ast_hash=None,
+                ast_node_count=None,
+                parse_failure=True,
+                failure_type="FORMAT_FATAL",
+            )
             continue
 
         # --- Normal cycle: persist, evaluate, ratchet ---
@@ -1130,6 +1218,15 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         grind_telem.update(hv._cycle_usage)
         grind_telem.update(_cycle_usage_aliases())
         _append_jsonl(TELEMETRY_FILE, grind_telem)
+        _log_solver_history(
+            cycle,
+            "grind",
+            current_theory,
+            solver_text=proposed_solver,
+            oracle_vector=fixed_vector,
+            ast_hash=ast_structure_hash or None,
+            ast_node_count=ast_node_count,
+        )
 
     # Max cycles reached
     hv.write_status(args.max_cycles, args.max_cycles, "MAX_CYCLES", last_result="COMPLETE")
@@ -1288,7 +1385,13 @@ def main() -> None:
 
         # Add assay-specific files to gitignore
         from v44_epistemics import SUPERSEDED_LOG_FILE
-        assay_ignores = {TELEMETRY_FILE, COMPRESSION_LOG_FILE, OPINIONS_HISTORY_FILE, SUPERSEDED_LOG_FILE}
+        assay_ignores = {
+            TELEMETRY_FILE,
+            COMPRESSION_LOG_FILE,
+            OPINIONS_HISTORY_FILE,
+            SOLVER_HISTORY_FILE,
+            SUPERSEDED_LOG_FILE,
+        }
         if args.hunches:
             assay_ignores.add(hv.HUNCHES_FILE)
         gitignore_path = ".gitignore"
