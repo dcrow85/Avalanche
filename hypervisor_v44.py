@@ -384,23 +384,35 @@ def _normalize_ast_node(node: ast.AST) -> str:
     return label
 
 
+def _recursive_ast_repr(node: ast.AST) -> str:
+    """Build a parenthesized structural representation preserving tree topology.
+
+    Example output: Module(FunctionDef(arguments(),Return(BinOp:Add(Name,Constant))))
+    Two trees with the same node inventory but different parent/child relationships
+    will produce different strings.
+    """
+    label = _normalize_ast_node(node)
+    children = list(ast.iter_child_nodes(node))
+    if not children:
+        return label
+    child_reprs = ",".join(_recursive_ast_repr(c) for c in children)
+    return f"{label}({child_reprs})"
+
+
 def solver_ast_structure_hash(code: str) -> str:
     """Hash the structural shape of solver AST, invariant to variable names and literals.
 
+    Uses recursive parenthesized representation to preserve parent/child topology.
     Returns an 8-character hex digest. Empty/unparseable code returns empty string.
     """
     try:
         tree = ast.parse(code or "")
     except SyntaxError:
         return ""
-    # Build a parenthesized structural representation
-    parts: list[str] = []
-    for node in ast.walk(tree):
-        parts.append(_normalize_ast_node(node))
-    if not parts:
-        return ""
     import hashlib
-    structural_repr = "|".join(parts)
+    structural_repr = _recursive_ast_repr(tree)
+    if not structural_repr:
+        return ""
     return hashlib.md5(structural_repr.encode()).hexdigest()[:8]
 
 

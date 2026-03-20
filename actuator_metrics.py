@@ -166,7 +166,7 @@ def _alarm_handler(signum, frame):
     raise _SolverTimeout()
 
 
-FAILURE_CATEGORIES = ("timeout", "crash", "wrong_shape", "wrong_values", "no_output", "other")
+FAILURE_CATEGORIES = ("pass", "timeout", "crash", "wrong_shape", "wrong_values", "no_output", "other")
 
 
 def _classify_failure_category(

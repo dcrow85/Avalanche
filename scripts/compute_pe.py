@@ -101,7 +101,10 @@ def compute_pe(
     opinions = load_opinions_history(opinions_path)
 
     results: list[dict] = []
-    previous_opinions_text: str | None = None
+    # Track previous opinions from GRIND cycles only, so both sides of
+    # the PE ratio (opinions distance and AST distance) use the same
+    # grind-to-grind step boundary.
+    previous_grind_opinions: str | None = None
 
     for row in telemetry:
         cycle = row.get("cycle")
@@ -110,22 +113,22 @@ def compute_pe(
         if cycle is None:
             continue
 
-        # Get opinions text for this cycle
+        # PE only meaningful for grind cycles
+        if cycle_type != "grind":
+            continue
+
+        # Get opinions text for this grind cycle
         opinions_text = opinions.get(int(cycle), "")
 
-        # PE only meaningful for grind cycles with a predecessor
-        if cycle_type != "grind":
-            previous_opinions_text = opinions_text if opinions_text else previous_opinions_text
+        if previous_grind_opinions is None:
+            previous_grind_opinions = opinions_text
             continue
 
-        if previous_opinions_text is None:
-            previous_opinions_text = opinions_text
-            continue
+        # Compute opinions Jaccard distance (grind-to-grind)
+        oj_dist = jaccard_distance(previous_grind_opinions, opinions_text)
 
-        # Compute opinions Jaccard distance
-        oj_dist = jaccard_distance(previous_opinions_text, opinions_text)
-
-        # Compute AST structure distance
+        # Compute AST structure distance (grind-to-grind, already correct
+        # because the hypervisor tracks AST state across grind cycles only)
         hash_changed = row.get("solver_ast_hash_changed", False)
         node_delta = row.get("solver_ast_node_delta", 0)
         node_count = row.get("solver_ast_node_count", 0)
@@ -143,7 +146,7 @@ def compute_pe(
             "solver_ast_node_delta": node_delta,
         })
 
-        previous_opinions_text = opinions_text
+        previous_grind_opinions = opinions_text
 
     return results
 

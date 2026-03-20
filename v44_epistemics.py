@@ -322,7 +322,10 @@ def detect_work_event(
 ) -> bool:
     """Return True if a structurally meaningful change occurred in dead-end state.
 
-    Triggers on: new basin/family ID appeared, or existing basin/family was superseded.
+    Triggers on:
+      - New basin/family ID appeared
+      - Existing basin/family was superseded (status ACTIVE → SUPERSEDED)
+      - Existing basin/family was fossilized (present before, absent now)
     Does NOT trigger on local changes alone (too noisy).
     """
     prev_basin_ids = _collect_ids(previous_active.get("basins", []))
@@ -332,6 +335,10 @@ def detect_work_event(
 
     # New basin or family appeared
     if curr_basin_ids - prev_basin_ids or curr_family_ids - prev_family_ids:
+        return True
+
+    # Basin or family was fossilized (disappeared from active surface entirely)
+    if prev_basin_ids - curr_basin_ids or prev_family_ids - curr_family_ids:
         return True
 
     # Basin or family was superseded (status changed from ACTIVE to SUPERSEDED)
