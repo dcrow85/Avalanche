@@ -48,6 +48,7 @@ TELEMETRY_FILE = "telemetry.jsonl"
 COMPRESSION_LOG_FILE = "compression_log.jsonl"
 OPINIONS_HISTORY_FILE = "opinions_history.jsonl"
 SOLVER_HISTORY_FILE = "solver_history.jsonl"
+DEAD_ENDS_HISTORY_FILE = "dead_ends_history.jsonl"
 FORMAT_FAIL_MAX_RETRIES = 2
 COMPRESSION_DATA_SLICE_ROWS = 2  # Rows from data.json shown during compression passes
 
@@ -298,6 +299,34 @@ def _log_solver_history(
     if failure_type is not None:
         record["failure_type"] = failure_type
     _append_jsonl(SOLVER_HISTORY_FILE, record)
+
+
+def _log_dead_ends_history(
+    cycle: int,
+    cycle_type: str,
+    dead_ends: dict[str, object] | None,
+    *,
+    parse_failure: bool = False,
+    failure_type: str | None = None,
+) -> None:
+    """Append one row to dead_ends_history.jsonl for any cycle type."""
+    claims_text = _dead_ends_claims_text(dead_ends) if isinstance(dead_ends, dict) else None
+    record = {
+        "cycle": cycle,
+        "cycle_type": cycle_type,
+        "dead_ends": dead_ends,
+        "dead_ends_hash": (
+            hashlib.md5(json.dumps(dead_ends, sort_keys=True).encode()).hexdigest()[:8]
+            if isinstance(dead_ends, dict) else None
+        ),
+        "dead_ends_claims_text": claims_text,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if parse_failure:
+        record["parse_failure"] = True
+    if failure_type is not None:
+        record["failure_type"] = failure_type
+    _append_jsonl(DEAD_ENDS_HISTORY_FILE, record)
 
 
 def _dead_ends_claims_text(dead_ends: dict[str, object]) -> str:
@@ -662,6 +691,11 @@ def run_compression_pass(
         post_pass_theory,
         solver_text=_read_solver_text_or_none(),
     )
+    compression_state = load_state(hv.DEAD_END_STATE_FILE)
+    compression_active = compression_state.get("active", {})
+    if not isinstance(compression_active, dict):
+        compression_active = {}
+    _log_dead_ends_history(cycle, "compression_pass", compression_active)
 
     pass_telem = {
         "cycle": cycle,
@@ -923,6 +957,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                     parse_failure=True,
                     failure_type="ALTITUDE_FATAL",
                 )
+                _log_dead_ends_history(
+                    cycle,
+                    f"altitude_{altitude_mode}",
+                    None,
+                    parse_failure=True,
+                    failure_type="ALTITUDE_FATAL",
+                )
                 continue
             altitude.last_map = altitude_result["map"]
             opinions_before = previous_opinions
@@ -974,6 +1015,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 alt_opinions_text,
                 solver_text=_read_solver_text_or_none(),
             )
+            _log_dead_ends_history(cycle, f"altitude_{altitude_mode}", alt_active_de)
             _append_jsonl(COMPRESSION_LOG_FILE, {
                 "cycle": cycle,
                 "event": f"altitude_{altitude_mode}",
@@ -1026,6 +1068,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 oracle_vector=None,
                 ast_hash=None,
                 ast_node_count=None,
+                parse_failure=True,
+                failure_type="FORMAT_FATAL",
+            )
+            _log_dead_ends_history(
+                cycle,
+                "grind",
+                None,
                 parse_failure=True,
                 failure_type="FORMAT_FATAL",
             )
@@ -1227,6 +1276,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             ast_hash=ast_structure_hash or None,
             ast_node_count=ast_node_count,
         )
+        _log_dead_ends_history(cycle, "grind", active_de)
 
     # Max cycles reached
     hv.write_status(args.max_cycles, args.max_cycles, "MAX_CYCLES", last_result="COMPLETE")
@@ -1390,6 +1440,7 @@ def main() -> None:
             COMPRESSION_LOG_FILE,
             OPINIONS_HISTORY_FILE,
             SOLVER_HISTORY_FILE,
+            DEAD_ENDS_HISTORY_FILE,
             SUPERSEDED_LOG_FILE,
         }
         if args.hunches:

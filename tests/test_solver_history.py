@@ -87,3 +87,52 @@ def test_read_solver_text_or_none(monkeypatch, tmp_path):
     assert ca._read_solver_text_or_none() == (
         "def transduce(arr: list[int]) -> list[int]:\n    return arr"
     )
+
+
+def test_log_dead_ends_history_grind_row(monkeypatch, tmp_path):
+    import compression_assay as ca
+
+    monkeypatch.chdir(tmp_path)
+
+    dead_ends = {
+        "basins": [{"id": "B1", "status": "ACTIVE", "claim": "inversion structure determines sign", "cited_families": ["F1"]}],
+        "families": [{"id": "F1", "status": "ACTIVE", "claim": "negate non-records", "falsifying_arrays": [[2, 1, 3]]}],
+        "locals": [],
+    }
+
+    ca._log_dead_ends_history(42, "grind", dead_ends)
+
+    history_path = tmp_path / ca.DEAD_ENDS_HISTORY_FILE
+    rows = history_path.read_text(encoding="utf-8").splitlines()
+    assert len(rows) == 1
+
+    record = json.loads(rows[0])
+    assert record["cycle"] == 42
+    assert record["cycle_type"] == "grind"
+    assert record["dead_ends"] == dead_ends
+    assert record["dead_ends_hash"] is not None
+    assert "inversion structure determines sign" in record["dead_ends_claims_text"]
+    assert "negate non-records" in record["dead_ends_claims_text"]
+
+
+def test_log_dead_ends_history_failure_row(monkeypatch, tmp_path):
+    import compression_assay as ca
+
+    monkeypatch.chdir(tmp_path)
+
+    ca._log_dead_ends_history(
+        43,
+        "grind",
+        None,
+        parse_failure=True,
+        failure_type="FORMAT_FATAL",
+    )
+
+    record = json.loads((tmp_path / ca.DEAD_ENDS_HISTORY_FILE).read_text(encoding="utf-8").splitlines()[0])
+    assert record["cycle"] == 43
+    assert record["cycle_type"] == "grind"
+    assert record["dead_ends"] is None
+    assert record["dead_ends_hash"] is None
+    assert record["dead_ends_claims_text"] is None
+    assert record["parse_failure"] is True
+    assert record["failure_type"] == "FORMAT_FATAL"
