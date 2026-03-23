@@ -51,6 +51,12 @@ SOLVER_HISTORY_FILE = "solver_history.jsonl"
 DEAD_ENDS_HISTORY_FILE = "dead_ends_history.jsonl"
 FORMAT_FAIL_MAX_RETRIES = 2
 COMPRESSION_DATA_SLICE_ROWS = 2  # Rows from data.json shown during compression passes
+SNAPSHOT_OPTIONAL_FILES = (
+    hv.GOAL_FILE,
+    hv.DATA_FILE,
+    hv.SOLVER_FILE,
+    hv.DEAD_END_STATE_FILE,
+)
 
 # Compression pass slot schema — per-slot character budgets
 COMPRESSION_SLOTS = {
@@ -175,8 +181,11 @@ class AltitudeState:
     altitudes: list[str] = field(default_factory=lambda: ["low", "medium", "high"])
     current_index: int = 0
     last_map: str = ""
+    fire_cycles: set[int] = field(default_factory=set)
 
     def should_fire(self, cycle: int) -> bool:
+        if self.fire_cycles:
+            return cycle in self.fire_cycles
         return cycle > 0 and cycle % self.frequency == 0
 
     def next_altitude(self) -> str:
@@ -348,17 +357,83 @@ def _snapshot_dead_ends(cycle: int, current_state: dict[str, object]) -> None:
         json.dump(active_de, f, indent=2)
 
 
-def _persist_altitude_reorientation(opinions_md: str) -> None:
-    """Persist altitude-driven opinions updates even though opinions.md is gitignored."""
-    hv.write_text(hv.OPINIONS_FILE, opinions_md)
-    hv.run_command('git add -f opinions.md && git commit -m "V4.7: altitude reorientation"')
-
-
 def _effective_graveyard_entry_cap(base_cap: int, altitude_mode: str | None) -> int:
     """Raise the graveyard cap for survey altitude so the prompt can see recent fossils."""
-    if altitude_mode in {"survey", "negative-space", "displace"}:
+    if altitude_mode in {"survey", "negative-space", "displace", "anchor"}:
         return max(base_cap, ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES)
     return base_cap
+
+
+def _copy_snapshot_file(src: Path, dest_name: str) -> bool:
+    """Copy a snapshot file into the current workspace if present."""
+    if not src.exists():
+        return False
+    hv.write_text(dest_name, src.read_text(encoding="utf-8"))
+    return True
+
+
+def _parse_cycle_list(raw: str | None) -> set[int]:
+    """Parse a comma-separated cycle list like '1,10,15'."""
+    if not raw:
+        return set()
+    parsed: set[int] = set()
+    for chunk in raw.split(","):
+        token = chunk.strip()
+        if not token:
+            continue
+        value = int(token)
+        if value <= 0:
+            raise ValueError(f"Cycle numbers must be positive integers: {token}")
+        parsed.add(value)
+    return parsed
+
+
+def _persist_altitude_outputs(opinions_md: str | None, solver_py: str | None = None) -> None:
+    """Persist altitude-driven workspace updates for modes that steer the next grind."""
+    files_to_add: list[str] = []
+    if opinions_md:
+        hv.write_text(hv.OPINIONS_FILE, opinions_md)
+        files_to_add.append(hv.OPINIONS_FILE)
+    if solver_py:
+        hv.write_text(hv.SOLVER_FILE, solver_py.rstrip() + "\n")
+        files_to_add.append(hv.SOLVER_FILE)
+    if files_to_add:
+        joined = " ".join(files_to_add)
+        hv.run_command(f'git add -f {joined} && git commit -m "V4.7: altitude reorientation"')
+
+
+def _apply_fork_snapshot(snap_dir: Path) -> list[str]:
+    """Apply a frozen snapshot into the current workspace.
+
+    Returns a list of optional context files copied from the snapshot.
+    """
+    from v44_epistemics import render_dead_ends_md
+
+    snap_opinions = snap_dir / hv.OPINIONS_FILE
+    snap_dead_ends = snap_dir / hv.DEAD_ENDS_JSON_FILE
+    if not snap_opinions.exists():
+        raise FileNotFoundError(f"Fork snapshot missing opinions.md: {snap_opinions}")
+    if not snap_dead_ends.exists():
+        raise FileNotFoundError(f"Fork snapshot missing dead-ends.json: {snap_dead_ends}")
+
+    _copy_snapshot_file(snap_opinions, hv.OPINIONS_FILE)
+
+    copied_optional: list[str] = []
+    for name in SNAPSHOT_OPTIONAL_FILES:
+        if _copy_snapshot_file(snap_dir / name, name):
+            copied_optional.append(name)
+
+    de_data = json.loads(snap_dead_ends.read_text(encoding="utf-8"))
+    hv.write_json(hv.DEAD_ENDS_JSON_FILE, de_data)
+    hv.write_text(hv.DEAD_ENDS_FILE, render_dead_ends_md(de_data))
+
+    snap_dead_end_state = snap_dir / hv.DEAD_END_STATE_FILE
+    if snap_dead_end_state.exists():
+        forked_state = load_state(str(snap_dead_end_state))
+    else:
+        forked_state = merge_state(blank_state(), de_data, cycle=0)
+    save_state(hv.DEAD_END_STATE_FILE, forked_state)
+    return copied_optional
 
 
 def _load_status_progress(default_max_cycles: int) -> tuple[int, int]:
@@ -744,7 +819,8 @@ def request_altitude_map(
 
     Returns dict with keys:
         "map": altitude map text (always present)
-        "opinions_md": updated theory text (survey/negative-space modes only, may be empty)
+        "opinions_md": updated theory text for steering modes (may be empty)
+        "solver_py": optional updated solver for anchor mode
     """
     prompt_messages = hv.format_cycle_prompt(
         cycle,
@@ -761,7 +837,16 @@ def request_altitude_map(
         prompt_budget_tokens=gradient.prompt_budget,
     )
 
-    if altitude_mode in {"survey", "negative-space", "displace"}:
+    if altitude_mode == "anchor":
+        system_content = (
+            "You are the anchoring instrument of Avalanche V4.7.\n"
+            "Output only a single raw JSON object with exactly three keys:\n"
+            "  altitude_map: your anchoring analysis (string)\n"
+            "  opinions_md: updated theory text that names the dissociation and the landing target (string)\n"
+            "  solver_py: a concrete solver attempt implementing the landing theory (string)\n"
+            "No markdown fences. No extra keys."
+        )
+    elif altitude_mode in {"survey", "negative-space", "displace"}:
         system_content = (
             "You are the metacognitive survey instrument of Avalanche V4.7.\n"
             "Output only a single raw JSON object with exactly two keys:\n"
@@ -798,9 +883,11 @@ def request_altitude_map(
     if not altitude_text:
         raise RuntimeError("Altitude response did not include altitude_map.")
 
-    result = {"map": altitude_text[:1200], "opinions_md": ""}
-    if altitude_mode in {"survey", "negative-space", "displace"}:
+    result = {"map": altitude_text[:1200], "opinions_md": "", "solver_py": ""}
+    if altitude_mode in {"survey", "negative-space", "displace", "anchor"}:
         result["opinions_md"] = str(payload.get("opinions_md", "")).strip()
+    if altitude_mode == "anchor":
+        result["solver_py"] = str(payload.get("solver_py", "")).strip()
     return result
 
 
@@ -828,6 +915,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
     altitude = AltitudeState(
         frequency=args.altitude_frequency,
         prompt_style=args.altitude_prompt,
+        fire_cycles=_parse_cycle_list(args.altitude_fire_cycles),
     )
 
     # Convergence state
@@ -969,12 +1057,24 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             opinions_before = previous_opinions
             opinions_updated = False
 
-            # Survey mode: write updated opinions.md if the model produced one
-            if altitude_result.get("opinions_md"):
-                _persist_altitude_reorientation(altitude_result["opinions_md"])
-                opinions_updated = True
-                print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars, "
-                      f"opinions updated ({len(opinions_before)}->{len(altitude_result['opinions_md'])} chars)")
+            solver_updated = False
+
+            # Steering modes may update the live workspace theory; anchor may also rewrite solver.py.
+            if altitude_result.get("opinions_md") or altitude_result.get("solver_py"):
+                _persist_altitude_outputs(
+                    altitude_result.get("opinions_md") or None,
+                    altitude_result.get("solver_py") or None,
+                )
+                opinions_updated = bool(altitude_result.get("opinions_md"))
+                solver_updated = bool(altitude_result.get("solver_py"))
+                detail_parts: list[str] = [f"map={len(altitude.last_map)} chars"]
+                if opinions_updated:
+                    detail_parts.append(
+                        f"opinions updated ({len(opinions_before)}->{len(altitude_result['opinions_md'])} chars)"
+                    )
+                if solver_updated:
+                    detail_parts.append(f"solver updated ({len(altitude_result['solver_py'])} chars)")
+                print(f"  [ALTITUDE] {altitude_mode}: " + ", ".join(detail_parts))
             else:
                 print(f"  [ALTITUDE] {altitude_mode}: map={len(altitude.last_map)} chars")
 
@@ -998,6 +1098,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
                 "altitude_map_len": len(altitude.last_map),
                 "altitude_map": altitude.last_map,
                 "opinions_updated": opinions_updated,
+                "solver_updated": solver_updated,
                 "opinions_len_before": len(opinions_before),
                 "opinions_len_after": len(altitude_result.get("opinions_md", "")) if opinions_updated else len(opinions_before),
                 "compression_pass": False,
@@ -1340,15 +1441,17 @@ def parse_args() -> argparse.Namespace:
     # Altitude cycles
     parser.add_argument("--altitude-frequency", type=int, default=10,
                         help="Altitude survey every N cycles")
-    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating", "displace"],
+    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating", "displace", "anchor"],
                         default="survey",
-                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), 'rotating' (low/medium/high), or 'displace' (graveyard-aware interaction surface)")
+                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), 'rotating' (low/medium/high), 'displace' (graveyard-aware interaction surface), or 'anchor' (workspace/graveyard landing assistance)")
+    parser.add_argument("--altitude-fire-cycles", type=str, default=None,
+                        help="Optional comma-separated explicit altitude fire cycles (overrides frequency), e.g. '1,10'")
     parser.add_argument("--no-altitude", action="store_true",
                         help="Disable altitude cycles")
 
     # Fork / inject / snapshot
     parser.add_argument("--fork-snapshot", type=str, default=None,
-                        help="Path to frozen snapshot directory to fork (copies opinions.md and dead-ends.json)")
+                        help="Path to frozen snapshot directory to fork (copies opinions.md, dead-ends.json, and optional context files)")
     parser.add_argument("--inject-graveyard", type=str, default=None,
                         help="Path to synthetic dead-ends JSON to inject after forking")
     parser.add_argument("--snapshot-every-cycle", action="store_true",
@@ -1378,29 +1481,24 @@ def main() -> None:
 
         # Fork from frozen snapshot if requested
         if args.fork_snapshot:
-            from v44_epistemics import render_dead_ends_md
             snap_dir = Path(args.fork_snapshot)
-            snap_opinions = snap_dir / "opinions.md"
-            snap_dead_ends = snap_dir / "dead-ends.json"
-            if not snap_opinions.exists():
-                raise FileNotFoundError(f"Fork snapshot missing opinions.md: {snap_opinions}")
-            if not snap_dead_ends.exists():
-                raise FileNotFoundError(f"Fork snapshot missing dead-ends.json: {snap_dead_ends}")
-            # Copy opinions
-            hv.write_text(hv.OPINIONS_FILE, snap_opinions.read_text(encoding="utf-8"))
-            # Copy and render dead-ends
-            de_data = json.loads(snap_dead_ends.read_text(encoding="utf-8"))
-            hv.write_json(hv.DEAD_ENDS_JSON_FILE, de_data)
-            hv.write_text(hv.DEAD_ENDS_FILE, render_dead_ends_md(de_data))
-            # Initialize state with forked graveyard
-            forked_state = merge_state(blank_state(), de_data, cycle=0)
-            save_state(hv.DEAD_END_STATE_FILE, forked_state)
+            copied_optional = _apply_fork_snapshot(snap_dir)
+
+            files_to_add = [
+                hv.OPINIONS_FILE,
+                hv.DEAD_ENDS_JSON_FILE,
+                hv.DEAD_ENDS_FILE,
+                hv.DEAD_END_STATE_FILE,
+            ]
+            files_to_add.extend(name for name in copied_optional if name not in files_to_add)
             hv.run_command(
-                f'git add -f {hv.OPINIONS_FILE} {hv.DEAD_ENDS_JSON_FILE} '
-                f'{hv.DEAD_ENDS_FILE} {hv.DEAD_END_STATE_FILE} && '
+                f'git add -f {" ".join(files_to_add)} && '
                 f'git commit -m "V4.7: fork from snapshot {snap_dir.name}"'
             )
-            print(f"  Forked from snapshot: {snap_dir}")
+            if copied_optional:
+                print(f"  Forked from snapshot: {snap_dir} (with optional context: {', '.join(copied_optional)})")
+            else:
+                print(f"  Forked from snapshot: {snap_dir}")
 
         # Inject synthetic graveyard if requested (overwrites fork)
         if args.inject_graveyard:

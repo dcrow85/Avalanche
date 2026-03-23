@@ -750,6 +750,46 @@ def format_cycle_prompt(
             "  - Two discriminating test patterns (arrays where the two hypotheses predict different outputs)\n\n"
             "Update your theory (opinions_md) to reflect the strongest interaction hypothesis."
         )
+    elif altitude_mode == "anchor":
+        active_basins = [
+            f"  - {str(basin.get('id', '?'))}: {str(basin.get('claim', '?'))}"
+            for basin in de_dict.get("basins", [])
+            if str(basin.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        active_families = [
+            f"  - {str(fam.get('id', '?'))}: {str(fam.get('claim', '?'))}"
+            for fam in de_dict.get("families", [])
+            if str(fam.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        superseded_families = [
+            f"  - {str(fam.get('id', '?'))}: {str(fam.get('claim', '?'))}"
+            for fam in de_dict.get("families", [])
+            if str(fam.get("status", "ACTIVE")) == "SUPERSEDED"
+        ]
+        active_basin_block = "\n".join(active_basins) if active_basins else "  (none)"
+        active_family_block = "\n".join(active_families) if active_families else "  (none)"
+        superseded_block = "\n".join(superseded_families) if superseded_families else "  (none yet)"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR ALTITUDE: Your workspace and graveyard have drifted apart.\n\n"
+            f"Last confirmed graveyard basins:\n{active_basin_block}\n\n"
+            f"Last confirmed active families:\n{active_family_block}\n\n"
+            f"Recently superseded families:\n{superseded_block}\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "These are not the same surface. Do not search farther outward. Land where you already are.\n"
+            "Your job is to convert the theory the workspace is already holding into oracle contact the graveyard can record.\n\n"
+            "Provide all of the following:\n"
+            "  1. One discriminating oracle test: an array where the current workspace theory and the last graveyard-confirmed theory predict different outputs.\n"
+            "  2. One precise solver implementing the current workspace theory as directly as possible.\n"
+            "  3. One backup explanation only if the current workspace theory fails.\n\n"
+            "Update opinions_md so it explicitly names:\n"
+            "  - the confirmed graveyard basin\n"
+            "  - the current workspace theory\n"
+            "  - the discriminating test\n"
+            "  - the exact condition that would earn a new tombstone\n\n"
+            "Do not retreat to parity, identity, value-threshold, or other cheaper basins unless the oracle forces you there.\n"
+            "Do not rewrite the theory back into inversion-count language if the workspace has already moved beyond it."
+        )
 
     def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
         if max_chars is None or len(text) <= max_chars:
