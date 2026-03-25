@@ -13,6 +13,7 @@ interventions, each independently togglable for isolation experiments.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -33,6 +34,8 @@ import hypervisor_v44 as hv
 from actuator_metrics import evaluate_solver_fractional
 from v43_metrics import semantic_distance
 from v44_epistemics import (
+    activate_anchor_lock,
+    anchor_lock_status_fields,
     blank_state,
     detect_work_event,
     load_state,
@@ -77,6 +80,10 @@ SYSTEM_PROMPT = (
     "Output only the JSON object matching the provided schema.\n"
     "No conversational filler. No markdown fences. No extra keys.\n"
 )
+
+
+class AnchorPrelockEscape(RuntimeError):
+    """Raised when the contrast basin escapes before the lock can arm."""
 
 
 # ---------------------------------------------------------------------------
@@ -359,7 +366,7 @@ def _snapshot_dead_ends(cycle: int, current_state: dict[str, object]) -> None:
 
 def _effective_graveyard_entry_cap(base_cap: int, altitude_mode: str | None) -> int:
     """Raise the graveyard cap for survey altitude so the prompt can see recent fossils."""
-    if altitude_mode in {"survey", "negative-space", "displace", "anchor"}:
+    if altitude_mode in {"survey", "negative-space", "displace", "anchor", "anchor-v2", "anchor-v3", "anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
         return max(base_cap, ALTITUDE_SURVEY_MIN_GRAVEYARD_ENTRIES)
     return base_cap
 
@@ -400,6 +407,364 @@ def _persist_altitude_outputs(opinions_md: str | None, solver_py: str | None = N
     if files_to_add:
         joined = " ".join(files_to_add)
         hv.run_command(f'git add -f {joined} && git commit -m "V4.7: altitude reorientation"')
+
+
+def _ensure_anchor_v4_lock(previous_state: dict[str, object], cycle: int) -> dict[str, object]:
+    """Activate the anchor content lock before the first anchor-v4 prompt fires."""
+    anchor_lock = previous_state.get("anchor_lock", {})
+    if isinstance(anchor_lock, dict) and anchor_lock.get("active"):
+        return previous_state
+    active = previous_state.get("active", {})
+    if not isinstance(active, dict):
+        raise RuntimeError("ANCHOR_LOCK_SETUP_ERROR: active graveyard state missing.")
+    active_basins = [
+        basin
+        for basin in active.get("basins", [])
+        if str(basin.get("status", "ACTIVE")) == "ACTIVE"
+    ]
+    if not active_basins:
+        superseded_basins = [
+            basin
+            for basin in active.get("basins", [])
+            if str(basin.get("status", "")) == "SUPERSEDED"
+        ]
+        if superseded_basins:
+            escaped_ids = ",".join(str(basin.get("id", "?")) for basin in superseded_basins)
+            raise AnchorPrelockEscape(
+                "ANCHOR_LOCK_PRELOCK_ESCAPE: no active basin available to lock; "
+                f"superseded basins present before lock fire ({escaped_ids})."
+            )
+        raise RuntimeError("ANCHOR_LOCK_SETUP_ERROR: no active basin available to lock.")
+    locked_basin_id = str(active_basins[0].get("id", "") or "")
+    if not locked_basin_id:
+        raise RuntimeError("ANCHOR_LOCK_SETUP_ERROR: active basin missing id.")
+    locked_state = activate_anchor_lock(
+        previous_state,
+        locked_basin_id=locked_basin_id,
+        replacement_theory_type="rank-based negation",
+        cycle=cycle,
+    )
+    save_state(hv.DEAD_END_STATE_FILE, locked_state)
+    return locked_state
+
+
+def _restore_runtime_state_after_workspace_reset(previous_state: dict[str, object]) -> None:
+    """Re-write runtime state after git reset so lock metadata survives mid-cycle rollback."""
+    save_state(hv.DEAD_END_STATE_FILE, previous_state)
+
+
+def _canonical_recent_fixed_suite_rows(limit: int = 3) -> list[dict[str, object]]:
+    path = Path(TELEMETRY_FILE)
+    if not path.exists():
+        return []
+    by_cycle: dict[int, dict[str, object]] = {}
+    for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        cycle = row.get("cycle")
+        vector = row.get("fixed_suite_vector")
+        if not isinstance(cycle, int) or not isinstance(vector, list):
+            continue
+        if row.get("cycle_type") != "grind":
+            continue
+        if not all(isinstance(item, bool) for item in vector):
+            continue
+        by_cycle[cycle] = row
+    return [by_cycle[cycle] for cycle in sorted(by_cycle)[-limit:]]
+
+
+def _latest_fixed_suite_row_before_cycle(cycle_exclusive: int) -> dict[str, object] | None:
+    candidates = [row for row in _canonical_recent_fixed_suite_rows(limit=256) if int(row.get("cycle", 0)) < cycle_exclusive]
+    return candidates[-1] if candidates else None
+
+
+def _format_case_list(cases: set[int]) -> str:
+    return ",".join(str(case) for case in sorted(cases)) if cases else "(none)"
+
+
+def _build_anchor_v45_oracle_memory(previous_state: dict[str, object], limit: int = 3) -> str:
+    anchor_lock = previous_state.get("anchor_lock", {})
+    if not isinstance(anchor_lock, dict) or not anchor_lock.get("active"):
+        return ""
+    locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "?")
+    replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+    rows = _canonical_recent_fixed_suite_rows(limit=limit)
+    if not rows:
+        return (
+            "Validator-persisted oracle memory for the current lock window is not available yet.\n"
+            f"Locked contrast basin: {locked_basin_id}.\n"
+            f"Replacement theory type: {replacement_theory_type}."
+        )
+
+    remembered_lines = [
+        "Validator-persisted oracle memory for the current lock window.",
+        f"Locked contrast basin: {locked_basin_id}.",
+        f"Replacement theory type: {replacement_theory_type}.",
+        "Use this as cumulative evidence. Do not treat it as a new theory.",
+        "",
+        "Recent fixed-suite oracle results (oldest to newest):",
+    ]
+    vectors: list[list[bool]] = []
+    for row in rows:
+        vector = [bool(item) for item in row["fixed_suite_vector"]]
+        vectors.append(vector)
+        passing_cases = {index + 1 for index, passed in enumerate(vector) if passed}
+        remembered_lines.append(
+            f"- cycle {row['cycle']}: score={float(row.get('oracle_fixed', 0.0)):.4f}; "
+            f"passing fixed cases={_format_case_list(passing_cases)}"
+        )
+
+    remembered_lines.append("")
+    remembered_lines.append("Cycle-to-cycle fixed-case flips:")
+    for left, right in zip(rows, rows[1:]):
+        left_vector = [bool(item) for item in left["fixed_suite_vector"]]
+        right_vector = [bool(item) for item in right["fixed_suite_vector"]]
+        gained = {index + 1 for index, (before, after) in enumerate(zip(left_vector, right_vector)) if not before and after}
+        lost = {index + 1 for index, (before, after) in enumerate(zip(left_vector, right_vector)) if before and not after}
+        remembered_lines.append(
+            f"- {left['cycle']}→{right['cycle']}: gained={_format_case_list(gained)}; "
+            f"lost={_format_case_list(lost)}"
+        )
+
+    stable_passes = {index + 1 for index in range(len(vectors[0])) if all(vector[index] for vector in vectors)}
+    stable_fails = {index + 1 for index in range(len(vectors[0])) if all(not vector[index] for vector in vectors)}
+    touched_cases: set[int] = set()
+    for left_vector, right_vector in zip(vectors, vectors[1:]):
+        touched_cases.update(
+            index + 1
+            for index, (before, after) in enumerate(zip(left_vector, right_vector))
+            if before != after
+        )
+    remembered_lines.extend(
+        [
+            "",
+            f"Stable passes across remembered window: {_format_case_list(stable_passes)}",
+            f"Stable fails across remembered window: {_format_case_list(stable_fails)}",
+            f"Cases touched by any flip in the remembered window: {_format_case_list(touched_cases)}",
+        ]
+    )
+    return "\n".join(remembered_lines)
+
+
+def _build_anchor_v46_oracle_memory(previous_state: dict[str, object], limit: int = 3) -> str:
+    anchor_lock = previous_state.get("anchor_lock", {})
+    if not isinstance(anchor_lock, dict) or not anchor_lock.get("active"):
+        return ""
+    locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "?")
+    replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+    rows = _canonical_recent_fixed_suite_rows(limit=limit)
+    if not rows:
+        return (
+            "Recent Oracle History (last 3 cycles) is not available yet for this lock window.\n"
+            f"Locked contrast basin: {locked_basin_id}.\n"
+            f"Replacement theory type: {replacement_theory_type}."
+        )
+
+    def _format_number(value: object) -> str:
+        if isinstance(value, (int, float)):
+            return f"{float(value):.4f}"
+        return "?"
+
+    scores = [float(row.get("oracle_fixed", 0.0) or 0.0) for row in rows]
+    first_score = scores[0]
+    last_score = scores[-1]
+    if last_score > first_score:
+        trend = "improving"
+    elif last_score < first_score:
+        trend = "declining"
+    else:
+        trend = "flat"
+    best_row = max(rows, key=lambda row: float(row.get("oracle_fixed", 0.0) or 0.0))
+
+    remembered_lines = [
+        "Recent Oracle History (last 3 cycles)",
+        f"Locked contrast basin: {locked_basin_id}.",
+        f"Replacement theory type: {replacement_theory_type}.",
+        "",
+    ]
+    for row in rows:
+        remembered_lines.append(
+            f"Cycle {int(row.get('cycle', 0))}: "
+            f"oracle_fixed = {_format_number(row.get('oracle_fixed'))}, "
+            f"oracle_combined = {_format_number(row.get('oracle_combined'))}, "
+            f"hamming_distance = {row.get('hamming_distance', '?')}"
+        )
+    remembered_lines.extend(
+        [
+            "",
+            f"Score trend: {trend}",
+            f"Best score in window: {float(best_row.get('oracle_fixed', 0.0) or 0.0):.4f} at cycle {int(best_row.get('cycle', 0))}",
+        ]
+    )
+    return "\n".join(remembered_lines)
+
+
+def _oracle_memory_note_for_mode(prompt_mode: str | None, previous_state: dict[str, object]) -> str:
+    if prompt_mode == "anchor-v4.5":
+        return _build_anchor_v45_oracle_memory(previous_state)
+    if prompt_mode == "anchor-v4.6":
+        return _build_anchor_v46_oracle_memory(previous_state)
+    if prompt_mode == "anchor-v5":
+        return _build_anchor_v5_oracle_ledger_note(previous_state)
+    if prompt_mode in {"anchor-v5.1", "anchor-v5.2"}:
+        return _build_anchor_v5_oracle_ledger_note(previous_state, escalate_ready=True)
+    return ""
+
+
+def _update_anchor_v5_ledger(
+    previous_state: dict[str, object],
+    *,
+    cycle: int,
+    fixed_score: float,
+    fixed_vector: list[bool],
+) -> dict[str, object]:
+    anchor_lock = previous_state.get("anchor_lock", {})
+    if not isinstance(anchor_lock, dict) or not anchor_lock.get("active"):
+        return previous_state
+
+    updated_state = copy.deepcopy(previous_state)
+    ledger = updated_state.setdefault("anchor_ledger", {})
+    if not isinstance(ledger, dict):
+        ledger = {}
+        updated_state["anchor_ledger"] = ledger
+
+    baseline_vector = ledger.get("baseline_fixed_vector", [])
+    baseline_cycle = ledger.get("baseline_cycle")
+    baseline_score = ledger.get("baseline_fixed_score")
+    if not isinstance(baseline_vector, list) or not baseline_vector:
+        baseline_row = _latest_fixed_suite_row_before_cycle(int(anchor_lock.get("lock_activated_cycle", cycle) or cycle))
+        if baseline_row and isinstance(baseline_row.get("fixed_suite_vector"), list):
+            baseline_vector = [bool(item) for item in baseline_row["fixed_suite_vector"]]
+            baseline_cycle = int(baseline_row.get("cycle", cycle - 1))
+            baseline_score = float(baseline_row.get("oracle_fixed", 0.0))
+        else:
+            baseline_vector = [bool(item) for item in fixed_vector]
+            baseline_cycle = cycle
+            baseline_score = float(fixed_score)
+
+    positive_counts = {
+        int(case): int(count)
+        for case, count in dict(ledger.get("positive_flip_counts", {})).items()
+    }
+    negative_counts = {
+        int(case): int(count)
+        for case, count in dict(ledger.get("negative_flip_counts", {})).items()
+    }
+
+    positive_cases: set[int] = set()
+    negative_cases: set[int] = set()
+    for index, (baseline_passed, current_passed) in enumerate(zip(baseline_vector, fixed_vector), start=1):
+        if not baseline_passed and current_passed:
+            positive_counts[index] = positive_counts.get(index, 0) + 1
+            positive_cases.add(index)
+        elif baseline_passed and not current_passed:
+            negative_counts[index] = negative_counts.get(index, 0) + 1
+            negative_cases.add(index)
+
+    coverage_cases = sorted(set(positive_counts) | set(negative_counts))
+    recurring_positive_cases = sorted(case for case, count in positive_counts.items() if count >= 2)
+    recurring_negative_cases = sorted(case for case, count in negative_counts.items() if count >= 2)
+    ready_for_replacement = len(coverage_cases) >= 4 and len(recurring_positive_cases) >= 2
+
+    ledger.update(
+        {
+            "active": True,
+            "baseline_cycle": baseline_cycle,
+            "baseline_fixed_vector": list(baseline_vector),
+            "baseline_fixed_score": baseline_score,
+            "last_cycle": cycle,
+            "last_fixed_vector": list(fixed_vector),
+            "last_fixed_score": round(float(fixed_score), 4),
+            "positive_flip_counts": {str(case): count for case, count in sorted(positive_counts.items())},
+            "negative_flip_counts": {str(case): count for case, count in sorted(negative_counts.items())},
+            "coverage_cases": coverage_cases,
+            "recurring_positive_cases": recurring_positive_cases,
+            "recurring_negative_cases": recurring_negative_cases,
+            "ready_for_replacement": ready_for_replacement,
+        }
+    )
+    save_state(hv.DEAD_END_STATE_FILE, updated_state)
+    return updated_state
+
+
+def _build_anchor_v5_oracle_ledger_note(
+    previous_state: dict[str, object],
+    *,
+    escalate_ready: bool = False,
+) -> str:
+    anchor_lock = previous_state.get("anchor_lock", {})
+    anchor_ledger = previous_state.get("anchor_ledger", {})
+    if not isinstance(anchor_lock, dict) or not anchor_lock.get("active"):
+        return ""
+    if not isinstance(anchor_ledger, dict) or not anchor_ledger.get("active"):
+        return ""
+
+    locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "?")
+    replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+    baseline_cycle = anchor_ledger.get("baseline_cycle")
+    baseline_score = anchor_ledger.get("baseline_fixed_score")
+    last_cycle = anchor_ledger.get("last_cycle")
+    last_score = anchor_ledger.get("last_fixed_score")
+    coverage_cases = {
+        int(case)
+        for case in anchor_ledger.get("coverage_cases", [])
+        if isinstance(case, int) or str(case).isdigit()
+    }
+    recurring_positive = {
+        int(case)
+        for case in anchor_ledger.get("recurring_positive_cases", [])
+        if isinstance(case, int) or str(case).isdigit()
+    }
+    recurring_negative = {
+        int(case)
+        for case in anchor_ledger.get("recurring_negative_cases", [])
+        if isinstance(case, int) or str(case).isdigit()
+    }
+    positive_counts = {
+        int(case): int(count)
+        for case, count in dict(anchor_ledger.get("positive_flip_counts", {})).items()
+    }
+    negative_counts = {
+        int(case): int(count)
+        for case, count in dict(anchor_ledger.get("negative_flip_counts", {})).items()
+    }
+    ready = bool(anchor_ledger.get("ready_for_replacement"))
+
+    lines: list[str] = []
+    if ready and escalate_ready:
+        lines.extend(
+            [
+                "LEDGER STATUS: READY FOR REPLACEMENT.",
+                "This overrides any earlier NOT READY statement in opinions.md.",
+                "You must now attempt supersession-with-replacement in this cycle.",
+                "",
+            ]
+        )
+
+    lines.extend([
+        "Validator-written differential oracle ledger for the current lock window.",
+        f"Locked contrast basin: {locked_basin_id}.",
+        f"Replacement theory type: {replacement_theory_type}.",
+        f"Baseline fixed-suite row: cycle {baseline_cycle}, score={float(baseline_score or 0.0):.4f}.",
+        f"Latest ledger row: cycle {last_cycle}, score={float(last_score or 0.0):.4f}.",
+        f"Coverage cases relative to baseline: {_format_case_list(coverage_cases)}",
+        f"Recurring positive flips (baseline fail -> current pass, count>=2): {_format_case_list(recurring_positive)}",
+        f"Recurring negative flips (baseline pass -> current fail, count>=2): {_format_case_list(recurring_negative)}",
+        f"Positive flip counts: {json.dumps(positive_counts, sort_keys=True)}",
+        f"Negative flip counts: {json.dumps(negative_counts, sort_keys=True)}",
+        (
+            "Replacement readiness threshold: READY "
+            "(coverage>=4 and recurring positive flips>=2)."
+            if ready
+            else "Replacement readiness threshold: NOT READY yet."
+        ),
+    ])
+    return "\n".join(lines)
 
 
 def _apply_fork_snapshot(snap_dir: Path) -> list[str]:
@@ -464,12 +829,14 @@ def _write_terminal_marker(
 ) -> None:
     """Persist a terminal status/telemetry marker after an unexpected exit path."""
     cycle, max_cycles = _load_status_progress(default_max_cycles)
+    state = load_state(hv.DEAD_END_STATE_FILE)
     hv.write_status(
         cycle,
         max_cycles,
         phase,
         last_result=last_result,
         last_error=last_error,
+        metrics=anchor_lock_status_fields(state),
     )
     _append_jsonl(
         TELEMETRY_FILE,
@@ -814,13 +1181,14 @@ def request_altitude_map(
     current_state: dict[str, object],
     altitude_mode: str,
     previous_map: str,
+    oracle_memory_note: str = "",
 ) -> dict[str, str]:
     """Run a metacognitive survey without invoking the solver schema.
 
     Returns dict with keys:
         "map": altitude map text (always present)
         "opinions_md": updated theory text for steering modes (may be empty)
-        "solver_py": optional updated solver for anchor mode
+        "solver_py": optional updated solver for anchor modes
     """
     prompt_messages = hv.format_cycle_prompt(
         cycle,
@@ -835,9 +1203,10 @@ def request_altitude_map(
         altitude_map=previous_map or None,
         max_graveyard_entries=gradient.max_graveyard_entries,
         prompt_budget_tokens=gradient.prompt_budget,
+        oracle_memory_note=oracle_memory_note,
     )
 
-    if altitude_mode == "anchor":
+    if altitude_mode in {"anchor", "anchor-v2", "anchor-v3", "anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
         system_content = (
             "You are the anchoring instrument of Avalanche V4.7.\n"
             "Output only a single raw JSON object with exactly three keys:\n"
@@ -884,9 +1253,9 @@ def request_altitude_map(
         raise RuntimeError("Altitude response did not include altitude_map.")
 
     result = {"map": altitude_text[:1200], "opinions_md": "", "solver_py": ""}
-    if altitude_mode in {"survey", "negative-space", "displace", "anchor"}:
+    if altitude_mode in {"survey", "negative-space", "displace", "anchor", "anchor-v2", "anchor-v3", "anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
         result["opinions_md"] = str(payload.get("opinions_md", "")).strip()
-    if altitude_mode == "anchor":
+    if altitude_mode in {"anchor", "anchor-v2", "anchor-v3", "anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
         result["solver_py"] = str(payload.get("solver_py", "")).strip()
     return result
 
@@ -984,6 +1353,8 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         altitude_mode = None
         if not args.no_altitude and altitude.should_fire(cycle):
             altitude_mode = altitude.next_altitude()
+            if altitude_mode in {"anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
+                previous_state = _ensure_anchor_v4_lock(previous_state, cycle)
 
         mode_label = f"ALTITUDE_{altitude_mode.upper()}" if altitude_mode else "GRIND"
         hv.write_status(cycle, args.max_cycles, mode_label)
@@ -1004,6 +1375,9 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             prompt_kwargs["altitude_mode"] = altitude_mode
         if altitude.last_map:
             prompt_kwargs["altitude_map"] = altitude.last_map
+        oracle_memory_note = _oracle_memory_note_for_mode(args.altitude_prompt, previous_state)
+        if oracle_memory_note:
+            prompt_kwargs["oracle_memory_note"] = oracle_memory_note
 
         # --- Altitude cycle: extract map and skip oracle ---
         if altitude_mode:
@@ -1011,7 +1385,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             for format_attempt in range(FORMAT_FAIL_MAX_RETRIES + 1):
                 try:
                     altitude_result = request_altitude_map(
-                        cycle, args, gradient, previous_state, altitude_mode, altitude.last_map
+                        cycle,
+                        args,
+                        gradient,
+                        previous_state,
+                        altitude_mode,
+                        altitude.last_map,
+                        oracle_memory_note=str(prompt_kwargs.get("oracle_memory_note", "")),
                     )
                     break
                 except RuntimeError as exc:
@@ -1203,6 +1583,13 @@ def run_compression_loop(args: argparse.Namespace) -> str:
 
         # Record fixed score for compression pass trigger
         passes.record(fixed_score, cycle)
+        if args.altitude_prompt in {"anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
+            previous_state = _update_anchor_v5_ledger(
+                previous_state,
+                cycle=cycle,
+                fixed_score=fixed_score,
+                fixed_vector=list(fixed_vector),
+            )
 
         # Restore solver, then do full persist + ratchet
         hv.write_text(hv.SOLVER_FILE, workspace_snapshot["solver_py"])
@@ -1234,6 +1621,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             hv.update_data_file(failing_pairs)
             hv.run_command("git reset --hard HEAD")
             hv.run_command("git clean -fd")
+            _restore_runtime_state_after_workspace_reset(previous_state)
 
             try:
                 fail_payload = hv.request_cycle_output(
@@ -1363,6 +1751,7 @@ def run_compression_loop(args: argparse.Namespace) -> str:
             "solver_ast_hash_changed": ast_hash_changed,
             "work_event": work_event,
             "probe_g_distance": probe_g_distance,
+            "oracle_memory_note": str(prompt_kwargs.get("oracle_memory_note", "")),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         grind_telem.update(hv._cycle_usage)
@@ -1380,7 +1769,14 @@ def run_compression_loop(args: argparse.Namespace) -> str:
         _log_dead_ends_history(cycle, "grind", active_de)
 
     # Max cycles reached
-    hv.write_status(args.max_cycles, args.max_cycles, "MAX_CYCLES", last_result="COMPLETE")
+    final_state = load_state(hv.DEAD_END_STATE_FILE)
+    hv.write_status(
+        args.max_cycles,
+        args.max_cycles,
+        "MAX_CYCLES",
+        last_result="COMPLETE",
+        metrics=anchor_lock_status_fields(final_state),
+    )
     print(f"\n  [V4.7] Max cycles ({args.max_cycles}) reached. Best oracle: {best_oracle_score:.2f}")
     return "MAX_CYCLES"
 
@@ -1441,9 +1837,9 @@ def parse_args() -> argparse.Namespace:
     # Altitude cycles
     parser.add_argument("--altitude-frequency", type=int, default=10,
                         help="Altitude survey every N cycles")
-    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating", "displace", "anchor"],
+    parser.add_argument("--altitude-prompt", choices=["survey", "negative-space", "rotating", "displace", "anchor", "anchor-v2", "anchor-v3", "anchor-v4", "anchor-v4.5", "anchor-v4.6", "anchor-v5", "anchor-v5.1", "anchor-v5.2"],
                         default="survey",
-                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), 'rotating' (low/medium/high), 'displace' (graveyard-aware interaction surface), or 'anchor' (workspace/graveyard landing assistance)")
+                        help="Altitude prompt style: 'survey' (factual comparison), 'negative-space' (untested direction), 'rotating' (low/medium/high), 'displace' (graveyard-aware interaction surface), 'anchor' (frontier-preserving landing assistance), 'anchor-v2' (single-commit constrained landing window), 'anchor-v3' (two-phase supersession-with-replacement window), 'anchor-v4' (content-hash-locked anchor window), 'anchor-v4.5' (locked anchor plus enriched persisted oracle memory), 'anchor-v4.6' (locked anchor plus minimal 3-cycle oracle persistence injection), 'anchor-v5' (locked anchor plus validator-written differential oracle ledger), 'anchor-v5.1' (v5 with explicit replacement-attempt mode when the ledger is READY), or 'anchor-v5.2' (v5.1 plus minimal replacement transaction rules for legal supersession-with-replacement)")
     parser.add_argument("--altitude-fire-cycles", type=str, default=None,
                         help="Optional comma-separated explicit altitude fire cycles (overrides frequency), e.g. '1,10'")
     parser.add_argument("--no-altitude", action="store_true",
@@ -1563,6 +1959,15 @@ def main() -> None:
         status = run_compression_loop(args)
 
         print(f"\n  === V4.7 COMPLETE: {status} ===")
+    except AnchorPrelockEscape as exc:
+        print(f"  [V4.7] PRELOCK_ESCAPE: {exc}")
+        _write_terminal_marker(
+            phase="PRELOCK_ESCAPE",
+            last_result="ESCAPE",
+            last_error=str(exc),
+            default_max_cycles=args.max_cycles,
+        )
+        return
     except Exception as exc:
         traceback.print_exc()
         _write_terminal_marker(

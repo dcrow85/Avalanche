@@ -1,0 +1,8 @@
+{
+  "r_value": 0.12639088811027616,
+  "n_samples": 3058,
+  "pct_in_gpt2": 0.973185088293002,
+  "mean_leverage_in_gpt2": 0.5850955694931088,
+  "mean_leverage_not_in_gpt2": 0.43923565333629616,
+  "status": "Clean: r=0.126. No significant contamination detected."
+}

@@ -1,0 +1,6455 @@
+{
+  "beta": 1.0,
+  "gamma": 0.0,
+  "n_graveyard_tokens": 806,
+  "tokens": [
+    {
+      "piece": "▁Go",
+      "readable": "Go",
+      "ablation_leverage": 0.6904780644178391,
+      "breadth": 2.5579314783337646,
+      "corpus_frequency": 6743,
+      "score": 0.8904489658386838
+    },
+    {
+      "piece": "▁trad",
+      "readable": "trad",
+      "ablation_leverage": 0.6900633251667023,
+      "breadth": 2.543155313461952,
+      "corpus_frequency": 2382,
+      "score": 0.8903696369417803
+    },
+    {
+      "piece": "▁tax",
+      "readable": "tax",
+      "ablation_leverage": 0.6898615419864654,
+      "breadth": 2.7431707808600403,
+      "corpus_frequency": 1374,
+      "score": 0.8903310237929183
+    },
+    {
+      "piece": "▁doing",
+      "readable": "doing",
+      "ablation_leverage": 0.6896765947341919,
+      "breadth": 2.5738554716862065,
+      "corpus_frequency": 1711,
+      "score": 0.8902956224391586
+    },
+    {
+      "piece": "▁whole",
+      "readable": "whole",
+      "ablation_leverage": 0.6895967984199524,
+      "breadth": 2.4891252621676427,
+      "corpus_frequency": 1480,
+      "score": 0.8902803454359949
+    },
+    {
+      "piece": "▁front",
+      "readable": "front",
+      "ablation_leverage": 0.6894158494472503,
+      "breadth": 2.715264698742674,
+      "corpus_frequency": 1554,
+      "score": 0.8902456962074489
+    },
+    {
+      "piece": "pend",
+      "readable": "pend",
+      "ablation_leverage": 0.6892781436443329,
+      "breadth": 2.7373380547462105,
+      "corpus_frequency": 3428,
+      "score": 0.8902193213540375
+    },
+    {
+      "piece": "velop",
+      "readable": "velop",
+      "ablation_leverage": 0.6889695596694946,
+      "breadth": 2.3928674701243446,
+      "corpus_frequency": 4554,
+      "score": 0.8901601989897098
+    },
+    {
+      "piece": "▁Cl",
+      "readable": "Cl",
+      "ablation_leverage": 0.6889201128482818,
+      "breadth": 2.6670205190793075,
+      "corpus_frequency": 4821,
+      "score": 0.8901507228898832
+    },
+    {
+      "piece": "▁further",
+      "readable": "further",
+      "ablation_leverage": 0.6887817418575287,
+      "breadth": 2.50545257408477,
+      "corpus_frequency": 1209,
+      "score": 0.8901242015474113
+    },
+    {
+      "piece": "uma",
+      "readable": "uma",
+      "ablation_leverage": 0.6886960858106613,
+      "breadth": 2.580233500476329,
+      "corpus_frequency": 2966,
+      "score": 0.8901077813223459
+    },
+    {
+      "piece": "▁sur",
+      "readable": "sur",
+      "ablation_leverage": 0.6886529898643494,
+      "breadth": 2.6555638421596606,
+      "corpus_frequency": 13436,
+      "score": 0.890099519076861
+    },
+    {
+      "piece": "▁fair",
+      "readable": "fair",
+      "ablation_leverage": 0.6882409799098969,
+      "breadth": 2.61318152247259,
+      "corpus_frequency": 1091,
+      "score": 0.8900205034629358
+    },
+    {
+      "piece": "▁custom",
+      "readable": "custom",
+      "ablation_leverage": 0.6879751658439637,
+      "breadth": 2.65258483662041,
+      "corpus_frequency": 2935,
+      "score": 0.8899695003116893
+    },
+    {
+      "piece": "▁El",
+      "readable": "El",
+      "ablation_leverage": 0.6876277101039886,
+      "breadth": 2.642190051783932,
+      "corpus_frequency": 2328,
+      "score": 0.8899028024179585
+    },
+    {
+      "piece": "▁little",
+      "readable": "little",
+      "ablation_leverage": 0.6875401550531387,
+      "breadth": 2.6073820095825235,
+      "corpus_frequency": 3181,
+      "score": 0.8898859899610333
+    },
+    {
+      "piece": "aving",
+      "readable": "aving",
+      "ablation_leverage": 0.6875296580791473,
+      "breadth": 2.7142824436848834,
+      "corpus_frequency": 3322,
+      "score": 0.8898839741720483
+    },
+    {
+      "piece": "▁sort",
+      "readable": "sort",
+      "ablation_leverage": 0.6873855936527252,
+      "breadth": 2.7160644548986332,
+      "corpus_frequency": 1200,
+      "score": 0.8898563056143308
+    },
+    {
+      "piece": "▁Sen",
+      "readable": "Sen",
+      "ablation_leverage": 0.6872444653511047,
+      "breadth": 2.7096896874496696,
+      "corpus_frequency": 1132,
+      "score": 0.8898291953360847
+    },
+    {
+      "piece": "▁Ch",
+      "readable": "Ch",
+      "ablation_leverage": 0.6869470357894898,
+      "breadth": 2.811952814840792,
+      "corpus_frequency": 12672,
+      "score": 0.8897720418698956
+    },
+    {
+      "piece": "▁vill",
+      "readable": "vill",
+      "ablation_leverage": 0.6868311512470245,
+      "breadth": 2.7424701496980193,
+      "corpus_frequency": 1282,
+      "score": 0.8897497670300679
+    },
+    {
+      "piece": "lp",
+      "readable": "lp",
+      "ablation_leverage": 0.6867425274848938,
+      "breadth": 2.7160556398153557,
+      "corpus_frequency": 9081,
+      "score": 0.8897327296066221
+    },
+    {
+      "piece": "▁like",
+      "readable": "like",
+      "ablation_leverage": 0.6867261874675751,
+      "breadth": 2.5015842485411293,
+      "corpus_frequency": 12272,
+      "score": 0.889729588089466
+    },
+    {
+      "piece": "ather",
+      "readable": "ather",
+      "ablation_leverage": 0.6867001318931579,
+      "breadth": 2.710313841200798,
+      "corpus_frequency": 3990,
+      "score": 0.8897245785133339
+    },
+    {
+      "piece": "▁sac",
+      "readable": "sac",
+      "ablation_leverage": 0.6866833254694938,
+      "breadth": 2.6677127337697275,
+      "corpus_frequency": 1020,
+      "score": 0.8897213471247226
+    },
+    {
+      "piece": "▁start",
+      "readable": "start",
+      "ablation_leverage": 0.686432466506958,
+      "breadth": 2.695226100550611,
+      "corpus_frequency": 5166,
+      "score": 0.8896731048075708
+    },
+    {
+      "piece": "▁Eng",
+      "readable": "Eng",
+      "ablation_leverage": 0.6860682058334351,
+      "breadth": 2.3262679771004042,
+      "corpus_frequency": 1719,
+      "score": 0.8896030229789337
+    },
+    {
+      "piece": "op",
+      "readable": "op",
+      "ablation_leverage": 0.686039924621582,
+      "breadth": 2.6801627693137178,
+      "corpus_frequency": 54607,
+      "score": 0.889597580266711
+    },
+    {
+      "piece": "▁easy",
+      "readable": "easy",
+      "ablation_leverage": 0.6857951641082763,
+      "breadth": 2.8079250682273673,
+      "corpus_frequency": 1899,
+      "score": 0.8895504667906862
+    },
+    {
+      "piece": "▁Americ",
+      "readable": "Americ",
+      "ablation_leverage": 0.6857861769199372,
+      "breadth": 2.425014217908327,
+      "corpus_frequency": 3037,
+      "score": 0.8895487365442261
+    },
+    {
+      "piece": "▁econom",
+      "readable": "econom",
+      "ablation_leverage": 0.685704140663147,
+      "breadth": 2.258807068512234,
+      "corpus_frequency": 1448,
+      "score": 0.889532941574962
+    },
+    {
+      "piece": "▁bra",
+      "readable": "bra",
+      "ablation_leverage": 0.6856968057155609,
+      "breadth": 2.441741415665228,
+      "corpus_frequency": 5738,
+      "score": 0.8895315292381965
+    },
+    {
+      "piece": "▁within",
+      "readable": "within",
+      "ablation_leverage": 0.6856652230024338,
+      "breadth": 2.552709530467243,
+      "corpus_frequency": 2301,
+      "score": 0.8895254478460338
+    },
+    {
+      "piece": "▁dec",
+      "readable": "dec",
+      "ablation_leverage": 0.6854878735542297,
+      "breadth": 2.7297088673302516,
+      "corpus_frequency": 5825,
+      "score": 0.8894912932156444
+    },
+    {
+      "piece": "▁inn",
+      "readable": "inn",
+      "ablation_leverage": 0.6850850558280945,
+      "breadth": 2.800388995067282,
+      "corpus_frequency": 4913,
+      "score": 0.8894136842078589
+    },
+    {
+      "piece": "ol",
+      "readable": "ol",
+      "ablation_leverage": 0.6847121894359589,
+      "breadth": 2.568586025433511,
+      "corpus_frequency": 75255,
+      "score": 0.8893418051034239
+    },
+    {
+      "piece": "▁pres",
+      "readable": "pres",
+      "ablation_leverage": 0.684164867401123,
+      "breadth": 2.598756117020395,
+      "corpus_frequency": 10130,
+      "score": 0.8892362244838488
+    },
+    {
+      "piece": "▁started",
+      "readable": "started",
+      "ablation_leverage": 0.6837657535076141,
+      "breadth": 2.3784148850651645,
+      "corpus_frequency": 1560,
+      "score": 0.8891591805442703
+    },
+    {
+      "piece": "▁law",
+      "readable": "law",
+      "ablation_leverage": 0.6837094169855118,
+      "breadth": 2.5967725872050096,
+      "corpus_frequency": 3053,
+      "score": 0.8891483018623664
+    },
+    {
+      "piece": "▁accept",
+      "readable": "accept",
+      "ablation_leverage": 0.6833264079969377,
+      "breadth": 2.320083938117532,
+      "corpus_frequency": 1123,
+      "score": 0.8890743183788343
+    },
+    {
+      "piece": "RE",
+      "readable": "RE",
+      "ablation_leverage": 0.6831543779373169,
+      "breadth": 2.7573438270533783,
+      "corpus_frequency": 2556,
+      "score": 0.8890410748967675
+    },
+    {
+      "piece": "ug",
+      "readable": "ug",
+      "ablation_leverage": 0.6831176948547363,
+      "breadth": 2.6202902039644167,
+      "corpus_frequency": 28458,
+      "score": 0.889033985091169
+    },
+    {
+      "piece": "▁reach",
+      "readable": "reach",
+      "ablation_leverage": 0.6830252981185914,
+      "breadth": 2.644104547802142,
+      "corpus_frequency": 1772,
+      "score": 0.8890161257198567
+    },
+    {
+      "piece": "▁publish",
+      "readable": "publish",
+      "ablation_leverage": 0.6828177452087403,
+      "breadth": 2.852249288034459,
+      "corpus_frequency": 1198,
+      "score": 0.8889759989935718
+    },
+    {
+      "piece": "ash",
+      "readable": "ash",
+      "ablation_leverage": 0.6827582281827926,
+      "breadth": 2.4132779324657587,
+      "corpus_frequency": 5385,
+      "score": 0.888964490166899
+    },
+    {
+      "piece": "▁pie",
+      "readable": "pie",
+      "ablation_leverage": 0.6826585471630097,
+      "breadth": 2.7173078730257494,
+      "corpus_frequency": 2594,
+      "score": 0.888945212568277
+    },
+    {
+      "piece": "▁almost",
+      "readable": "almost",
+      "ablation_leverage": 0.682259167432785,
+      "breadth": 2.7215390797057997,
+      "corpus_frequency": 1277,
+      "score": 0.8888679471329056
+    },
+    {
+      "piece": "ar",
+      "readable": "ar",
+      "ablation_leverage": 0.682148665189743,
+      "breadth": 2.7335663783736246,
+      "corpus_frequency": 243214,
+      "score": 0.8888465609840451
+    },
+    {
+      "piece": "▁past",
+      "readable": "past",
+      "ablation_leverage": 0.6821364498138428,
+      "breadth": 2.763268523181443,
+      "corpus_frequency": 2126,
+      "score": 0.8888441966578723
+    },
+    {
+      "piece": "▁lay",
+      "readable": "lay",
+      "ablation_leverage": 0.6821053493022918,
+      "breadth": 2.5740989865252892,
+      "corpus_frequency": 8998,
+      "score": 0.8888381768604662
+    },
+    {
+      "piece": "▁won",
+      "readable": "won",
+      "ablation_leverage": 0.6821049916744232,
+      "breadth": 2.6466601404923447,
+      "corpus_frequency": 2725,
+      "score": 0.8888381076366222
+    },
+    {
+      "piece": "▁United",
+      "readable": "United",
+      "ablation_leverage": 0.6819549584388733,
+      "breadth": 2.7669973559599494,
+      "corpus_frequency": 1243,
+      "score": 0.8888090634168889
+    },
+    {
+      "piece": "▁defe",
+      "readable": "defe",
+      "ablation_leverage": 0.6813033378124237,
+      "breadth": 2.740333861159071,
+      "corpus_frequency": 1427,
+      "score": 0.8886828450950844
+    },
+    {
+      "piece": "▁proper",
+      "readable": "proper",
+      "ablation_leverage": 0.6812725222110748,
+      "breadth": 2.4070682279770894,
+      "corpus_frequency": 2316,
+      "score": 0.8886768731521186
+    },
+    {
+      "piece": "▁wal",
+      "readable": "wal",
+      "ablation_leverage": 0.6811082589626313,
+      "breadth": 2.5445481593143926,
+      "corpus_frequency": 3434,
+      "score": 0.888645035018913
+    },
+    {
+      "piece": "▁soft",
+      "readable": "soft",
+      "ablation_leverage": 0.6805608904361725,
+      "breadth": 2.484367506755801,
+      "corpus_frequency": 2020,
+      "score": 0.8885388864992118
+    },
+    {
+      "piece": "▁continue",
+      "readable": "continue",
+      "ablation_leverage": 0.6804810392856598,
+      "breadth": 2.7655844478927403,
+      "corpus_frequency": 2035,
+      "score": 0.8885233942181144
+    },
+    {
+      "piece": "iam",
+      "readable": "iam",
+      "ablation_leverage": 0.6797052729129791,
+      "breadth": 2.528218144778726,
+      "corpus_frequency": 1655,
+      "score": 0.88837278959908
+    },
+    {
+      "piece": "▁cam",
+      "readable": "cam",
+      "ablation_leverage": 0.6795433485507965,
+      "breadth": 2.314743247378603,
+      "corpus_frequency": 5102,
+      "score": 0.888341332476796
+    },
+    {
+      "piece": "▁Me",
+      "readable": "Me",
+      "ablation_leverage": 0.6793048840761184,
+      "breadth": 2.5534887240700854,
+      "corpus_frequency": 7421,
+      "score": 0.8882949922201896
+    },
+    {
+      "piece": "▁Wal",
+      "readable": "Wal",
+      "ablation_leverage": 0.6790663659572601,
+      "breadth": 2.7509373195768863,
+      "corpus_frequency": 1236,
+      "score": 0.888248625263313
+    },
+    {
+      "piece": "▁state",
+      "readable": "state",
+      "ablation_leverage": 0.6788637351989746,
+      "breadth": 2.495689284886464,
+      "corpus_frequency": 4940,
+      "score": 0.8882092218674166
+    },
+    {
+      "piece": "▁Serv",
+      "readable": "Serv",
+      "ablation_leverage": 0.6784222358465195,
+      "breadth": 2.759046131584671,
+      "corpus_frequency": 1668,
+      "score": 0.8881233275523875
+    },
+    {
+      "piece": "ould",
+      "readable": "ould",
+      "ablation_leverage": 0.6783427453041077,
+      "breadth": 2.5289425754702988,
+      "corpus_frequency": 20399,
+      "score": 0.8881078566185099
+    },
+    {
+      "piece": "▁profess",
+      "readable": "profess",
+      "ablation_leverage": 0.6781699752807617,
+      "breadth": 2.35667115168192,
+      "corpus_frequency": 2052,
+      "score": 0.8880742248102553
+    },
+    {
+      "piece": "▁hus",
+      "readable": "hus",
+      "ablation_leverage": 0.6777007153630257,
+      "breadth": 2.7165681599491553,
+      "corpus_frequency": 1787,
+      "score": 0.8879828343426713
+    },
+    {
+      "piece": "▁sil",
+      "readable": "sil",
+      "ablation_leverage": 0.6773647248744965,
+      "breadth": 2.3357087290010403,
+      "corpus_frequency": 2478,
+      "score": 0.8879173598084311
+    },
+    {
+      "piece": "itting",
+      "readable": "itting",
+      "ablation_leverage": 0.677336950302124,
+      "breadth": 2.57096371171202,
+      "corpus_frequency": 1125,
+      "score": 0.8879119459186736
+    },
+    {
+      "piece": "ident",
+      "readable": "ident",
+      "ablation_leverage": 0.6771995663642884,
+      "breadth": 2.762788828932538,
+      "corpus_frequency": 5582,
+      "score": 0.8878851634294394
+    },
+    {
+      "piece": "▁happen",
+      "readable": "happen",
+      "ablation_leverage": 0.6767800825834275,
+      "breadth": 2.566341190501544,
+      "corpus_frequency": 1942,
+      "score": 0.8878033529862079
+    },
+    {
+      "piece": "▁includes",
+      "readable": "includes",
+      "ablation_leverage": 0.6765841317176818,
+      "breadth": 2.6093850273664696,
+      "corpus_frequency": 1096,
+      "score": 0.8877651200021547
+    },
+    {
+      "piece": "▁sam",
+      "readable": "sam",
+      "ablation_leverage": 0.6762681593000889,
+      "breadth": 2.5362830172108697,
+      "corpus_frequency": 4018,
+      "score": 0.8877034456644831
+    },
+    {
+      "piece": "▁visit",
+      "readable": "visit",
+      "ablation_leverage": 0.6762362939119339,
+      "breadth": 2.548917861536968,
+      "corpus_frequency": 2471,
+      "score": 0.8876972242919989
+    },
+    {
+      "piece": "▁Le",
+      "readable": "Le",
+      "ablation_leverage": 0.6760636758804321,
+      "breadth": 2.5611598674029077,
+      "corpus_frequency": 6147,
+      "score": 0.8876635173915463
+    },
+    {
+      "piece": "ancial",
+      "readable": "ancial",
+      "ablation_leverage": 0.6755968034267426,
+      "breadth": 2.642560486079452,
+      "corpus_frequency": 1327,
+      "score": 0.8875723086745474
+    },
+    {
+      "piece": "ener",
+      "readable": "ener",
+      "ablation_leverage": 0.675594093799591,
+      "breadth": 2.7421778208473735,
+      "corpus_frequency": 5696,
+      "score": 0.8875717791348544
+    },
+    {
+      "piece": "▁redu",
+      "readable": "redu",
+      "ablation_leverage": 0.6753939759731292,
+      "breadth": 2.6905942624008254,
+      "corpus_frequency": 1609,
+      "score": 0.8875326644386773
+    },
+    {
+      "piece": "▁blood",
+      "readable": "blood",
+      "ablation_leverage": 0.6750915479660035,
+      "breadth": 2.7325852675574707,
+      "corpus_frequency": 1125,
+      "score": 0.8874735303679595
+    },
+    {
+      "piece": "▁yourself",
+      "readable": "yourself",
+      "ablation_leverage": 0.6749632132053375,
+      "breadth": 2.639025154042656,
+      "corpus_frequency": 1166,
+      "score": 0.8874484289291286
+    },
+    {
+      "piece": "ster",
+      "readable": "ster",
+      "ablation_leverage": 0.6746905735135078,
+      "breadth": 2.541479699472104,
+      "corpus_frequency": 9158,
+      "score": 0.8873950865471165
+    },
+    {
+      "piece": "▁researc",
+      "readable": "researc",
+      "ablation_leverage": 0.6745062386989593,
+      "breadth": 2.3908515451053334,
+      "corpus_frequency": 2110,
+      "score": 0.8873590089372958
+    },
+    {
+      "piece": "tain",
+      "readable": "tain",
+      "ablation_leverage": 0.6745007312297822,
+      "breadth": 2.4397365562697613,
+      "corpus_frequency": 8503,
+      "score": 0.8873579308756971
+    },
+    {
+      "piece": "▁fill",
+      "readable": "fill",
+      "ablation_leverage": 0.6742505979537964,
+      "breadth": 2.60663690679244,
+      "corpus_frequency": 1496,
+      "score": 0.8873089591638876
+    },
+    {
+      "piece": "nding",
+      "readable": "nding",
+      "ablation_leverage": 0.673980598449707,
+      "breadth": 2.762454715548781,
+      "corpus_frequency": 6906,
+      "score": 0.887256077599415
+    },
+    {
+      "piece": "▁sa",
+      "readable": "sa",
+      "ablation_leverage": 0.6736651730537414,
+      "breadth": 2.5782871223833346,
+      "corpus_frequency": 43480,
+      "score": 0.887194272173073
+    },
+    {
+      "piece": "▁deep",
+      "readable": "deep",
+      "ablation_leverage": 0.6736618733406067,
+      "breadth": 2.591998593559864,
+      "corpus_frequency": 1112,
+      "score": 0.8871936254641514
+    },
+    {
+      "piece": "▁harm",
+      "readable": "harm",
+      "ablation_leverage": 0.6734186887741089,
+      "breadth": 2.5782950710184496,
+      "corpus_frequency": 1189,
+      "score": 0.8871459551362442
+    },
+    {
+      "piece": "vant",
+      "readable": "vant",
+      "ablation_leverage": 0.673377029709518,
+      "breadth": 2.3245369613233486,
+      "corpus_frequency": 1514,
+      "score": 0.8871377871785084
+    },
+    {
+      "piece": "▁might",
+      "readable": "might",
+      "ablation_leverage": 0.6732274496555328,
+      "breadth": 2.416955639407118,
+      "corpus_frequency": 2528,
+      "score": 0.8871084553371572
+    },
+    {
+      "piece": "▁Bl",
+      "readable": "Bl",
+      "ablation_leverage": 0.6732137024402618,
+      "breadth": 2.5086715041673466,
+      "corpus_frequency": 3271,
+      "score": 0.8871057592554398
+    },
+    {
+      "piece": "▁diff",
+      "readable": "diff",
+      "ablation_leverage": 0.6728235840797424,
+      "breadth": 2.4431068253462627,
+      "corpus_frequency": 5679,
+      "score": 0.8870292269128619
+    },
+    {
+      "piece": "▁So",
+      "readable": "So",
+      "ablation_leverage": 0.6727656674385071,
+      "breadth": 2.5953369994851614,
+      "corpus_frequency": 11037,
+      "score": 0.8870178612033124
+    },
+    {
+      "piece": "▁entire",
+      "readable": "entire",
+      "ablation_leverage": 0.6726887583732605,
+      "breadth": 2.4809600670333274,
+      "corpus_frequency": 1166,
+      "score": 0.8870027668595492
+    },
+    {
+      "piece": "▁found",
+      "readable": "found",
+      "ablation_leverage": 0.672588427066803,
+      "breadth": 2.749748508037279,
+      "corpus_frequency": 3779,
+      "score": 0.886983073020427
+    },
+    {
+      "piece": "▁surv",
+      "readable": "surv",
+      "ablation_leverage": 0.6725212371349335,
+      "breadth": 2.716127547614823,
+      "corpus_frequency": 1044,
+      "score": 0.8869698827954586
+    },
+    {
+      "piece": "▁Cr",
+      "readable": "Cr",
+      "ablation_leverage": 0.6718473875522614,
+      "breadth": 2.7949848048633488,
+      "corpus_frequency": 3689,
+      "score": 0.8868375247556919
+    },
+    {
+      "piece": "omb",
+      "readable": "omb",
+      "ablation_leverage": 0.6717196834087372,
+      "breadth": 2.5515972659956088,
+      "corpus_frequency": 2698,
+      "score": 0.8868124260495739
+    },
+    {
+      "piece": "▁women",
+      "readable": "women",
+      "ablation_leverage": 0.6710551381111145,
+      "breadth": 2.4359203673641594,
+      "corpus_frequency": 1943,
+      "score": 0.8866817406318926
+    },
+    {
+      "piece": "agement",
+      "readable": "agement",
+      "ablation_leverage": 0.6709905731678009,
+      "breadth": 2.548818447909015,
+      "corpus_frequency": 2084,
+      "score": 0.886669036787645
+    },
+    {
+      "piece": "▁region",
+      "readable": "region",
+      "ablation_leverage": 0.6708735692501068,
+      "breadth": 2.0051324731808973,
+      "corpus_frequency": 1161,
+      "score": 0.8866460118982987
+    },
+    {
+      "piece": "▁Es",
+      "readable": "Es",
+      "ablation_leverage": 0.6705725193023682,
+      "breadth": 2.381016810502902,
+      "corpus_frequency": 1162,
+      "score": 0.8865867506173459
+    },
+    {
+      "piece": "▁set",
+      "readable": "set",
+      "ablation_leverage": 0.670466593503952,
+      "breadth": 2.6465195278502986,
+      "corpus_frequency": 6138,
+      "score": 0.8865658929374948
+    },
+    {
+      "piece": "▁pair",
+      "readable": "pair",
+      "ablation_leverage": 0.6704545080661773,
+      "breadth": 2.5450434478933133,
+      "corpus_frequency": 1323,
+      "score": 0.8865635130038085
+    },
+    {
+      "piece": "ag",
+      "readable": "ag",
+      "ablation_leverage": 0.6702753794193268,
+      "breadth": 2.543257988431063,
+      "corpus_frequency": 47548,
+      "score": 0.8865282329327041
+    },
+    {
+      "piece": "io",
+      "readable": "io",
+      "ablation_leverage": 0.6699930131435394,
+      "breadth": 2.638252801988508,
+      "corpus_frequency": 148327,
+      "score": 0.8864726006665381
+    },
+    {
+      "piece": "▁assist",
+      "readable": "assist",
+      "ablation_leverage": 0.6699193179607391,
+      "breadth": 2.654251109306223,
+      "corpus_frequency": 1256,
+      "score": 0.886458077262762
+    },
+    {
+      "piece": "▁Lo",
+      "readable": "Lo",
+      "ablation_leverage": 0.6697578060626984,
+      "breadth": 2.7034643477260314,
+      "corpus_frequency": 6759,
+      "score": 0.8864262418799772
+    },
+    {
+      "piece": "▁mor",
+      "readable": "mor",
+      "ablation_leverage": 0.6696834468841553,
+      "breadth": 2.4733682430440957,
+      "corpus_frequency": 20171,
+      "score": 0.886411582466043
+    },
+    {
+      "piece": "▁please",
+      "readable": "please",
+      "ablation_leverage": 0.6696710628271103,
+      "breadth": 2.7408543670832026,
+      "corpus_frequency": 1559,
+      "score": 0.8864091408740378
+    },
+    {
+      "piece": "ural",
+      "readable": "ural",
+      "ablation_leverage": 0.669516327381134,
+      "breadth": 2.735259937478718,
+      "corpus_frequency": 3032,
+      "score": 0.8863786300346135
+    },
+    {
+      "piece": "▁cor",
+      "readable": "cor",
+      "ablation_leverage": 0.6691285514831543,
+      "breadth": 2.732395613675936,
+      "corpus_frequency": 10719,
+      "score": 0.8863021371325062
+    },
+    {
+      "piece": "▁crit",
+      "readable": "crit",
+      "ablation_leverage": 0.6688978958129883,
+      "breadth": 2.516276282170011,
+      "corpus_frequency": 1558,
+      "score": 0.8862566168303132
+    },
+    {
+      "piece": "▁half",
+      "readable": "half",
+      "ablation_leverage": 0.6685414302349091,
+      "breadth": 2.6814658319085236,
+      "corpus_frequency": 1463,
+      "score": 0.8861862368380551
+    },
+    {
+      "piece": "▁On",
+      "readable": "On",
+      "ablation_leverage": 0.6680542600154876,
+      "breadth": 2.632860688209012,
+      "corpus_frequency": 5833,
+      "score": 0.8860899900179834
+    },
+    {
+      "piece": "itt",
+      "readable": "itt",
+      "ablation_leverage": 0.6674374443292618,
+      "breadth": 2.3355393725016924,
+      "corpus_frequency": 9369,
+      "score": 0.8859680293089194
+    },
+    {
+      "piece": "▁success",
+      "readable": "success",
+      "ablation_leverage": 0.6670977973937988,
+      "breadth": 2.6333520602706777,
+      "corpus_frequency": 2120,
+      "score": 0.8859008240346828
+    },
+    {
+      "piece": "▁matt",
+      "readable": "matt",
+      "ablation_leverage": 0.6670515513420106,
+      "breadth": 2.7766902105550217,
+      "corpus_frequency": 1616,
+      "score": 0.8858916707723905
+    },
+    {
+      "piece": "▁fight",
+      "readable": "fight",
+      "ablation_leverage": 0.6670055282115936,
+      "breadth": 2.31802896289802,
+      "corpus_frequency": 1055,
+      "score": 0.885882561001843
+    },
+    {
+      "piece": "▁about",
+      "readable": "about",
+      "ablation_leverage": 0.6667321074008942,
+      "breadth": 2.452239848328702,
+      "corpus_frequency": 13174,
+      "score": 0.8858284274078819
+    },
+    {
+      "piece": "ro",
+      "readable": "ro",
+      "ablation_leverage": 0.6665664958953857,
+      "breadth": 2.6683908969834444,
+      "corpus_frequency": 163052,
+      "score": 0.8857956277904699
+    },
+    {
+      "piece": "▁were",
+      "readable": "were",
+      "ablation_leverage": 0.6664471220970154,
+      "breadth": 2.665927274307477,
+      "corpus_frequency": 9797,
+      "score": 0.8857719805687905
+    },
+    {
+      "piece": "▁speak",
+      "readable": "speak",
+      "ablation_leverage": 0.6663531172275543,
+      "breadth": 2.546033044838148,
+      "corpus_frequency": 1251,
+      "score": 0.8857533557959701
+    },
+    {
+      "piece": "▁blog",
+      "readable": "blog",
+      "ablation_leverage": 0.6662030780315399,
+      "breadth": 2.6587995731158465,
+      "corpus_frequency": 1397,
+      "score": 0.885723623743393
+    },
+    {
+      "piece": "▁guide",
+      "readable": "guide",
+      "ablation_leverage": 0.6658180034160615,
+      "breadth": 2.795736594364379,
+      "corpus_frequency": 1303,
+      "score": 0.8856472859681496
+    },
+    {
+      "piece": "▁behind",
+      "readable": "behind",
+      "ablation_leverage": 0.6656015944480896,
+      "breadth": 2.512141181430655,
+      "corpus_frequency": 1033,
+      "score": 0.8856043653461382
+    },
+    {
+      "piece": "▁Tra",
+      "readable": "Tra",
+      "ablation_leverage": 0.6655909991264344,
+      "breadth": 2.6055140390926033,
+      "corpus_frequency": 2619,
+      "score": 0.8856022636063415
+    },
+    {
+      "piece": "▁recogn",
+      "readable": "recogn",
+      "ablation_leverage": 0.6654497873783112,
+      "breadth": 2.713328667313461,
+      "corpus_frequency": 1004,
+      "score": 0.885574248958848
+    },
+    {
+      "piece": "▁enough",
+      "readable": "enough",
+      "ablation_leverage": 0.6653136193752289,
+      "breadth": 2.5955411034550746,
+      "corpus_frequency": 1903,
+      "score": 0.8855472292966837
+    },
+    {
+      "piece": "ittle",
+      "readable": "ittle",
+      "ablation_leverage": 0.6651811146736145,
+      "breadth": 2.5960923068917707,
+      "corpus_frequency": 3433,
+      "score": 0.8855209312298599
+    },
+    {
+      "piece": "na",
+      "readable": "na",
+      "ablation_leverage": 0.6649625599384308,
+      "breadth": 2.6846205250332735,
+      "corpus_frequency": 73037,
+      "score": 0.8854775434562538
+    },
+    {
+      "piece": "ER",
+      "readable": "ER",
+      "ablation_leverage": 0.6648304164409637,
+      "breadth": 2.6389834546902122,
+      "corpus_frequency": 2663,
+      "score": 0.885451303237061
+    },
+    {
+      "piece": "▁complete",
+      "readable": "complete",
+      "ablation_leverage": 0.6642728346586227,
+      "breadth": 2.629329925783642,
+      "corpus_frequency": 2425,
+      "score": 0.8853405247127362
+    },
+    {
+      "piece": "▁with",
+      "readable": "with",
+      "ablation_leverage": 0.6641993880271911,
+      "breadth": 2.765073400955174,
+      "corpus_frequency": 52974,
+      "score": 0.8853259256458237
+    },
+    {
+      "piece": "▁young",
+      "readable": "young",
+      "ablation_leverage": 0.6641698777675629,
+      "breadth": 2.4229302319500245,
+      "corpus_frequency": 1699,
+      "score": 0.8853200594047511
+    },
+    {
+      "piece": "▁Sw",
+      "readable": "Sw",
+      "ablation_leverage": 0.6640532183647155,
+      "breadth": 2.5266966206614194,
+      "corpus_frequency": 1028,
+      "score": 0.8852968665388441
+    },
+    {
+      "piece": "▁prot",
+      "readable": "prot",
+      "ablation_leverage": 0.6639171707630157,
+      "breadth": 2.440912362802761,
+      "corpus_frequency": 2917,
+      "score": 0.8852698139896674
+    },
+    {
+      "piece": "▁arg",
+      "readable": "arg",
+      "ablation_leverage": 0.6639103102684021,
+      "breadth": 2.44468112801784,
+      "corpus_frequency": 7494,
+      "score": 0.885268449659539
+    },
+    {
+      "piece": "▁right",
+      "readable": "right",
+      "ablation_leverage": 0.6639040458202362,
+      "breadth": 2.3227136253638037,
+      "corpus_frequency": 6388,
+      "score": 0.8852672038514255
+    },
+    {
+      "piece": "▁They",
+      "readable": "They",
+      "ablation_leverage": 0.6638725972175599,
+      "breadth": 2.4505641247934613,
+      "corpus_frequency": 3696,
+      "score": 0.8852609495036926
+    },
+    {
+      "piece": "itis",
+      "readable": "itis",
+      "ablation_leverage": 0.663733720779419,
+      "breadth": 2.8509473696812906,
+      "corpus_frequency": 1058,
+      "score": 0.8852333268782133
+    },
+    {
+      "piece": "ual",
+      "readable": "ual",
+      "ablation_leverage": 0.6636402535438538,
+      "breadth": 2.27447786217204,
+      "corpus_frequency": 14925,
+      "score": 0.8852147329223746
+    },
+    {
+      "piece": "▁dire",
+      "readable": "dire",
+      "ablation_leverage": 0.6635011148452759,
+      "breadth": 2.686317930998543,
+      "corpus_frequency": 3273,
+      "score": 0.8851870484375387
+    },
+    {
+      "piece": "▁stat",
+      "readable": "stat",
+      "ablation_leverage": 0.6629142010211945,
+      "breadth": 2.70439028931437,
+      "corpus_frequency": 7101,
+      "score": 0.8850702060200454
+    },
+    {
+      "piece": "van",
+      "readable": "van",
+      "ablation_leverage": 0.6628396248817444,
+      "breadth": 2.6460694565294,
+      "corpus_frequency": 4204,
+      "score": 0.8850553520445289
+    },
+    {
+      "piece": "resh",
+      "readable": "resh",
+      "ablation_leverage": 0.6628196942806244,
+      "breadth": 2.576640874757074,
+      "corpus_frequency": 1375,
+      "score": 0.8850513820111056
+    },
+    {
+      "piece": "iver",
+      "readable": "iver",
+      "ablation_leverage": 0.6627292096614837,
+      "breadth": 2.5308547056432857,
+      "corpus_frequency": 7817,
+      "score": 0.8850333566197268
+    },
+    {
+      "piece": "▁fol",
+      "readable": "fol",
+      "ablation_leverage": 0.6626442801952362,
+      "breadth": 2.5732350416715786,
+      "corpus_frequency": 5031,
+      "score": 0.8850164356281056
+    },
+    {
+      "piece": "ario",
+      "readable": "ario",
+      "ablation_leverage": 0.6621212768554687,
+      "breadth": 2.405127640514735,
+      "corpus_frequency": 1878,
+      "score": 0.8849121868073067
+    },
+    {
+      "piece": "▁tow",
+      "readable": "tow",
+      "ablation_leverage": 0.6619574403762818,
+      "breadth": 2.587110828734178,
+      "corpus_frequency": 3236,
+      "score": 0.8848795127927279
+    },
+    {
+      "piece": "▁His",
+      "readable": "His",
+      "ablation_leverage": 0.6615801250934601,
+      "breadth": 2.720967415442659,
+      "corpus_frequency": 1657,
+      "score": 0.8848042337946032
+    },
+    {
+      "piece": "▁add",
+      "readable": "add",
+      "ablation_leverage": 0.6613026201725006,
+      "breadth": 2.5829608792947676,
+      "corpus_frequency": 7359,
+      "score": 0.884748840775278
+    },
+    {
+      "piece": "▁Off",
+      "readable": "Off",
+      "ablation_leverage": 0.6611677688360215,
+      "breadth": 2.6573432359355396,
+      "corpus_frequency": 1281,
+      "score": 0.8847219145797887
+    },
+    {
+      "piece": "ares",
+      "readable": "ares",
+      "ablation_leverage": 0.6610087019205093,
+      "breadth": 2.1690565690429424,
+      "corpus_frequency": 1016,
+      "score": 0.884690146122009
+    },
+    {
+      "piece": "▁increase",
+      "readable": "increase",
+      "ablation_leverage": 0.6607253825664521,
+      "breadth": 2.6283080884729295,
+      "corpus_frequency": 1953,
+      "score": 0.8846335433298893
+    },
+    {
+      "piece": "▁mean",
+      "readable": "mean",
+      "ablation_leverage": 0.6603850913047791,
+      "breadth": 2.5659266831896383,
+      "corpus_frequency": 3902,
+      "score": 0.8845655263466693
+    },
+    {
+      "piece": "ential",
+      "readable": "ential",
+      "ablation_leverage": 0.6600175293534994,
+      "breadth": 2.5503918872681006,
+      "corpus_frequency": 3120,
+      "score": 0.8844920191472502
+    },
+    {
+      "piece": "thing",
+      "readable": "thing",
+      "ablation_leverage": 0.6584895479679108,
+      "breadth": 2.6717710022611847,
+      "corpus_frequency": 12985,
+      "score": 0.8841860050122003
+    },
+    {
+      "piece": "▁sh",
+      "readable": "sh",
+      "ablation_leverage": 0.6583394801616669,
+      "breadth": 2.434750001278148,
+      "corpus_frequency": 62969,
+      "score": 0.8841559121262692
+    },
+    {
+      "piece": "▁area",
+      "readable": "area",
+      "ablation_leverage": 0.6582484102249145,
+      "breadth": 2.5081405284557565,
+      "corpus_frequency": 3339,
+      "score": 0.8841376466553308
+    },
+    {
+      "piece": "▁vir",
+      "readable": "vir",
+      "ablation_leverage": 0.658021891117096,
+      "breadth": 2.4675829057710477,
+      "corpus_frequency": 2645,
+      "score": 0.8840922038159992
+    },
+    {
+      "piece": "▁bag",
+      "readable": "bag",
+      "ablation_leverage": 0.657492607831955,
+      "breadth": 2.5915351146655508,
+      "corpus_frequency": 1114,
+      "score": 0.8839859613217087
+    },
+    {
+      "piece": "▁labor",
+      "readable": "labor",
+      "ablation_leverage": 0.656874213218689,
+      "breadth": 2.7533551623545254,
+      "corpus_frequency": 1018,
+      "score": 0.8838617232113958
+    },
+    {
+      "piece": "▁reve",
+      "readable": "reve",
+      "ablation_leverage": 0.6568483209609985,
+      "breadth": 2.448488734509233,
+      "corpus_frequency": 2951,
+      "score": 0.8838565187958433
+    },
+    {
+      "piece": "▁Inc",
+      "readable": "Inc",
+      "ablation_leverage": 0.6567523527145386,
+      "breadth": 2.18836233280405,
+      "corpus_frequency": 1144,
+      "score": 0.8838372271228211
+    },
+    {
+      "piece": "▁typ",
+      "readable": "typ",
+      "ablation_leverage": 0.6565872430801392,
+      "breadth": 2.613801572799122,
+      "corpus_frequency": 2917,
+      "score": 0.8838040299518799
+    },
+    {
+      "piece": "▁has",
+      "readable": "has",
+      "ablation_leverage": 0.6564039099216461,
+      "breadth": 2.7014792750573324,
+      "corpus_frequency": 19336,
+      "score": 0.8837671589517271
+    },
+    {
+      "piece": "ew",
+      "readable": "ew",
+      "ablation_leverage": 0.6560229218006134,
+      "breadth": 2.6909424043825725,
+      "corpus_frequency": 31334,
+      "score": 0.883690503677596
+    },
+    {
+      "piece": "▁gas",
+      "readable": "gas",
+      "ablation_leverage": 0.6558384287357331,
+      "breadth": 2.656882959998115,
+      "corpus_frequency": 1017,
+      "score": 0.8836533674481923
+    },
+    {
+      "piece": "▁Med",
+      "readable": "Med",
+      "ablation_leverage": 0.6556815361976623,
+      "breadth": 2.673514762370992,
+      "corpus_frequency": 1992,
+      "score": 0.8836217786517444
+    },
+    {
+      "piece": "▁lear",
+      "readable": "lear",
+      "ablation_leverage": 0.6556505644321442,
+      "breadth": 2.555103619007685,
+      "corpus_frequency": 5301,
+      "score": 0.8836155418927102
+    },
+    {
+      "piece": "▁knowledge",
+      "readable": "knowledge",
+      "ablation_leverage": 0.6556048595905304,
+      "breadth": 2.519949232160335,
+      "corpus_frequency": 1219,
+      "score": 0.8836063378080335
+    },
+    {
+      "piece": "▁cont",
+      "readable": "cont",
+      "ablation_leverage": 0.6553474998474121,
+      "breadth": 2.5426037114135784,
+      "corpus_frequency": 13648,
+      "score": 0.8835544984750118
+    },
+    {
+      "piece": "▁cra",
+      "readable": "cra",
+      "ablation_leverage": 0.6553032326698304,
+      "breadth": 2.5631025855430667,
+      "corpus_frequency": 3893,
+      "score": 0.8835455797956017
+    },
+    {
+      "piece": "▁official",
+      "readable": "official",
+      "ablation_leverage": 0.6548696386814118,
+      "breadth": 2.567831361930189,
+      "corpus_frequency": 1057,
+      "score": 0.8834581900731139
+    },
+    {
+      "piece": "▁approach",
+      "readable": "approach",
+      "ablation_leverage": 0.6542160952091217,
+      "breadth": 2.6444267268087183,
+      "corpus_frequency": 1165,
+      "score": 0.8833263607197165
+    },
+    {
+      "piece": "▁po",
+      "readable": "po",
+      "ablation_leverage": 0.6541675257682801,
+      "breadth": 2.7239131060314734,
+      "corpus_frequency": 65915,
+      "score": 0.8833165582908415
+    },
+    {
+      "piece": "ading",
+      "readable": "ading",
+      "ablation_leverage": 0.6539786791801453,
+      "breadth": 2.679860652521909,
+      "corpus_frequency": 3115,
+      "score": 0.8832784377937686
+    },
+    {
+      "piece": "ention",
+      "readable": "ention",
+      "ablation_leverage": 0.6538325595855713,
+      "breadth": 2.5324003102192894,
+      "corpus_frequency": 3473,
+      "score": 0.8832489345960421
+    },
+    {
+      "piece": "vention",
+      "readable": "vention",
+      "ablation_leverage": 0.6537349569797516,
+      "breadth": 2.7501981807465006,
+      "corpus_frequency": 1169,
+      "score": 0.8832292238535041
+    },
+    {
+      "piece": "▁Fr",
+      "readable": "Fr",
+      "ablation_leverage": 0.6535876405239105,
+      "breadth": 2.7348398180404234,
+      "corpus_frequency": 6646,
+      "score": 0.8831994678781474
+    },
+    {
+      "piece": "▁Hol",
+      "readable": "Hol",
+      "ablation_leverage": 0.6535247262567282,
+      "breadth": 2.5126316901798296,
+      "corpus_frequency": 1239,
+      "score": 0.8831867579845797
+    },
+    {
+      "piece": "▁bus",
+      "readable": "bus",
+      "ablation_leverage": 0.6533982682228089,
+      "breadth": 2.7647438800615545,
+      "corpus_frequency": 6313,
+      "score": 0.8831612073246137
+    },
+    {
+      "piece": "▁long",
+      "readable": "long",
+      "ablation_leverage": 0.6531856656074524,
+      "breadth": 2.6022366087839734,
+      "corpus_frequency": 7380,
+      "score": 0.8831182401311198
+    },
+    {
+      "piece": "▁eight",
+      "readable": "eight",
+      "ablation_leverage": 0.6531671977043152,
+      "breadth": 2.7581470314578374,
+      "corpus_frequency": 2427,
+      "score": 0.8831145070899354
+    },
+    {
+      "piece": "▁Ma",
+      "readable": "Ma",
+      "ablation_leverage": 0.6529795050621032,
+      "breadth": 2.4609098927551774,
+      "corpus_frequency": 19599,
+      "score": 0.8830765615281176
+    },
+    {
+      "piece": "▁local",
+      "readable": "local",
+      "ablation_leverage": 0.6527418518066406,
+      "breadth": 2.784289376431297,
+      "corpus_frequency": 2372,
+      "score": 0.8830284998467777
+    },
+    {
+      "piece": "▁aud",
+      "readable": "aud",
+      "ablation_leverage": 0.652221314907074,
+      "breadth": 2.6334916303977605,
+      "corpus_frequency": 2062,
+      "score": 0.8829231681730823
+    },
+    {
+      "piece": "▁mill",
+      "readable": "mill",
+      "ablation_leverage": 0.6522016805410386,
+      "breadth": 2.5080225073179583,
+      "corpus_frequency": 2123,
+      "score": 0.8829191934751257
+    },
+    {
+      "piece": "▁range",
+      "readable": "range",
+      "ablation_leverage": 0.6521183276176452,
+      "breadth": 2.4607321040260137,
+      "corpus_frequency": 2758,
+      "score": 0.8829023185297716
+    },
+    {
+      "piece": "▁again",
+      "readable": "again",
+      "ablation_leverage": 0.6514837789535523,
+      "breadth": 2.7712191036534346,
+      "corpus_frequency": 4406,
+      "score": 0.8827737822844578
+    },
+    {
+      "piece": "ief",
+      "readable": "ief",
+      "ablation_leverage": 0.6512968802452087,
+      "breadth": 2.713957789287691,
+      "corpus_frequency": 1898,
+      "score": 0.8827358996044841
+    },
+    {
+      "piece": "▁whe",
+      "readable": "whe",
+      "ablation_leverage": 0.651021819114685,
+      "breadth": 2.684662480950137,
+      "corpus_frequency": 18448,
+      "score": 0.8826801274208845
+    },
+    {
+      "piece": "▁best",
+      "readable": "best",
+      "ablation_leverage": 0.6509320843219757,
+      "breadth": 2.602967050213612,
+      "corpus_frequency": 4732,
+      "score": 0.8826619274391853
+    },
+    {
+      "piece": "▁around",
+      "readable": "around",
+      "ablation_leverage": 0.6509239971637726,
+      "breadth": 2.6356150968823115,
+      "corpus_frequency": 3846,
+      "score": 0.882660287081123
+    },
+    {
+      "piece": "▁west",
+      "readable": "west",
+      "ablation_leverage": 0.6503106880187989,
+      "breadth": 2.170500573234391,
+      "corpus_frequency": 1104,
+      "score": 0.8825358271557725
+    },
+    {
+      "piece": "▁means",
+      "readable": "means",
+      "ablation_leverage": 0.6502022755146026,
+      "breadth": 2.5712537520793903,
+      "corpus_frequency": 1701,
+      "score": 0.8825138146042082
+    },
+    {
+      "piece": "▁credit",
+      "readable": "credit",
+      "ablation_leverage": 0.6499927499890328,
+      "breadth": 2.5038809341434183,
+      "corpus_frequency": 1050,
+      "score": 0.88247126121682
+    },
+    {
+      "piece": "▁gain",
+      "readable": "gain",
+      "ablation_leverage": 0.6494808864593505,
+      "breadth": 2.671128659620881,
+      "corpus_frequency": 5568,
+      "score": 0.8823672470651681
+    },
+    {
+      "piece": "▁film",
+      "readable": "film",
+      "ablation_leverage": 0.6490717720985413,
+      "breadth": 2.6638530039001598,
+      "corpus_frequency": 1931,
+      "score": 0.8822840532831723
+    },
+    {
+      "piece": "▁was",
+      "readable": "was",
+      "ablation_leverage": 0.6489523255825043,
+      "breadth": 2.5869666257963755,
+      "corpus_frequency": 29842,
+      "score": 0.8822597538340708
+    },
+    {
+      "piece": "▁Ge",
+      "readable": "Ge",
+      "ablation_leverage": 0.6489398920536041,
+      "breadth": 2.368147992543009,
+      "corpus_frequency": 4759,
+      "score": 0.8822572241780261
+    },
+    {
+      "piece": "▁motion",
+      "readable": "motion",
+      "ablation_leverage": 0.6485762655735016,
+      "breadth": 2.694585520172825,
+      "corpus_frequency": 1500,
+      "score": 0.8821832213301127
+    },
+    {
+      "piece": "▁raise",
+      "readable": "raise",
+      "ablation_leverage": 0.648530969619751,
+      "breadth": 2.8556617188587463,
+      "corpus_frequency": 1150,
+      "score": 0.8821740000923176
+    },
+    {
+      "piece": "hor",
+      "readable": "hor",
+      "ablation_leverage": 0.6484499740600586,
+      "breadth": 2.60689635137392,
+      "corpus_frequency": 7066,
+      "score": 0.8821575096117933
+    },
+    {
+      "piece": "▁follow",
+      "readable": "follow",
+      "ablation_leverage": 0.6483905613422394,
+      "breadth": 2.640657924438423,
+      "corpus_frequency": 3556,
+      "score": 0.882145412030819
+    },
+    {
+      "piece": "iat",
+      "readable": "iat",
+      "ablation_leverage": 0.6482959419488907,
+      "breadth": 2.707312399782837,
+      "corpus_frequency": 7181,
+      "score": 0.8821261433996279
+    },
+    {
+      "piece": "▁another",
+      "readable": "another",
+      "ablation_leverage": 0.6478392434120178,
+      "breadth": 2.6888718956547653,
+      "corpus_frequency": 2576,
+      "score": 0.8820331001151892
+    },
+    {
+      "piece": "own",
+      "readable": "own",
+      "ablation_leverage": 0.6476914465427399,
+      "breadth": 2.7844494073848245,
+      "corpus_frequency": 17837,
+      "score": 0.8820029753808447
+    },
+    {
+      "piece": "▁don",
+      "readable": "don",
+      "ablation_leverage": 0.6476324582099915,
+      "breadth": 2.6220946831264715,
+      "corpus_frequency": 8794,
+      "score": 0.8819909501496149
+    },
+    {
+      "piece": "va",
+      "readable": "va",
+      "ablation_leverage": 0.6473228549957275,
+      "breadth": 2.722001085403879,
+      "corpus_frequency": 26345,
+      "score": 0.8819278171561592
+    },
+    {
+      "piece": "cking",
+      "readable": "cking",
+      "ablation_leverage": 0.6467279720306397,
+      "breadth": 2.7202775744161816,
+      "corpus_frequency": 2166,
+      "score": 0.8818064263142745
+    },
+    {
+      "piece": "at",
+      "readable": "at",
+      "ablation_leverage": 0.6466294193267822,
+      "breadth": 2.7450972515760133,
+      "corpus_frequency": 312801,
+      "score": 0.8817863050303114
+    },
+    {
+      "piece": "▁chang",
+      "readable": "chang",
+      "ablation_leverage": 0.646159119606018,
+      "breadth": 2.549200560017295,
+      "corpus_frequency": 4534,
+      "score": 0.8816902427389742
+    },
+    {
+      "piece": "▁had",
+      "readable": "had",
+      "ablation_leverage": 0.6459645652770996,
+      "breadth": 2.7716568419854752,
+      "corpus_frequency": 10355,
+      "score": 0.8816504830929549
+    },
+    {
+      "piece": "nder",
+      "readable": "nder",
+      "ablation_leverage": 0.6456012773513794,
+      "breadth": 2.4084766043758803,
+      "corpus_frequency": 11901,
+      "score": 0.8815762085275983
+    },
+    {
+      "piece": "▁She",
+      "readable": "She",
+      "ablation_leverage": 0.6454195928573608,
+      "breadth": 2.78544112142918,
+      "corpus_frequency": 3423,
+      "score": 0.8815390472789403
+    },
+    {
+      "piece": "▁treatment",
+      "readable": "treatment",
+      "ablation_leverage": 0.6453228747844696,
+      "breadth": 2.042465991729007,
+      "corpus_frequency": 1458,
+      "score": 0.8815192605624642
+    },
+    {
+      "piece": "▁mass",
+      "readable": "mass",
+      "ablation_leverage": 0.64501189827919,
+      "breadth": 2.637238550338769,
+      "corpus_frequency": 1121,
+      "score": 0.8814556204584739
+    },
+    {
+      "piece": "▁multi",
+      "readable": "multi",
+      "ablation_leverage": 0.6447038114070892,
+      "breadth": 2.5583539342807855,
+      "corpus_frequency": 1694,
+      "score": 0.8813925414430402
+    },
+    {
+      "piece": "▁wear",
+      "readable": "wear",
+      "ablation_leverage": 0.6446806740760803,
+      "breadth": 2.583238121972467,
+      "corpus_frequency": 1128,
+      "score": 0.8813878029907279
+    },
+    {
+      "piece": "▁think",
+      "readable": "think",
+      "ablation_leverage": 0.6446104907989502,
+      "breadth": 2.6761021968153966,
+      "corpus_frequency": 4807,
+      "score": 0.8813734286368706
+    },
+    {
+      "piece": "▁meet",
+      "readable": "meet",
+      "ablation_leverage": 0.6444277250766755,
+      "breadth": 2.733424292535344,
+      "corpus_frequency": 2393,
+      "score": 0.8813359887393188
+    },
+    {
+      "piece": "▁mental",
+      "readable": "mental",
+      "ablation_leverage": 0.6439535248279572,
+      "breadth": 2.8042443890111315,
+      "corpus_frequency": 1965,
+      "score": 0.8812387984005463
+    },
+    {
+      "piece": "▁wid",
+      "readable": "wid",
+      "ablation_leverage": 0.6439271318912506,
+      "breadth": 2.4764641151253333,
+      "corpus_frequency": 2265,
+      "score": 0.881233386898953
+    },
+    {
+      "piece": "▁outside",
+      "readable": "outside",
+      "ablation_leverage": 0.6436135828495025,
+      "breadth": 2.4478502712309687,
+      "corpus_frequency": 1070,
+      "score": 0.8811690810894125
+    },
+    {
+      "piece": "reci",
+      "readable": "reci",
+      "ablation_leverage": 0.6435739350318909,
+      "breadth": 2.751912232747633,
+      "corpus_frequency": 1839,
+      "score": 0.88116094748283
+    },
+    {
+      "piece": "▁protect",
+      "readable": "protect",
+      "ablation_leverage": 0.6433660541370045,
+      "breadth": 2.505518439076578,
+      "corpus_frequency": 1766,
+      "score": 0.8811182932652231
+    },
+    {
+      "piece": "▁least",
+      "readable": "least",
+      "ablation_leverage": 0.6427554810047149,
+      "breadth": 2.6239697389390146,
+      "corpus_frequency": 1458,
+      "score": 0.8809929325657325
+    },
+    {
+      "piece": "ber",
+      "readable": "ber",
+      "ablation_leverage": 0.6426656663417816,
+      "breadth": 2.667819232720303,
+      "corpus_frequency": 15684,
+      "score": 0.8809744820929465
+    },
+    {
+      "piece": "raph",
+      "readable": "raph",
+      "ablation_leverage": 0.6426272892951965,
+      "breadth": 2.644774224887178,
+      "corpus_frequency": 2483,
+      "score": 0.8809665975755298
+    },
+    {
+      "piece": "▁got",
+      "readable": "got",
+      "ablation_leverage": 0.6425308346748352,
+      "breadth": 2.596121184189817,
+      "corpus_frequency": 3276,
+      "score": 0.8809467790123444
+    },
+    {
+      "piece": "▁By",
+      "readable": "By",
+      "ablation_leverage": 0.6424115562438965,
+      "breadth": 2.7740144660492163,
+      "corpus_frequency": 1546,
+      "score": 0.8809222667183672
+    },
+    {
+      "piece": "▁paper",
+      "readable": "paper",
+      "ablation_leverage": 0.64241126537323,
+      "breadth": 2.6017200602820507,
+      "corpus_frequency": 1861,
+      "score": 0.8809222069374769
+    },
+    {
+      "piece": "▁using",
+      "readable": "using",
+      "ablation_leverage": 0.6423896408081055,
+      "breadth": 2.7074670639015865,
+      "corpus_frequency": 3895,
+      "score": 0.8809177624954777
+    },
+    {
+      "piece": "nam",
+      "readable": "nam",
+      "ablation_leverage": 0.6419461870193481,
+      "breadth": 2.8477915323149037,
+      "corpus_frequency": 4825,
+      "score": 0.8808265875559554
+    },
+    {
+      "piece": "▁did",
+      "readable": "did",
+      "ablation_leverage": 0.6418531548976898,
+      "breadth": 2.7539352430892676,
+      "corpus_frequency": 5905,
+      "score": 0.8808074519829201
+    },
+    {
+      "piece": "bon",
+      "readable": "bon",
+      "ablation_leverage": 0.6417400878667832,
+      "breadth": 2.731912072566855,
+      "corpus_frequency": 1785,
+      "score": 0.8807841917391656
+    },
+    {
+      "piece": "▁each",
+      "readable": "each",
+      "ablation_leverage": 0.6416514766216278,
+      "breadth": 2.6581205790915003,
+      "corpus_frequency": 8368,
+      "score": 0.8807659596954193
+    },
+    {
+      "piece": "attle",
+      "readable": "attle",
+      "ablation_leverage": 0.6416465389728546,
+      "breadth": 2.715487822412391,
+      "corpus_frequency": 1048,
+      "score": 0.8807649436845214
+    },
+    {
+      "piece": "▁teach",
+      "readable": "teach",
+      "ablation_leverage": 0.6415889799594879,
+      "breadth": 2.748643443405432,
+      "corpus_frequency": 1763,
+      "score": 0.8807530992954764
+    },
+    {
+      "piece": "▁designed",
+      "readable": "designed",
+      "ablation_leverage": 0.641274300813675,
+      "breadth": 2.4948826551122165,
+      "corpus_frequency": 1049,
+      "score": 0.8806883264029587
+    },
+    {
+      "piece": "▁world",
+      "readable": "world",
+      "ablation_leverage": 0.641075255870819,
+      "breadth": 2.679206875842774,
+      "corpus_frequency": 4538,
+      "score": 0.8806473389982388
+    },
+    {
+      "piece": "tt",
+      "readable": "tt",
+      "ablation_leverage": 0.6406511664390564,
+      "breadth": 2.613854717463205,
+      "corpus_frequency": 41416,
+      "score": 0.8805599678942415
+    },
+    {
+      "piece": "▁mark",
+      "readable": "mark",
+      "ablation_leverage": 0.6404866635799408,
+      "breadth": 2.658541773114353,
+      "corpus_frequency": 4862,
+      "score": 0.8805260613684639
+    },
+    {
+      "piece": "▁stay",
+      "readable": "stay",
+      "ablation_leverage": 0.6403473496437073,
+      "breadth": 2.42553539980534,
+      "corpus_frequency": 1477,
+      "score": 0.8804973398492802
+    },
+    {
+      "piece": "▁san",
+      "readable": "san",
+      "ablation_leverage": 0.6403101682662964,
+      "breadth": 2.6157570225398143,
+      "corpus_frequency": 2752,
+      "score": 0.8804896733311686
+    },
+    {
+      "piece": "▁con",
+      "readable": "con",
+      "ablation_leverage": 0.6402592074871063,
+      "breadth": 2.4307703969541836,
+      "corpus_frequency": 43692,
+      "score": 0.8804791648816319
+    },
+    {
+      "piece": "aff",
+      "readable": "aff",
+      "ablation_leverage": 0.6401150178909302,
+      "breadth": 2.3889311080061377,
+      "corpus_frequency": 4855,
+      "score": 0.8804494275018677
+    },
+    {
+      "piece": "reme",
+      "readable": "reme",
+      "ablation_leverage": 0.6396109592914582,
+      "breadth": 2.579381511396803,
+      "corpus_frequency": 3971,
+      "score": 0.8803454187799324
+    },
+    {
+      "piece": "▁spec",
+      "readable": "spec",
+      "ablation_leverage": 0.6394375610351563,
+      "breadth": 2.827310533643583,
+      "corpus_frequency": 9487,
+      "score": 0.8803096203974716
+    },
+    {
+      "piece": "alk",
+      "readable": "alk",
+      "ablation_leverage": 0.6392603051662445,
+      "breadth": 2.594268808029912,
+      "corpus_frequency": 4544,
+      "score": 0.8802730155686272
+    },
+    {
+      "piece": "▁exist",
+      "readable": "exist",
+      "ablation_leverage": 0.639219229221344,
+      "breadth": 2.6093740255265896,
+      "corpus_frequency": 1336,
+      "score": 0.8802645315917315
+    },
+    {
+      "piece": "▁enter",
+      "readable": "enter",
+      "ablation_leverage": 0.638670711517334,
+      "breadth": 2.524005856071806,
+      "corpus_frequency": 4097,
+      "score": 0.8801511864475234
+    },
+    {
+      "piece": "son",
+      "readable": "son",
+      "ablation_leverage": 0.6382340860366821,
+      "breadth": 2.3955838393980353,
+      "corpus_frequency": 16301,
+      "score": 0.88006089299285
+    },
+    {
+      "piece": "▁offers",
+      "readable": "offers",
+      "ablation_leverage": 0.6381367778778076,
+      "breadth": 2.662349387742884,
+      "corpus_frequency": 1315,
+      "score": 0.8800407614032097
+    },
+    {
+      "piece": "gg",
+      "readable": "gg",
+      "ablation_leverage": 0.6380966973304748,
+      "breadth": 2.750668814620518,
+      "corpus_frequency": 6670,
+      "score": 0.8800324684501619
+    },
+    {
+      "piece": "au",
+      "readable": "au",
+      "ablation_leverage": 0.6380315591394902,
+      "breadth": 2.682204799355156,
+      "corpus_frequency": 26410,
+      "score": 0.8800189897794595
+    },
+    {
+      "piece": "sel",
+      "readable": "sel",
+      "ablation_leverage": 0.6379641437530518,
+      "breadth": 2.52720015432819,
+      "corpus_frequency": 11527,
+      "score": 0.8800050384526685
+    },
+    {
+      "piece": "oman",
+      "readable": "oman",
+      "ablation_leverage": 0.6375562769174575,
+      "breadth": 2.7451352909756217,
+      "corpus_frequency": 1867,
+      "score": 0.8799206006958941
+    },
+    {
+      "piece": "▁way",
+      "readable": "way",
+      "ablation_leverage": 0.6375409746170044,
+      "breadth": 2.702927195766037,
+      "corpus_frequency": 14229,
+      "score": 0.8799174317187277
+    },
+    {
+      "piece": "▁dr",
+      "readable": "dr",
+      "ablation_leverage": 0.6373904180526734,
+      "breadth": 2.642269301470444,
+      "corpus_frequency": 20353,
+      "score": 0.8798862486697019
+    },
+    {
+      "piece": "earch",
+      "readable": "earch",
+      "ablation_leverage": 0.637295880317688,
+      "breadth": 2.5640552176728506,
+      "corpus_frequency": 4287,
+      "score": 0.8798666643914558
+    },
+    {
+      "piece": "▁dam",
+      "readable": "dam",
+      "ablation_leverage": 0.6372888827323914,
+      "breadth": 2.50295005683384,
+      "corpus_frequency": 2011,
+      "score": 0.8798652146679746
+    },
+    {
+      "piece": "▁down",
+      "readable": "down",
+      "ablation_leverage": 0.6370202028751373,
+      "breadth": 2.5414318024742544,
+      "corpus_frequency": 5681,
+      "score": 0.8798095389238203
+    },
+    {
+      "piece": "lex",
+      "readable": "lex",
+      "ablation_leverage": 0.637017028927803,
+      "breadth": 2.5616624282117932,
+      "corpus_frequency": 2049,
+      "score": 0.8798088810792551
+    },
+    {
+      "piece": "omes",
+      "readable": "omes",
+      "ablation_leverage": 0.6368775725364685,
+      "breadth": 2.701338662415285,
+      "corpus_frequency": 3471,
+      "score": 0.879779973573405
+    },
+    {
+      "piece": "qu",
+      "readable": "qu",
+      "ablation_leverage": 0.6367448592185974,
+      "breadth": 2.5268131528447695,
+      "corpus_frequency": 27494,
+      "score": 0.8797524579407017
+    },
+    {
+      "piece": "▁potential",
+      "readable": "potential",
+      "ablation_leverage": 0.636663619056344,
+      "breadth": 2.407920596744712,
+      "corpus_frequency": 1233,
+      "score": 0.8797356114773953
+    },
+    {
+      "piece": "eral",
+      "readable": "eral",
+      "ablation_leverage": 0.6365578001737595,
+      "breadth": 2.5687566596152407,
+      "corpus_frequency": 7056,
+      "score": 0.8797136649945035
+    },
+    {
+      "piece": "yd",
+      "readable": "yd",
+      "ablation_leverage": 0.6363217675685883,
+      "breadth": 2.3139168873478795,
+      "corpus_frequency": 1614,
+      "score": 0.8796646994729989
+    },
+    {
+      "piece": "▁coming",
+      "readable": "coming",
+      "ablation_leverage": 0.63630914747715,
+      "breadth": 2.8251475545631894,
+      "corpus_frequency": 2089,
+      "score": 0.8796620808937178
+    },
+    {
+      "piece": "▁fast",
+      "readable": "fast",
+      "ablation_leverage": 0.6361793434619903,
+      "breadth": 2.655912382753084,
+      "corpus_frequency": 1694,
+      "score": 0.8796351444684721
+    },
+    {
+      "piece": "▁main",
+      "readable": "main",
+      "ablation_leverage": 0.6360754811763764,
+      "breadth": 2.7358232173398513,
+      "corpus_frequency": 4798,
+      "score": 0.8796135874117372
+    },
+    {
+      "piece": "ata",
+      "readable": "ata",
+      "ablation_leverage": 0.6360414505004883,
+      "breadth": 2.493134347372357,
+      "corpus_frequency": 5078,
+      "score": 0.8796065234353879
+    },
+    {
+      "piece": "▁wanted",
+      "readable": "wanted",
+      "ablation_leverage": 0.636000452041626,
+      "breadth": 2.47622907182001,
+      "corpus_frequency": 1286,
+      "score": 0.8795980126074807
+    },
+    {
+      "piece": "▁go",
+      "readable": "go",
+      "ablation_leverage": 0.635897376537323,
+      "breadth": 2.527408827909528,
+      "corpus_frequency": 30673,
+      "score": 0.87957661284574
+    },
+    {
+      "piece": "▁these",
+      "readable": "these",
+      "ablation_leverage": 0.6358807921409607,
+      "breadth": 2.739061565733908,
+      "corpus_frequency": 6280,
+      "score": 0.8795731693940229
+    },
+    {
+      "piece": "ffic",
+      "readable": "ffic",
+      "ablation_leverage": 0.6355574071407318,
+      "breadth": 2.524470479207757,
+      "corpus_frequency": 6808,
+      "score": 0.8795060063578473
+    },
+    {
+      "piece": "▁disc",
+      "readable": "disc",
+      "ablation_leverage": 0.6354533934593201,
+      "breadth": 2.480633295536614,
+      "corpus_frequency": 4604,
+      "score": 0.8794843967481721
+    },
+    {
+      "piece": "AR",
+      "readable": "AR",
+      "ablation_leverage": 0.6354346442222595,
+      "breadth": 2.7080961858758164,
+      "corpus_frequency": 1856,
+      "score": 0.8794805010795882
+    },
+    {
+      "piece": "lier",
+      "readable": "lier",
+      "ablation_leverage": 0.6350431621074677,
+      "breadth": 2.6973031432335457,
+      "corpus_frequency": 1197,
+      "score": 0.8793991336585198
+    },
+    {
+      "piece": "▁information",
+      "readable": "information",
+      "ablation_leverage": 0.6349798011779785,
+      "breadth": 2.447196253745627,
+      "corpus_frequency": 4083,
+      "score": 0.8793859597191254
+    },
+    {
+      "piece": "▁reduce",
+      "readable": "reduce",
+      "ablation_leverage": 0.634625473022461,
+      "breadth": 2.7474712779016865,
+      "corpus_frequency": 1088,
+      "score": 0.8793122639337378
+    },
+    {
+      "piece": "▁Bo",
+      "readable": "Bo",
+      "ablation_leverage": 0.6345292472839356,
+      "breadth": 2.6375676726207122,
+      "corpus_frequency": 6043,
+      "score": 0.8792922430898551
+    },
+    {
+      "piece": "▁lad",
+      "readable": "lad",
+      "ablation_leverage": 0.6343485283851623,
+      "breadth": 2.7146729401951704,
+      "corpus_frequency": 1891,
+      "score": 0.8792546342896891
+    },
+    {
+      "piece": "▁net",
+      "readable": "net",
+      "ablation_leverage": 0.6340927505493164,
+      "breadth": 2.7558233775206293,
+      "corpus_frequency": 5371,
+      "score": 0.8792013869098473
+    },
+    {
+      "piece": "ter",
+      "readable": "ter",
+      "ablation_leverage": 0.6339738988876342,
+      "breadth": 2.725779847099089,
+      "corpus_frequency": 73457,
+      "score": 0.8791766372705776
+    },
+    {
+      "piece": "urn",
+      "readable": "urn",
+      "ablation_leverage": 0.6339271461963654,
+      "breadth": 2.718271108383736,
+      "corpus_frequency": 8138,
+      "score": 0.8791669002306537
+    },
+    {
+      "piece": "chool",
+      "readable": "chool",
+      "ablation_leverage": 0.6338536262512207,
+      "breadth": 2.664382813973111,
+      "corpus_frequency": 3750,
+      "score": 0.8791515870040688
+    },
+    {
+      "piece": "▁pin",
+      "readable": "pin",
+      "ablation_leverage": 0.6337262570858002,
+      "breadth": 2.7852916937038557,
+      "corpus_frequency": 8097,
+      "score": 0.8791250534967349
+    },
+    {
+      "piece": "▁ne",
+      "readable": "ne",
+      "ablation_leverage": 0.6336946642398834,
+      "breadth": 2.6755594098503015,
+      "corpus_frequency": 157613,
+      "score": 0.8791184712588715
+    },
+    {
+      "piece": "▁called",
+      "readable": "called",
+      "ablation_leverage": 0.6334503674507141,
+      "breadth": 2.609212663424085,
+      "corpus_frequency": 1813,
+      "score": 0.8790675619578835
+    },
+    {
+      "piece": "her",
+      "readable": "her",
+      "ablation_leverage": 0.6334387516975403,
+      "breadth": 2.3738017856860374,
+      "corpus_frequency": 73135,
+      "score": 0.8790651408482065
+    },
+    {
+      "piece": "▁Be",
+      "readable": "Be",
+      "ablation_leverage": 0.6331135177612305,
+      "breadth": 2.5991189981568055,
+      "corpus_frequency": 8511,
+      "score": 0.8789973332374116
+    },
+    {
+      "piece": "err",
+      "readable": "err",
+      "ablation_leverage": 0.6329972732067108,
+      "breadth": 2.598647899581974,
+      "corpus_frequency": 5306,
+      "score": 0.8789730891074634
+    },
+    {
+      "piece": "▁Ind",
+      "readable": "Ind",
+      "ablation_leverage": 0.6328899317979813,
+      "breadth": 2.703236255833213,
+      "corpus_frequency": 2492,
+      "score": 0.8789506978761694
+    },
+    {
+      "piece": "▁talk",
+      "readable": "talk",
+      "ablation_leverage": 0.6327375185489654,
+      "breadth": 2.504262789687278,
+      "corpus_frequency": 2061,
+      "score": 0.8789188982120969
+    },
+    {
+      "piece": "▁why",
+      "readable": "why",
+      "ablation_leverage": 0.6324905180931091,
+      "breadth": 2.5022639221062963,
+      "corpus_frequency": 2071,
+      "score": 0.8788673475024733
+    },
+    {
+      "piece": "cial",
+      "readable": "cial",
+      "ablation_leverage": 0.6323896872997284,
+      "breadth": 2.6460525539291178,
+      "corpus_frequency": 10742,
+      "score": 0.878846297629284
+    },
+    {
+      "piece": "▁deal",
+      "readable": "deal",
+      "ablation_leverage": 0.6323307847976685,
+      "breadth": 2.649077983269984,
+      "corpus_frequency": 2382,
+      "score": 0.8788339993347568
+    },
+    {
+      "piece": "▁signed",
+      "readable": "signed",
+      "ablation_leverage": 0.6322773981094361,
+      "breadth": 2.617067755976261,
+      "corpus_frequency": 1687,
+      "score": 0.8788228517010996
+    },
+    {
+      "piece": "▁gen",
+      "readable": "gen",
+      "ablation_leverage": 0.6322354364395142,
+      "breadth": 2.809778588628909,
+      "corpus_frequency": 10183,
+      "score": 0.8788140890561231
+    },
+    {
+      "piece": "▁mount",
+      "readable": "mount",
+      "ablation_leverage": 0.6320863389968872,
+      "breadth": 2.5096347395253327,
+      "corpus_frequency": 2177,
+      "score": 0.8787829490801464
+    },
+    {
+      "piece": "▁ago",
+      "readable": "ago",
+      "ablation_leverage": 0.6319442784786224,
+      "breadth": 2.2591256757143654,
+      "corpus_frequency": 2435,
+      "score": 0.8787532719775795
+    },
+    {
+      "piece": "▁att",
+      "readable": "att",
+      "ablation_leverage": 0.631931414604187,
+      "breadth": 2.7134587463843847,
+      "corpus_frequency": 12247,
+      "score": 0.8787505843250207
+    },
+    {
+      "piece": "▁difficult",
+      "readable": "difficult",
+      "ablation_leverage": 0.6317283296585083,
+      "breadth": 2.7321530716947393,
+      "corpus_frequency": 1097,
+      "score": 0.8787081464842522
+    },
+    {
+      "piece": "uth",
+      "readable": "uth",
+      "ablation_leverage": 0.6314449083805084,
+      "breadth": 2.640083784784667,
+      "corpus_frequency": 6338,
+      "score": 0.8786488982737098
+    },
+    {
+      "piece": "▁suff",
+      "readable": "suff",
+      "ablation_leverage": 0.6313053441047668,
+      "breadth": 2.510528542474467,
+      "corpus_frequency": 1023,
+      "score": 0.8786197130854804
+    },
+    {
+      "piece": "▁mal",
+      "readable": "mal",
+      "ablation_leverage": 0.6311652016639709,
+      "breadth": 2.692099242208943,
+      "corpus_frequency": 7886,
+      "score": 0.8785904005005041
+    },
+    {
+      "piece": "▁often",
+      "readable": "often",
+      "ablation_leverage": 0.6308564376831055,
+      "breadth": 2.4437350382462735,
+      "corpus_frequency": 2057,
+      "score": 0.8785257955893834
+    },
+    {
+      "piece": "▁name",
+      "readable": "name",
+      "ablation_leverage": 0.6307093381881714,
+      "breadth": 2.7406044832149608,
+      "corpus_frequency": 3841,
+      "score": 0.8784950057814745
+    },
+    {
+      "piece": "▁fil",
+      "readable": "fil",
+      "ablation_leverage": 0.6306818556785584,
+      "breadth": 2.651860625338042,
+      "corpus_frequency": 6900,
+      "score": 0.8784892525441595
+    },
+    {
+      "piece": "▁search",
+      "readable": "search",
+      "ablation_leverage": 0.6306640839576722,
+      "breadth": 2.6873909266482645,
+      "corpus_frequency": 3999,
+      "score": 0.8784855320471052
+    },
+    {
+      "piece": "▁tick",
+      "readable": "tick",
+      "ablation_leverage": 0.6304152238368989,
+      "breadth": 2.7692936057953457,
+      "corpus_frequency": 1405,
+      "score": 0.8784334223428711
+    },
+    {
+      "piece": "pp",
+      "readable": "pp",
+      "ablation_leverage": 0.630153945684433,
+      "breadth": 2.5276844181885205,
+      "corpus_frequency": 33951,
+      "score": 0.878378690242309
+    },
+    {
+      "piece": "▁Sm",
+      "readable": "Sm",
+      "ablation_leverage": 0.6299272060394288,
+      "breadth": 2.617009899653496,
+      "corpus_frequency": 1152,
+      "score": 0.8783311748142301
+    },
+    {
+      "piece": "▁those",
+      "readable": "those",
+      "ablation_leverage": 0.6297497767955065,
+      "breadth": 2.743039627204559,
+      "corpus_frequency": 4386,
+      "score": 0.8782939809153862
+    },
+    {
+      "piece": "▁interest",
+      "readable": "interest",
+      "ablation_leverage": 0.6296875762939453,
+      "breadth": 2.6174599709743944,
+      "corpus_frequency": 2849,
+      "score": 0.8782809395515279
+    },
+    {
+      "piece": "cient",
+      "readable": "cient",
+      "ablation_leverage": 0.629289629459381,
+      "breadth": 2.4966313834451244,
+      "corpus_frequency": 2031,
+      "score": 0.8781974729181636
+    },
+    {
+      "piece": "arch",
+      "readable": "arch",
+      "ablation_leverage": 0.6292841935157776,
+      "breadth": 2.547404542619196,
+      "corpus_frequency": 6518,
+      "score": 0.8781963324006925
+    },
+    {
+      "piece": "▁tast",
+      "readable": "tast",
+      "ablation_leverage": 0.6291828179359436,
+      "breadth": 2.2535045073083593,
+      "corpus_frequency": 1301,
+      "score": 0.8781750609450162
+    },
+    {
+      "piece": "▁question",
+      "readable": "question",
+      "ablation_leverage": 0.6289992745220662,
+      "breadth": 2.76839768574669,
+      "corpus_frequency": 2415,
+      "score": 0.8781365396389567
+    },
+    {
+      "piece": "▁match",
+      "readable": "match",
+      "ablation_leverage": 0.6285700929164887,
+      "breadth": 2.6736758679090773,
+      "corpus_frequency": 1142,
+      "score": 0.8780464209506935
+    },
+    {
+      "piece": "▁prin",
+      "readable": "prin",
+      "ablation_leverage": 0.6285324168205261,
+      "breadth": 2.6150157666099076,
+      "corpus_frequency": 3195,
+      "score": 0.8780385068623157
+    },
+    {
+      "piece": "ull",
+      "readable": "ull",
+      "ablation_leverage": 0.6285134291648865,
+      "breadth": 2.5659293006275097,
+      "corpus_frequency": 6857,
+      "score": 0.87803451821236
+    },
+    {
+      "piece": "▁Se",
+      "readable": "Se",
+      "ablation_leverage": 0.6277705681324005,
+      "breadth": 2.516859236907045,
+      "corpus_frequency": 11054,
+      "score": 0.8778783741424133
+    },
+    {
+      "piece": "▁school",
+      "readable": "school",
+      "ablation_leverage": 0.6276365268230438,
+      "breadth": 2.642251145083131,
+      "corpus_frequency": 2740,
+      "score": 0.8778501799422213
+    },
+    {
+      "piece": "▁full",
+      "readable": "full",
+      "ablation_leverage": 0.6274464976787567,
+      "breadth": 2.5757795687382385,
+      "corpus_frequency": 4554,
+      "score": 0.8778101989603873
+    },
+    {
+      "piece": "▁hum",
+      "readable": "hum",
+      "ablation_leverage": 0.6274204313755035,
+      "breadth": 2.5439155890916627,
+      "corpus_frequency": 2707,
+      "score": 0.8778047138235764
+    },
+    {
+      "piece": "▁text",
+      "readable": "text",
+      "ablation_leverage": 0.6273400008678436,
+      "breadth": 2.815624690246559,
+      "corpus_frequency": 1440,
+      "score": 0.8777877873810846
+    },
+    {
+      "piece": "▁insp",
+      "readable": "insp",
+      "ablation_leverage": 0.6273386740684509,
+      "breadth": 2.5684046464085917,
+      "corpus_frequency": 1255,
+      "score": 0.8777875081405621
+    },
+    {
+      "piece": "▁Par",
+      "readable": "Par",
+      "ablation_leverage": 0.6272062361240387,
+      "breadth": 2.6075181314611067,
+      "corpus_frequency": 3211,
+      "score": 0.8777596320469099
+    },
+    {
+      "piece": "ray",
+      "readable": "ray",
+      "ablation_leverage": 0.6268735575675964,
+      "breadth": 2.7661868096684454,
+      "corpus_frequency": 2022,
+      "score": 0.8776895824980148
+    },
+    {
+      "piece": "▁To",
+      "readable": "To",
+      "ablation_leverage": 0.6267901313304901,
+      "breadth": 2.3422640441949207,
+      "corpus_frequency": 8543,
+      "score": 0.877672010250836
+    },
+    {
+      "piece": "AT",
+      "readable": "AT",
+      "ablation_leverage": 0.6265492928028107,
+      "breadth": 2.468497124254272,
+      "corpus_frequency": 1937,
+      "score": 0.8776212687904013
+    },
+    {
+      "piece": "▁flu",
+      "readable": "flu",
+      "ablation_leverage": 0.6264142560958862,
+      "breadth": 2.584466038305358,
+      "corpus_frequency": 1582,
+      "score": 0.8775928098256246
+    },
+    {
+      "piece": "▁Co",
+      "readable": "Co",
+      "ablation_leverage": 0.6263151049613953,
+      "breadth": 2.631777977008305,
+      "corpus_frequency": 22987,
+      "score": 0.8775719098332818
+    },
+    {
+      "piece": "▁pack",
+      "readable": "pack",
+      "ablation_leverage": 0.6262999033927917,
+      "breadth": 2.7975115202555054,
+      "corpus_frequency": 1634,
+      "score": 0.8775687052136598
+    },
+    {
+      "piece": "▁deb",
+      "readable": "deb",
+      "ablation_leverage": 0.626245448589325,
+      "breadth": 2.5075101984562242,
+      "corpus_frequency": 1206,
+      "score": 0.8775572250407245
+    },
+    {
+      "piece": "▁quest",
+      "readable": "quest",
+      "ablation_leverage": 0.6260705029964447,
+      "breadth": 2.5051854699344585,
+      "corpus_frequency": 3657,
+      "score": 0.8775203362183243
+    },
+    {
+      "piece": "▁ran",
+      "readable": "ran",
+      "ablation_leverage": 0.6254253232479096,
+      "breadth": 2.509587241139159,
+      "corpus_frequency": 21422,
+      "score": 0.8773842052121416
+    },
+    {
+      "piece": "▁ey",
+      "readable": "ey",
+      "ablation_leverage": 0.6254003620147706,
+      "breadth": 2.7617769509467407,
+      "corpus_frequency": 33638,
+      "score": 0.8773789356450212
+    },
+    {
+      "piece": "ot",
+      "readable": "ot",
+      "ablation_leverage": 0.6252775466442109,
+      "breadth": 2.6185449010012967,
+      "corpus_frequency": 91240,
+      "score": 0.8773530050226682
+    },
+    {
+      "piece": "▁simple",
+      "readable": "simple",
+      "ablation_leverage": 0.6252372479438781,
+      "breadth": 2.5721055991116613,
+      "corpus_frequency": 1270,
+      "score": 0.877344495447073
+    },
+    {
+      "piece": "▁Tw",
+      "readable": "Tw",
+      "ablation_leverage": 0.6251243793964386,
+      "breadth": 2.5608853288297615,
+      "corpus_frequency": 1584,
+      "score": 0.8773206589191881
+    },
+    {
+      "piece": "▁jo",
+      "readable": "jo",
+      "ablation_leverage": 0.6250895786285401,
+      "breadth": 2.7262797904701026,
+      "corpus_frequency": 9866,
+      "score": 0.8773133085326429
+    },
+    {
+      "piece": "ular",
+      "readable": "ular",
+      "ablation_leverage": 0.6246189594268798,
+      "breadth": 2.4872906519205125,
+      "corpus_frequency": 4958,
+      "score": 0.8772138672720617
+    },
+    {
+      "piece": "▁situ",
+      "readable": "situ",
+      "ablation_leverage": 0.6246052706241607,
+      "breadth": 2.676213186529436,
+      "corpus_frequency": 1180,
+      "score": 0.8772109737236025
+    },
+    {
+      "piece": "▁circ",
+      "readable": "circ",
+      "ablation_leverage": 0.6243703353404999,
+      "breadth": 2.4951405568403824,
+      "corpus_frequency": 1099,
+      "score": 0.8771613030568592
+    },
+    {
+      "piece": "ota",
+      "readable": "ota",
+      "ablation_leverage": 0.6243200075626373,
+      "breadth": 2.440249843430525,
+      "corpus_frequency": 2994,
+      "score": 0.8771506601883334
+    },
+    {
+      "piece": "▁compet",
+      "readable": "compet",
+      "ablation_leverage": 0.6242251682281494,
+      "breadth": 2.584161665532138,
+      "corpus_frequency": 1533,
+      "score": 0.8771306020818584
+    },
+    {
+      "piece": "▁include",
+      "readable": "include",
+      "ablation_leverage": 0.6241813588142395,
+      "breadth": 2.75053726235336,
+      "corpus_frequency": 3863,
+      "score": 0.8771213355524704
+    },
+    {
+      "piece": "ing",
+      "readable": "ing",
+      "ablation_leverage": 0.624073691368103,
+      "breadth": 2.6497573545090036,
+      "corpus_frequency": 220012,
+      "score": 0.8770985590636069
+    },
+    {
+      "piece": "mer",
+      "readable": "mer",
+      "ablation_leverage": 0.6240000712871552,
+      "breadth": 2.385922080927204,
+      "corpus_frequency": 15219,
+      "score": 0.8770829828558071
+    },
+    {
+      "piece": "▁Un",
+      "readable": "Un",
+      "ablation_leverage": 0.6239922618865967,
+      "breadth": 2.659061134796848,
+      "corpus_frequency": 5851,
+      "score": 0.877081330469922
+    },
+    {
+      "piece": "▁later",
+      "readable": "later",
+      "ablation_leverage": 0.6239707601070404,
+      "breadth": 2.529822436488123,
+      "corpus_frequency": 1525,
+      "score": 0.8770767808157885
+    },
+    {
+      "piece": "▁initi",
+      "readable": "initi",
+      "ablation_leverage": 0.6238409829139709,
+      "breadth": 2.5888607013087235,
+      "corpus_frequency": 1583,
+      "score": 0.8770493173713891
+    },
+    {
+      "piece": "▁Us",
+      "readable": "Us",
+      "ablation_leverage": 0.6235733985900879,
+      "breadth": 2.716088067088574,
+      "corpus_frequency": 1598,
+      "score": 0.8769926731486567
+    },
+    {
+      "piece": "air",
+      "readable": "air",
+      "ablation_leverage": 0.6232382202148438,
+      "breadth": 2.504865525709935,
+      "corpus_frequency": 8305,
+      "score": 0.8769216858163358
+    },
+    {
+      "piece": "▁control",
+      "readable": "control",
+      "ablation_leverage": 0.6230911308526993,
+      "breadth": 2.76001997017086,
+      "corpus_frequency": 2217,
+      "score": 0.876890521748675
+    },
+    {
+      "piece": "▁link",
+      "readable": "link",
+      "ablation_leverage": 0.6230363335646689,
+      "breadth": 2.326589113592016,
+      "corpus_frequency": 1740,
+      "score": 0.876878909875269
+    },
+    {
+      "piece": "▁Free",
+      "readable": "Free",
+      "ablation_leverage": 0.6229028956592083,
+      "breadth": 2.4702290970059253,
+      "corpus_frequency": 1192,
+      "score": 0.8768506293121643
+    },
+    {
+      "piece": "ame",
+      "readable": "ame",
+      "ablation_leverage": 0.6224747002124786,
+      "breadth": 2.440098042041258,
+      "corpus_frequency": 19261,
+      "score": 0.8767598374950685
+    },
+    {
+      "piece": "hi",
+      "readable": "hi",
+      "ablation_leverage": 0.622360486984253,
+      "breadth": 2.6137220534562733,
+      "corpus_frequency": 147449,
+      "score": 0.8767356099033089
+    },
+    {
+      "piece": "▁character",
+      "readable": "character",
+      "ablation_leverage": 0.6220701265335083,
+      "breadth": 2.6526159327446512,
+      "corpus_frequency": 1529,
+      "score": 0.8766739968859228
+    },
+    {
+      "piece": "▁Sy",
+      "readable": "Sy",
+      "ablation_leverage": 0.622019020318985,
+      "breadth": 2.672602941916434,
+      "corpus_frequency": 1537,
+      "score": 0.8766631494296744
+    },
+    {
+      "piece": "▁ele",
+      "readable": "ele",
+      "ablation_leverage": 0.6218158960342407,
+      "breadth": 2.545008833863493,
+      "corpus_frequency": 13335,
+      "score": 0.8766200268430113
+    },
+    {
+      "piece": "▁wee",
+      "readable": "wee",
+      "ablation_leverage": 0.621809241771698,
+      "breadth": 2.5230156605160388,
+      "corpus_frequency": 9330,
+      "score": 0.8766186139276898
+    },
+    {
+      "piece": "▁answ",
+      "readable": "answ",
+      "ablation_leverage": 0.6216758465766907,
+      "breadth": 2.624309964787511,
+      "corpus_frequency": 1247,
+      "score": 0.876590286619928
+    },
+    {
+      "piece": "▁suggest",
+      "readable": "suggest",
+      "ablation_leverage": 0.6212909603118897,
+      "breadth": 2.6947358727305817,
+      "corpus_frequency": 1260,
+      "score": 0.8765085195207944
+    },
+    {
+      "piece": "ball",
+      "readable": "ball",
+      "ablation_leverage": 0.6212244820594788,
+      "breadth": 2.673385827541706,
+      "corpus_frequency": 2457,
+      "score": 0.8764943914294464
+    },
+    {
+      "piece": "ind",
+      "readable": "ind",
+      "ablation_leverage": 0.620770161151886,
+      "breadth": 2.537760683971257,
+      "corpus_frequency": 22194,
+      "score": 0.8763977977488663
+    },
+    {
+      "piece": "▁finish",
+      "readable": "finish",
+      "ablation_leverage": 0.6207545912265777,
+      "breadth": 2.546411427768783,
+      "corpus_frequency": 1274,
+      "score": 0.8763944861567398
+    },
+    {
+      "piece": "▁direct",
+      "readable": "direct",
+      "ablation_leverage": 0.620656658411026,
+      "breadth": 2.884529892092462,
+      "corpus_frequency": 3240,
+      "score": 0.8763736547662696
+    },
+    {
+      "piece": "▁government",
+      "readable": "government",
+      "ablation_leverage": 0.6206103110313416,
+      "breadth": 2.358880320878221,
+      "corpus_frequency": 1733,
+      "score": 0.8763637950212978
+    },
+    {
+      "piece": "▁prote",
+      "readable": "prote",
+      "ablation_leverage": 0.620438939332962,
+      "breadth": 2.6929704058260207,
+      "corpus_frequency": 2491,
+      "score": 0.8763273317371569
+    },
+    {
+      "piece": "▁needed",
+      "readable": "needed",
+      "ablation_leverage": 0.6203545749187469,
+      "breadth": 2.606117056044406,
+      "corpus_frequency": 1247,
+      "score": 0.8763093775612458
+    },
+    {
+      "piece": "▁pen",
+      "readable": "pen",
+      "ablation_leverage": 0.6201007640361786,
+      "breadth": 2.521925888357433,
+      "corpus_frequency": 12670,
+      "score": 0.8762553475811726
+    },
+    {
+      "piece": "ll",
+      "readable": "ll",
+      "ablation_leverage": 0.6200702917575837,
+      "breadth": 2.5202502743675854,
+      "corpus_frequency": 155415,
+      "score": 0.876248859309384
+    },
+    {
+      "piece": "▁opin",
+      "readable": "opin",
+      "ablation_leverage": 0.6197880050633102,
+      "breadth": 2.6666004692980927,
+      "corpus_frequency": 1389,
+      "score": 0.8761887386053637
+    },
+    {
+      "piece": "▁material",
+      "readable": "material",
+      "ablation_leverage": 0.6195718903641683,
+      "breadth": 2.665275871292284,
+      "corpus_frequency": 1587,
+      "score": 0.876142692535609
+    },
+    {
+      "piece": "ix",
+      "readable": "ix",
+      "ablation_leverage": 0.6193083667755127,
+      "breadth": 2.8115461726329922,
+      "corpus_frequency": 4584,
+      "score": 0.8760865236425364
+    },
+    {
+      "piece": "▁pret",
+      "readable": "pret",
+      "ablation_leverage": 0.6191165113449096,
+      "breadth": 2.6742750380007028,
+      "corpus_frequency": 1618,
+      "score": 0.8760456154654643
+    },
+    {
+      "piece": "▁consid",
+      "readable": "consid",
+      "ablation_leverage": 0.61900377035141,
+      "breadth": 2.662790855252571,
+      "corpus_frequency": 2346,
+      "score": 0.8760215704691049
+    },
+    {
+      "piece": "wn",
+      "readable": "wn",
+      "ablation_leverage": 0.6189816296100616,
+      "breadth": 2.6676090859427313,
+      "corpus_frequency": 18793,
+      "score": 0.876016847856409
+    },
+    {
+      "piece": "▁learn",
+      "readable": "learn",
+      "ablation_leverage": 0.6189401489496231,
+      "breadth": 2.5190328192156413,
+      "corpus_frequency": 3036,
+      "score": 0.8760079995907404
+    },
+    {
+      "piece": "aught",
+      "readable": "aught",
+      "ablation_leverage": 0.6186999130249023,
+      "breadth": 2.4627799574659077,
+      "corpus_frequency": 1477,
+      "score": 0.8759567430499258
+    },
+    {
+      "piece": "alth",
+      "readable": "alth",
+      "ablation_leverage": 0.6183440506458282,
+      "breadth": 2.723373580407537,
+      "corpus_frequency": 5044,
+      "score": 0.8758807799550976
+    },
+    {
+      "piece": "▁research",
+      "readable": "research",
+      "ablation_leverage": 0.618084248304367,
+      "breadth": 2.314269376528153,
+      "corpus_frequency": 2110,
+      "score": 0.875825294414029
+    },
+    {
+      "piece": "mas",
+      "readable": "mas",
+      "ablation_leverage": 0.6179773557186127,
+      "breadth": 2.666608885769694,
+      "corpus_frequency": 3668,
+      "score": 0.8758024587753556
+    },
+    {
+      "piece": "▁hand",
+      "readable": "hand",
+      "ablation_leverage": 0.6179346692562103,
+      "breadth": 2.4852533010358924,
+      "corpus_frequency": 4479,
+      "score": 0.8757933384926269
+    },
+    {
+      "piece": "▁fan",
+      "readable": "fan",
+      "ablation_leverage": 0.6178343904018402,
+      "breadth": 2.7762090431098825,
+      "corpus_frequency": 1975,
+      "score": 0.8757719106848415
+    },
+    {
+      "piece": "▁CO",
+      "readable": "CO",
+      "ablation_leverage": 0.6177403926849365,
+      "breadth": 2.6007303751888258,
+      "corpus_frequency": 1463,
+      "score": 0.8757518218862507
+    },
+    {
+      "piece": "▁doub",
+      "readable": "doub",
+      "ablation_leverage": 0.6176868712902069,
+      "breadth": 2.7701173727529227,
+      "corpus_frequency": 1135,
+      "score": 0.8757403821519943
+    },
+    {
+      "piece": "▁br",
+      "readable": "br",
+      "ablation_leverage": 0.6175814563035965,
+      "breadth": 2.647926636883777,
+      "corpus_frequency": 20779,
+      "score": 0.8757178477131605
+    },
+    {
+      "piece": "▁soon",
+      "readable": "soon",
+      "ablation_leverage": 0.6175571882724762,
+      "breadth": 2.582660414901666,
+      "corpus_frequency": 1134,
+      "score": 0.8757126594197564
+    },
+    {
+      "piece": "▁organiz",
+      "readable": "organiz",
+      "ablation_leverage": 0.6175491046905518,
+      "breadth": 2.481300292881823,
+      "corpus_frequency": 1830,
+      "score": 0.8757109311751733
+    },
+    {
+      "piece": "▁che",
+      "readable": "che",
+      "ablation_leverage": 0.6172900295257568,
+      "breadth": 2.724118284585944,
+      "corpus_frequency": 16360,
+      "score": 0.8756555297292459
+    },
+    {
+      "piece": "▁sign",
+      "readable": "sign",
+      "ablation_leverage": 0.6171210235357285,
+      "breadth": 2.598949687419185,
+      "corpus_frequency": 8659,
+      "score": 0.8756193764252407
+    },
+    {
+      "piece": "▁cas",
+      "readable": "cas",
+      "ablation_leverage": 0.6170880973339081,
+      "breadth": 2.7693320438066302,
+      "corpus_frequency": 6729,
+      "score": 0.875612331788895
+    },
+    {
+      "piece": "▁people",
+      "readable": "people",
+      "ablation_leverage": 0.6170416855812073,
+      "breadth": 2.817906489993577,
+      "corpus_frequency": 7931,
+      "score": 0.8756024012496685
+    },
+    {
+      "piece": "oul",
+      "readable": "oul",
+      "ablation_leverage": 0.6169643592834473,
+      "breadth": 2.8355840387521107,
+      "corpus_frequency": 21355,
+      "score": 0.8755858543884044
+    },
+    {
+      "piece": "▁require",
+      "readable": "require",
+      "ablation_leverage": 0.6168866717815399,
+      "breadth": 2.675060297289916,
+      "corpus_frequency": 2985,
+      "score": 0.875569228145406
+    },
+    {
+      "piece": "ado",
+      "readable": "ado",
+      "ablation_leverage": 0.6168569731712341,
+      "breadth": 2.5361358297087424,
+      "corpus_frequency": 2054,
+      "score": 0.8755628716623464
+    },
+    {
+      "piece": "ch",
+      "readable": "ch",
+      "ablation_leverage": 0.6167337393760681,
+      "breadth": 2.580343345948732,
+      "corpus_frequency": 113081,
+      "score": 0.8755364922917886
+    },
+    {
+      "piece": "▁lead",
+      "readable": "lead",
+      "ablation_leverage": 0.6165793180465698,
+      "breadth": 2.391582841710325,
+      "corpus_frequency": 3724,
+      "score": 0.875503429489913
+    },
+    {
+      "piece": "▁fo",
+      "readable": "fo",
+      "ablation_leverage": 0.6158475756645203,
+      "breadth": 2.6462294874829273,
+      "corpus_frequency": 113754,
+      "score": 0.8753466451114252
+    },
+    {
+      "piece": "formation",
+      "readable": "formation",
+      "ablation_leverage": 0.6156726557016373,
+      "breadth": 2.604240599425804,
+      "corpus_frequency": 4920,
+      "score": 0.8753091388718558
+    },
+    {
+      "piece": "▁rob",
+      "readable": "rob",
+      "ablation_leverage": 0.6155209356546402,
+      "breadth": 2.486499368314951,
+      "corpus_frequency": 4846,
+      "score": 0.875276598514409
+    },
+    {
+      "piece": "ross",
+      "readable": "ross",
+      "ablation_leverage": 0.6154498362541199,
+      "breadth": 2.374009595954884,
+      "corpus_frequency": 3005,
+      "score": 0.875261346616382
+    },
+    {
+      "piece": "▁Sto",
+      "readable": "Sto",
+      "ablation_leverage": 0.6154314798116683,
+      "breadth": 2.7468492412500805,
+      "corpus_frequency": 1414,
+      "score": 0.87525740859534
+    },
+    {
+      "piece": "▁added",
+      "readable": "added",
+      "ablation_leverage": 0.6153608477115631,
+      "breadth": 2.325212771728181,
+      "corpus_frequency": 1157,
+      "score": 0.8752422547435906
+    },
+    {
+      "piece": "rian",
+      "readable": "rian",
+      "ablation_leverage": 0.6153585600852967,
+      "breadth": 2.465388785274059,
+      "corpus_frequency": 1849,
+      "score": 0.8752417639128894
+    },
+    {
+      "piece": "▁rece",
+      "readable": "rece",
+      "ablation_leverage": 0.615011910200119,
+      "breadth": 2.6621465375600017,
+      "corpus_frequency": 5033,
+      "score": 0.87516736598024
+    },
+    {
+      "piece": "▁Gra",
+      "readable": "Gra",
+      "ablation_leverage": 0.6149725234508514,
+      "breadth": 2.734811339354054,
+      "corpus_frequency": 1978,
+      "score": 0.875158910150728
+    },
+    {
+      "piece": "▁fall",
+      "readable": "fall",
+      "ablation_leverage": 0.6149031609296799,
+      "breadth": 2.588171747959463,
+      "corpus_frequency": 1404,
+      "score": 0.8751440175910089
+    },
+    {
+      "piece": "ma",
+      "readable": "ma",
+      "ablation_leverage": 0.6148518717288971,
+      "breadth": 2.4343368251152206,
+      "corpus_frequency": 111221,
+      "score": 0.8751330044038909
+    },
+    {
+      "piece": "▁inst",
+      "readable": "inst",
+      "ablation_leverage": 0.6147846817970276,
+      "breadth": 2.571162901942067,
+      "corpus_frequency": 7014,
+      "score": 0.87511857550697
+    },
+    {
+      "piece": "▁part",
+      "readable": "part",
+      "ablation_leverage": 0.6147365927696228,
+      "breadth": 2.6701179258767205,
+      "corpus_frequency": 12881,
+      "score": 0.8751082475209657
+    },
+    {
+      "piece": "▁example",
+      "readable": "example",
+      "ablation_leverage": 0.6146289587020874,
+      "breadth": 2.510745819867017,
+      "corpus_frequency": 2249,
+      "score": 0.8750851282354111
+    },
+    {
+      "piece": "▁chem",
+      "readable": "chem",
+      "ablation_leverage": 0.6146273422241211,
+      "breadth": 2.5428666739006376,
+      "corpus_frequency": 1085,
+      "score": 0.8750847809927779
+    },
+    {
+      "piece": "▁work",
+      "readable": "work",
+      "ablation_leverage": 0.614044451713562,
+      "breadth": 2.614502602572819,
+      "corpus_frequency": 14946,
+      "score": 0.8749595081814339
+    },
+    {
+      "piece": "▁Br",
+      "readable": "Br",
+      "ablation_leverage": 0.6139112651348114,
+      "breadth": 2.7103402027876458,
+      "corpus_frequency": 6391,
+      "score": 0.8749308674929169
+    },
+    {
+      "piece": "▁happ",
+      "readable": "happ",
+      "ablation_leverage": 0.6138704293966293,
+      "breadth": 2.740474473801117,
+      "corpus_frequency": 3297,
+      "score": 0.8749220848555439
+    },
+    {
+      "piece": "▁hear",
+      "readable": "hear",
+      "ablation_leverage": 0.6132826840877533,
+      "breadth": 2.5691147609219027,
+      "corpus_frequency": 3764,
+      "score": 0.8747956123432037
+    },
+    {
+      "piece": "ush",
+      "readable": "ush",
+      "ablation_leverage": 0.6130632030963897,
+      "breadth": 2.474352786585161,
+      "corpus_frequency": 2531,
+      "score": 0.8747483527875909
+    },
+    {
+      "piece": "ip",
+      "readable": "ip",
+      "ablation_leverage": 0.6130004453659058,
+      "breadth": 2.5694667497638273,
+      "corpus_frequency": 21729,
+      "score": 0.8747348364226681
+    },
+    {
+      "piece": "▁collect",
+      "readable": "collect",
+      "ablation_leverage": 0.6129385316371918,
+      "breadth": 2.711305656971827,
+      "corpus_frequency": 1636,
+      "score": 0.8747215004774772
+    },
+    {
+      "piece": "nded",
+      "readable": "nded",
+      "ablation_leverage": 0.6129237759113312,
+      "breadth": 2.577116357685647,
+      "corpus_frequency": 4321,
+      "score": 0.8747183219601657
+    },
+    {
+      "piece": "alf",
+      "readable": "alf",
+      "ablation_leverage": 0.6128538584709168,
+      "breadth": 2.603679538390865,
+      "corpus_frequency": 1832,
+      "score": 0.8747032600683734
+    },
+    {
+      "piece": "▁wind",
+      "readable": "wind",
+      "ablation_leverage": 0.6126686382293701,
+      "breadth": 2.575143361441385,
+      "corpus_frequency": 1467,
+      "score": 0.8746633508836196
+    },
+    {
+      "piece": "▁eating",
+      "readable": "eating",
+      "ablation_leverage": 0.6126148645207286,
+      "breadth": 2.4659727825260567,
+      "corpus_frequency": 1813,
+      "score": 0.8746517620667907
+    },
+    {
+      "piece": "▁camp",
+      "readable": "camp",
+      "ablation_leverage": 0.6125302410125733,
+      "breadth": 2.44748494404044,
+      "corpus_frequency": 1695,
+      "score": 0.8746335227237488
+    },
+    {
+      "piece": "▁co",
+      "readable": "co",
+      "ablation_leverage": 0.6121801483631134,
+      "breadth": 2.6238643613513646,
+      "corpus_frequency": 152642,
+      "score": 0.8745580386557972
+    },
+    {
+      "piece": "▁ease",
+      "readable": "ease",
+      "ablation_leverage": 0.6117808568477631,
+      "breadth": 2.6504785696211446,
+      "corpus_frequency": 8637,
+      "score": 0.8744718940257302
+    },
+    {
+      "piece": "ian",
+      "readable": "ian",
+      "ablation_leverage": 0.6116439425945281,
+      "breadth": 2.435558895170944,
+      "corpus_frequency": 10490,
+      "score": 0.8744423426925189
+    },
+    {
+      "piece": "▁support",
+      "readable": "support",
+      "ablation_leverage": 0.611524031162262,
+      "breadth": 2.7089963285176135,
+      "corpus_frequency": 3878,
+      "score": 0.8744164557842325
+    },
+    {
+      "piece": "▁organization",
+      "readable": "organization",
+      "ablation_leverage": 0.6115144109725952,
+      "breadth": 2.60636628473655,
+      "corpus_frequency": 1328,
+      "score": 0.8744143787233758
+    },
+    {
+      "piece": "▁mat",
+      "readable": "mat",
+      "ablation_leverage": 0.6112999927997589,
+      "breadth": 2.7644827169922292,
+      "corpus_frequency": 17349,
+      "score": 0.874368075977747
+    },
+    {
+      "piece": "ike",
+      "readable": "ike",
+      "ablation_leverage": 0.6111866617202759,
+      "breadth": 2.6972625881227392,
+      "corpus_frequency": 14565,
+      "score": 0.8743435960239029
+    },
+    {
+      "piece": "▁said",
+      "readable": "said",
+      "ablation_leverage": 0.6111814033985138,
+      "breadth": 2.39529041456583,
+      "corpus_frequency": 7014,
+      "score": 0.8743424600957664
+    },
+    {
+      "piece": "▁lib",
+      "readable": "lib",
+      "ablation_leverage": 0.6110986804962159,
+      "breadth": 2.6893789243484028,
+      "corpus_frequency": 1411,
+      "score": 0.8743245886073863
+    },
+    {
+      "piece": "etic",
+      "readable": "etic",
+      "ablation_leverage": 0.6110836696624756,
+      "breadth": 2.5217327618626735,
+      "corpus_frequency": 1711,
+      "score": 0.8743213454016329
+    },
+    {
+      "piece": "AL",
+      "readable": "AL",
+      "ablation_leverage": 0.6110667669773102,
+      "breadth": 2.4478082672886528,
+      "corpus_frequency": 1411,
+      "score": 0.8743176933515076
+    },
+    {
+      "piece": "rand",
+      "readable": "rand",
+      "ablation_leverage": 0.6106655359268188,
+      "breadth": 2.5462013691396006,
+      "corpus_frequency": 3282,
+      "score": 0.8742309723692566
+    },
+    {
+      "piece": "▁Ke",
+      "readable": "Ke",
+      "ablation_leverage": 0.6106454336643219,
+      "breadth": 2.5434168751429533,
+      "corpus_frequency": 2632,
+      "score": 0.8742266260224528
+    },
+    {
+      "piece": "iling",
+      "readable": "iling",
+      "ablation_leverage": 0.6105930697917938,
+      "breadth": 2.3735798062579576,
+      "corpus_frequency": 1219,
+      "score": 0.8742153036623436
+    },
+    {
+      "piece": "▁vol",
+      "readable": "vol",
+      "ablation_leverage": 0.6102983736991883,
+      "breadth": 2.5809926318644028,
+      "corpus_frequency": 3834,
+      "score": 0.8741515649874113
+    },
+    {
+      "piece": "ember",
+      "readable": "ember",
+      "ablation_leverage": 0.6100822269916535,
+      "breadth": 2.7259601271747247,
+      "corpus_frequency": 6654,
+      "score": 0.8741047958857242
+    },
+    {
+      "piece": "▁exc",
+      "readable": "exc",
+      "ablation_leverage": 0.6100398111343384,
+      "breadth": 2.608011131556753,
+      "corpus_frequency": 4512,
+      "score": 0.874095616139551
+    },
+    {
+      "piece": "el",
+      "readable": "el",
+      "ablation_leverage": 0.609773736000061,
+      "breadth": 2.6305832015089994,
+      "corpus_frequency": 120434,
+      "score": 0.8740380169279081
+    },
+    {
+      "piece": "▁article",
+      "readable": "article",
+      "ablation_leverage": 0.6095582707971334,
+      "breadth": 2.548927320523533,
+      "corpus_frequency": 1446,
+      "score": 0.87399135519451
+    },
+    {
+      "piece": "▁base",
+      "readable": "base",
+      "ablation_leverage": 0.6093037045001983,
+      "breadth": 2.5519348047491537,
+      "corpus_frequency": 4150,
+      "score": 0.8739362043613721
+    },
+    {
+      "piece": "illa",
+      "readable": "illa",
+      "ablation_leverage": 0.6090983235836029,
+      "breadth": 2.4416771164054447,
+      "corpus_frequency": 1644,
+      "score": 0.8738916925596937
+    },
+    {
+      "piece": "▁choose",
+      "readable": "choose",
+      "ablation_leverage": 0.6090147089958191,
+      "breadth": 2.1855607312785166,
+      "corpus_frequency": 1043,
+      "score": 0.8738735666355272
+    },
+    {
+      "piece": "ut",
+      "readable": "ut",
+      "ablation_leverage": 0.6089429318904876,
+      "breadth": 2.541190404734694,
+      "corpus_frequency": 97510,
+      "score": 0.8738580048490971
+    },
+    {
+      "piece": "▁ha",
+      "readable": "ha",
+      "ablation_leverage": 0.6085843479633332,
+      "breadth": 2.6041391704250025,
+      "corpus_frequency": 198698,
+      "score": 0.8737802338235875
+    },
+    {
+      "piece": "▁power",
+      "readable": "power",
+      "ablation_leverage": 0.6084648537635803,
+      "breadth": 2.668763448378486,
+      "corpus_frequency": 2949,
+      "score": 0.8737543072941482
+    },
+    {
+      "piece": "▁sum",
+      "readable": "sum",
+      "ablation_leverage": 0.6083527195453644,
+      "breadth": 2.3525950077322952,
+      "corpus_frequency": 3490,
+      "score": 0.8737299730207938
+    },
+    {
+      "piece": "▁achie",
+      "readable": "achie",
+      "ablation_leverage": 0.6082209014892578,
+      "breadth": 2.7626482162904913,
+      "corpus_frequency": 1155,
+      "score": 0.8737013614169035
+    },
+    {
+      "piece": "ause",
+      "readable": "ause",
+      "ablation_leverage": 0.6082113063335419,
+      "breadth": 2.5993591339721975,
+      "corpus_frequency": 7819,
+      "score": 0.8736992785102308
+    },
+    {
+      "piece": "rain",
+      "readable": "rain",
+      "ablation_leverage": 0.6082066261768341,
+      "breadth": 2.50167649948451,
+      "corpus_frequency": 5024,
+      "score": 0.8736982625346358
+    },
+    {
+      "piece": "oming",
+      "readable": "oming",
+      "ablation_leverage": 0.608120265007019,
+      "breadth": 2.6585000737619096,
+      "corpus_frequency": 2348,
+      "score": 0.873679513716196
+    },
+    {
+      "piece": "ression",
+      "readable": "ression",
+      "ablation_leverage": 0.6075974023342132,
+      "breadth": 2.5910554204166454,
+      "corpus_frequency": 1197,
+      "score": 0.8735659444990796
+    },
+    {
+      "piece": "▁staff",
+      "readable": "staff",
+      "ablation_leverage": 0.6075832271575927,
+      "breadth": 2.4879829761563252,
+      "corpus_frequency": 1226,
+      "score": 0.8735628641968125
+    },
+    {
+      "piece": "▁impro",
+      "readable": "impro",
+      "ablation_leverage": 0.607516233921051,
+      "breadth": 2.750028690806409,
+      "corpus_frequency": 2187,
+      "score": 0.8735483054220687
+    },
+    {
+      "piece": "olution",
+      "readable": "olution",
+      "ablation_leverage": 0.6075110864639283,
+      "breadth": 2.3233141266044077,
+      "corpus_frequency": 2508,
+      "score": 0.8735471867252861
+    },
+    {
+      "piece": "▁Ed",
+      "readable": "Ed",
+      "ablation_leverage": 0.6074929571151734,
+      "breadth": 2.6660167286105145,
+      "corpus_frequency": 1933,
+      "score": 0.8735432465986979
+    },
+    {
+      "piece": "▁heat",
+      "readable": "heat",
+      "ablation_leverage": 0.6074328076839447,
+      "breadth": 2.510409465243423,
+      "corpus_frequency": 1839,
+      "score": 0.8735301732309494
+    },
+    {
+      "piece": "▁beh",
+      "readable": "beh",
+      "ablation_leverage": 0.607396490573883,
+      "breadth": 2.4277764308640117,
+      "corpus_frequency": 2029,
+      "score": 0.8735222791473797
+    },
+    {
+      "piece": "able",
+      "readable": "able",
+      "ablation_leverage": 0.6073430848121643,
+      "breadth": 2.3851177322811075,
+      "corpus_frequency": 18605,
+      "score": 0.8735106697245782
+    },
+    {
+      "piece": "anch",
+      "readable": "anch",
+      "ablation_leverage": 0.6072990643978119,
+      "breadth": 2.198525096498235,
+      "corpus_frequency": 1126,
+      "score": 0.8735010997348077
+    },
+    {
+      "piece": "▁risk",
+      "readable": "risk",
+      "ablation_leverage": 0.6072804808616639,
+      "breadth": 2.599188312883127,
+      "corpus_frequency": 1469,
+      "score": 0.8734970594862062
+    },
+    {
+      "piece": "por",
+      "readable": "por",
+      "ablation_leverage": 0.6071118438243865,
+      "breadth": 2.5226648558040656,
+      "corpus_frequency": 20696,
+      "score": 0.8734603904371538
+    },
+    {
+      "piece": "▁answer",
+      "readable": "answer",
+      "ablation_leverage": 0.6068552994728088,
+      "breadth": 2.695175340823278,
+      "corpus_frequency": 1234,
+      "score": 0.873404586964522
+    },
+    {
+      "piece": "▁figure",
+      "readable": "figure",
+      "ablation_leverage": 0.6068247640132904,
+      "breadth": 2.8200645008508687,
+      "corpus_frequency": 1062,
+      "score": 0.8733979433268864
+    },
+    {
+      "piece": "▁dra",
+      "readable": "dra",
+      "ablation_leverage": 0.606733922958374,
+      "breadth": 2.7871646324168777,
+      "corpus_frequency": 3537,
+      "score": 0.8733781769495796
+    },
+    {
+      "piece": "▁done",
+      "readable": "done",
+      "ablation_leverage": 0.6067130887508392,
+      "breadth": 2.6439543744468565,
+      "corpus_frequency": 2097,
+      "score": 0.873373643154736
+    },
+    {
+      "piece": "▁percent",
+      "readable": "percent",
+      "ablation_leverage": 0.6064957183599472,
+      "breadth": 2.5579471135687344,
+      "corpus_frequency": 1199,
+      "score": 0.8733263312392542
+    },
+    {
+      "piece": "▁den",
+      "readable": "den",
+      "ablation_leverage": 0.6063777458667755,
+      "breadth": 2.7031731631170226,
+      "corpus_frequency": 16709,
+      "score": 0.8733006467485075
+    },
+    {
+      "piece": "▁man",
+      "readable": "man",
+      "ablation_leverage": 0.6063672852516174,
+      "breadth": 2.487566444280689,
+      "corpus_frequency": 24414,
+      "score": 0.8732983690647977
+    },
+    {
+      "piece": "▁special",
+      "readable": "special",
+      "ablation_leverage": 0.6062987387180329,
+      "breadth": 2.569891860303935,
+      "corpus_frequency": 3590,
+      "score": 0.8732834428398433
+    },
+    {
+      "piece": "ee",
+      "readable": "ee",
+      "ablation_leverage": 0.6062474882602692,
+      "breadth": 2.678463890152213,
+      "corpus_frequency": 93828,
+      "score": 0.8732722817876467
+    },
+    {
+      "piece": "bert",
+      "readable": "bert",
+      "ablation_leverage": 0.6061320775747299,
+      "breadth": 2.618413747345815,
+      "corpus_frequency": 1069,
+      "score": 0.8732471448071109
+    },
+    {
+      "piece": "ban",
+      "readable": "ban",
+      "ablation_leverage": 0.6058441638946533,
+      "breadth": 2.7093209829148046,
+      "corpus_frequency": 4063,
+      "score": 0.8731844150079403
+    },
+    {
+      "piece": "▁related",
+      "readable": "related",
+      "ablation_leverage": 0.6057867574691772,
+      "breadth": 2.839930804757627,
+      "corpus_frequency": 1122,
+      "score": 0.873171903897657
+    },
+    {
+      "piece": "ym",
+      "readable": "ym",
+      "ablation_leverage": 0.6056232023239135,
+      "breadth": 2.685602780091064,
+      "corpus_frequency": 4489,
+      "score": 0.8731362523187338
+    },
+    {
+      "piece": "▁result",
+      "readable": "result",
+      "ablation_leverage": 0.6054523611068725,
+      "breadth": 2.6752203282434435,
+      "corpus_frequency": 2954,
+      "score": 0.8730990022470386
+    },
+    {
+      "piece": "arge",
+      "readable": "arge",
+      "ablation_leverage": 0.6053666412830353,
+      "breadth": 2.624727686197138,
+      "corpus_frequency": 5889,
+      "score": 0.8730803080103421
+    },
+    {
+      "piece": "lection",
+      "readable": "lection",
+      "ablation_leverage": 0.6052791237831116,
+      "breadth": 2.6419373051862083,
+      "corpus_frequency": 2177,
+      "score": 0.8730612189956971
+    },
+    {
+      "piece": "le",
+      "readable": "le",
+      "ablation_leverage": 0.6050898396968841,
+      "breadth": 2.557019401314788,
+      "corpus_frequency": 190880,
+      "score": 0.8730199235628908
+    },
+    {
+      "piece": "LL",
+      "readable": "LL",
+      "ablation_leverage": 0.6049893039464951,
+      "breadth": 2.5942983613008397,
+      "corpus_frequency": 1191,
+      "score": 0.8729979847843712
+    },
+    {
+      "piece": "ery",
+      "readable": "ery",
+      "ablation_leverage": 0.6049798703193665,
+      "breadth": 2.6710582250176484,
+      "corpus_frequency": 18370,
+      "score": 0.8729959260036396
+    },
+    {
+      "piece": "▁cons",
+      "readable": "cons",
+      "ablation_leverage": 0.6046154773235322,
+      "breadth": 2.5945467719728468,
+      "corpus_frequency": 9118,
+      "score": 0.8729163768394996
+    },
+    {
+      "piece": "▁experience",
+      "readable": "experience",
+      "ablation_leverage": 0.6045882272720337,
+      "breadth": 2.7881599660934864,
+      "corpus_frequency": 3804,
+      "score": 0.8729104260641806
+    },
+    {
+      "piece": "▁pro",
+      "readable": "pro",
+      "ablation_leverage": 0.6045294404029846,
+      "breadth": 2.845985908911212,
+      "corpus_frequency": 50902,
+      "score": 0.8728975874703802
+    },
+    {
+      "piece": "lease",
+      "readable": "lease",
+      "ablation_leverage": 0.6044023585319519,
+      "breadth": 2.7569656635319477,
+      "corpus_frequency": 4709,
+      "score": 0.8728698295135809
+    },
+    {
+      "piece": "otic",
+      "readable": "otic",
+      "ablation_leverage": 0.6043039751052857,
+      "breadth": 2.73635579968842,
+      "corpus_frequency": 1484,
+      "score": 0.8728483360283815
+    },
+    {
+      "piece": "medi",
+      "readable": "medi",
+      "ablation_leverage": 0.6042336320877075,
+      "breadth": 2.5489487463891427,
+      "corpus_frequency": 5233,
+      "score": 0.8728329662883895
+    },
+    {
+      "piece": "arr",
+      "readable": "arr",
+      "ablation_leverage": 0.6042210602760315,
+      "breadth": 2.639704148067002,
+      "corpus_frequency": 8225,
+      "score": 0.8728302191964851
+    },
+    {
+      "piece": "ograph",
+      "readable": "ograph",
+      "ablation_leverage": 0.6041227459907532,
+      "breadth": 2.546541217773423,
+      "corpus_frequency": 1757,
+      "score": 0.8728087343724197
+    },
+    {
+      "piece": "lf",
+      "readable": "lf",
+      "ablation_leverage": 0.6038941073417664,
+      "breadth": 2.048468912470491,
+      "corpus_frequency": 9453,
+      "score": 0.8727587559720442
+    },
+    {
+      "piece": "▁Gl",
+      "readable": "Gl",
+      "ablation_leverage": 0.6037662321329117,
+      "breadth": 2.6899651404265956,
+      "corpus_frequency": 1339,
+      "score": 0.8727307953229977
+    },
+    {
+      "piece": "ishing",
+      "readable": "ishing",
+      "ablation_leverage": 0.6035173940658569,
+      "breadth": 2.4175365753172144,
+      "corpus_frequency": 1128,
+      "score": 0.8726763684718004
+    },
+    {
+      "piece": "ental",
+      "readable": "ental",
+      "ablation_leverage": 0.6034184348583221,
+      "breadth": 2.7902619695572115,
+      "corpus_frequency": 3042,
+      "score": 0.872654717483537
+    },
+    {
+      "piece": "▁fail",
+      "readable": "fail",
+      "ablation_leverage": 0.6032724046707153,
+      "breadth": 2.6999983060508317,
+      "corpus_frequency": 1155,
+      "score": 0.8726227614900384
+    },
+    {
+      "piece": "ways",
+      "readable": "ways",
+      "ablation_leverage": 0.6032697355747223,
+      "breadth": 2.811904273939655,
+      "corpus_frequency": 4472,
+      "score": 0.8726221773359868
+    },
+    {
+      "piece": "▁target",
+      "readable": "target",
+      "ablation_leverage": 0.6032337939739227,
+      "breadth": 2.417473083989349,
+      "corpus_frequency": 1000,
+      "score": 0.8726143109633714
+    },
+    {
+      "piece": "▁screen",
+      "readable": "screen",
+      "ablation_leverage": 0.6031966733932496,
+      "breadth": 2.5919601555485796,
+      "corpus_frequency": 1301,
+      "score": 0.872606186060842
+    },
+    {
+      "piece": "vel",
+      "readable": "vel",
+      "ablation_leverage": 0.6031697118282318,
+      "breadth": 2.4856494325512806,
+      "corpus_frequency": 13058,
+      "score": 0.8726002844364527
+    },
+    {
+      "piece": "▁key",
+      "readable": "key",
+      "ablation_leverage": 0.6030858683586121,
+      "breadth": 2.629437654156523,
+      "corpus_frequency": 2405,
+      "score": 0.872581930230441
+    },
+    {
+      "piece": "▁consum",
+      "readable": "consum",
+      "ablation_leverage": 0.6026795208454132,
+      "breadth": 2.7244573661928024,
+      "corpus_frequency": 1047,
+      "score": 0.8724929403744704
+    },
+    {
+      "piece": "▁friend",
+      "readable": "friend",
+      "ablation_leverage": 0.6025550091266632,
+      "breadth": 2.4823494646372684,
+      "corpus_frequency": 3660,
+      "score": 0.8724656603749307
+    },
+    {
+      "piece": "less",
+      "readable": "less",
+      "ablation_leverage": 0.6021792471408844,
+      "breadth": 2.703695676595283,
+      "corpus_frequency": 6210,
+      "score": 0.8723832982976597
+    },
+    {
+      "piece": "gage",
+      "readable": "gage",
+      "ablation_leverage": 0.6016495859622956,
+      "breadth": 2.5271382058536376,
+      "corpus_frequency": 1390,
+      "score": 0.8722671162238202
+    },
+    {
+      "piece": "ough",
+      "readable": "ough",
+      "ablation_leverage": 0.601539294719696,
+      "breadth": 2.365862674890412,
+      "corpus_frequency": 17562,
+      "score": 0.8722429107874762
+    },
+    {
+      "piece": "ep",
+      "readable": "ep",
+      "ablation_leverage": 0.6013710570335388,
+      "breadth": 2.609072050782038,
+      "corpus_frequency": 36007,
+      "score": 0.8722059793916679
+    },
+    {
+      "piece": "▁close",
+      "readable": "close",
+      "ablation_leverage": 0.6013104295730591,
+      "breadth": 2.7361421350052684,
+      "corpus_frequency": 2560,
+      "score": 0.8721926679698265
+    },
+    {
+      "piece": "▁nor",
+      "readable": "nor",
+      "ablation_leverage": 0.6012056005001069,
+      "breadth": 2.3765985488878774,
+      "corpus_frequency": 4727,
+      "score": 0.8721696484337659
+    },
+    {
+      "piece": "▁Mr",
+      "readable": "Mr",
+      "ablation_leverage": 0.6008731734752655,
+      "breadth": 2.510550077885469,
+      "corpus_frequency": 1268,
+      "score": 0.8720966238483567
+    },
+    {
+      "piece": "▁impl",
+      "readable": "impl",
+      "ablation_leverage": 0.6007287561893463,
+      "breadth": 2.7902023947466015,
+      "corpus_frequency": 4004,
+      "score": 0.872064886966249
+    },
+    {
+      "piece": "ik",
+      "readable": "ik",
+      "ablation_leverage": 0.6005794048309326,
+      "breadth": 2.544539999407211,
+      "corpus_frequency": 16648,
+      "score": 0.8720320577551507
+    },
+    {
+      "piece": "meric",
+      "readable": "meric",
+      "ablation_leverage": 0.600574003458023,
+      "breadth": 2.317366494259284,
+      "corpus_frequency": 3270,
+      "score": 0.8720308703159595
+    },
+    {
+      "piece": "▁resp",
+      "readable": "resp",
+      "ablation_leverage": 0.6005226099491119,
+      "breadth": 2.6690760263512407,
+      "corpus_frequency": 4090,
+      "score": 0.8720195714196571
+    },
+    {
+      "piece": "urg",
+      "readable": "urg",
+      "ablation_leverage": 0.6002328014373779,
+      "breadth": 2.565588965233621,
+      "corpus_frequency": 2284,
+      "score": 0.8719558387240991
+    },
+    {
+      "piece": "▁version",
+      "readable": "version",
+      "ablation_leverage": 0.5997934693098068,
+      "breadth": 2.5531883695407944,
+      "corpus_frequency": 1351,
+      "score": 0.8718591651168415
+    },
+    {
+      "piece": "rial",
+      "readable": "rial",
+      "ablation_leverage": 0.5997379487752914,
+      "breadth": 2.634313178529143,
+      "corpus_frequency": 4344,
+      "score": 0.8718469429641208
+    },
+    {
+      "piece": "ince",
+      "readable": "ince",
+      "ablation_leverage": 0.5992437279224396,
+      "breadth": 2.6338105480631784,
+      "corpus_frequency": 4461,
+      "score": 0.8717380965216869
+    },
+    {
+      "piece": "ream",
+      "readable": "ream",
+      "ablation_leverage": 0.5990989863872528,
+      "breadth": 2.7433102492604498,
+      "corpus_frequency": 2509,
+      "score": 0.8717062018723548
+    },
+    {
+      "piece": "cast",
+      "readable": "cast",
+      "ablation_leverage": 0.5990884745121002,
+      "breadth": 2.8114830799168025,
+      "corpus_frequency": 1280,
+      "score": 0.8717038852186575
+    },
+    {
+      "piece": "▁improve",
+      "readable": "improve",
+      "ablation_leverage": 0.5990411162376403,
+      "breadth": 2.5987561170203954,
+      "corpus_frequency": 1801,
+      "score": 0.8716934476878403
+    },
+    {
+      "piece": "▁Ve",
+      "readable": "Ve",
+      "ablation_leverage": 0.5988761007785797,
+      "breadth": 2.564576867838619,
+      "corpus_frequency": 2197,
+      "score": 0.8716570726442426
+    },
+    {
+      "piece": "ort",
+      "readable": "ort",
+      "ablation_leverage": 0.5988652992248535,
+      "breadth": 2.518193550463839,
+      "corpus_frequency": 31795,
+      "score": 0.8716546912633558
+    },
+    {
+      "piece": "▁beaut",
+      "readable": "beaut",
+      "ablation_leverage": 0.5986428332328796,
+      "breadth": 2.65329646962231,
+      "corpus_frequency": 1788,
+      "score": 0.8716056354073126
+    },
+    {
+      "piece": "iding",
+      "readable": "iding",
+      "ablation_leverage": 0.5983906799554825,
+      "breadth": 2.518413156227977,
+      "corpus_frequency": 1766,
+      "score": 0.8715500111777152
+    },
+    {
+      "piece": "aching",
+      "readable": "aching",
+      "ablation_leverage": 0.5981399655342102,
+      "breadth": 2.7028637044381707,
+      "corpus_frequency": 1168,
+      "score": 0.8714946811114375
+    },
+    {
+      "piece": "crib",
+      "readable": "crib",
+      "ablation_leverage": 0.5979531335830689,
+      "breadth": 2.654680899003149,
+      "corpus_frequency": 1725,
+      "score": 0.8714534341592932
+    },
+    {
+      "piece": "▁prov",
+      "readable": "prov",
+      "ablation_leverage": 0.5971616876125335,
+      "breadth": 2.71777973632207,
+      "corpus_frequency": 10279,
+      "score": 0.8712785633184918
+    },
+    {
+      "piece": "▁kn",
+      "readable": "kn",
+      "ablation_leverage": 0.5966897714138031,
+      "breadth": 2.6441884302993737,
+      "corpus_frequency": 11412,
+      "score": 0.871174182593797
+    },
+    {
+      "piece": "ras",
+      "readable": "ras",
+      "ablation_leverage": 0.5966611981391907,
+      "breadth": 2.8243827881700154,
+      "corpus_frequency": 3440,
+      "score": 0.8711678599674081
+    },
+    {
+      "piece": "▁Rec",
+      "readable": "Rec",
+      "ablation_leverage": 0.5966083467006683,
+      "breadth": 2.669987846805798,
+      "corpus_frequency": 1437,
+      "score": 0.8711561643285102
+    },
+    {
+      "piece": "arter",
+      "readable": "arter",
+      "ablation_leverage": 0.5965100502967835,
+      "breadth": 2.5555753274662587,
+      "corpus_frequency": 1363,
+      "score": 0.8711344092936697
+    },
+    {
+      "piece": "▁provide",
+      "readable": "provide",
+      "ablation_leverage": 0.5959530293941497,
+      "breadth": 2.603194853040147,
+      "corpus_frequency": 5076,
+      "score": 0.8710110612467126
+    },
+    {
+      "piece": "▁Tr",
+      "readable": "Tr",
+      "ablation_leverage": 0.5956845164299012,
+      "breadth": 2.6733333380537188,
+      "corpus_frequency": 6082,
+      "score": 0.8709515599017427
+    },
+    {
+      "piece": "▁TO",
+      "readable": "TO",
+      "ablation_leverage": 0.5954870688915253,
+      "breadth": 2.4834723323371053,
+      "corpus_frequency": 1153,
+      "score": 0.8709077892415322
+    },
+    {
+      "piece": "▁working",
+      "readable": "working",
+      "ablation_leverage": 0.5952980327606201,
+      "breadth": 2.7215474961774015,
+      "corpus_frequency": 2465,
+      "score": 0.8708658696419347
+    },
+    {
+      "piece": "▁value",
+      "readable": "value",
+      "ablation_leverage": 0.5949029564857483,
+      "breadth": 2.335049011240919,
+      "corpus_frequency": 1661,
+      "score": 0.8707782167288887
+    },
+    {
+      "piece": "▁amount",
+      "readable": "amount",
+      "ablation_leverage": 0.5948934125900268,
+      "breadth": 2.558923448942542,
+      "corpus_frequency": 1356,
+      "score": 0.8707760985689933
+    },
+    {
+      "piece": "end",
+      "readable": "end",
+      "ablation_leverage": 0.5946017599105835,
+      "breadth": 2.420285441521204,
+      "corpus_frequency": 24472,
+      "score": 0.8707113531582631
+    },
+    {
+      "piece": "ill",
+      "readable": "ill",
+      "ablation_leverage": 0.5945390844345093,
+      "breadth": 2.56788539427149,
+      "corpus_frequency": 43064,
+      "score": 0.8706974353759269
+    },
+    {
+      "piece": "▁original",
+      "readable": "original",
+      "ablation_leverage": 0.5944872426986695,
+      "breadth": 2.6341531475756153,
+      "corpus_frequency": 1215,
+      "score": 0.8706859222366357
+    },
+    {
+      "piece": "▁sto",
+      "readable": "sto",
+      "ablation_leverage": 0.5944658970832825,
+      "breadth": 2.590215507761556,
+      "corpus_frequency": 18657,
+      "score": 0.8706811814584415
+    },
+    {
+      "piece": "ensive",
+      "readable": "ensive",
+      "ablation_leverage": 0.594460700750351,
+      "breadth": 2.6924228220215762,
+      "corpus_frequency": 1710,
+      "score": 0.8706800273473349
+    },
+    {
+      "piece": "gr",
+      "readable": "gr",
+      "ablation_leverage": 0.5943328857421875,
+      "breadth": 2.742078765510514,
+      "corpus_frequency": 36397,
+      "score": 0.8706516363208356
+    },
+    {
+      "piece": "id",
+      "readable": "id",
+      "ablation_leverage": 0.5941585445404053,
+      "breadth": 2.5295917596592963,
+      "corpus_frequency": 72651,
+      "score": 0.8706129007751343
+    },
+    {
+      "piece": "soci",
+      "readable": "soci",
+      "ablation_leverage": 0.5939635241031647,
+      "breadth": 2.628428638900208,
+      "corpus_frequency": 4281,
+      "score": 0.8705695571969005
+    },
+    {
+      "piece": "▁inde",
+      "readable": "inde",
+      "ablation_leverage": 0.5938255119323731,
+      "breadth": 2.6147151230143337,
+      "corpus_frequency": 2270,
+      "score": 0.8705388751894244
+    },
+    {
+      "piece": "▁address",
+      "readable": "address",
+      "ablation_leverage": 0.5936810672283173,
+      "breadth": 2.517282946641096,
+      "corpus_frequency": 1149,
+      "score": 0.870506755503066
+    },
+    {
+      "piece": "▁large",
+      "readable": "large",
+      "ablation_leverage": 0.593592244386673,
+      "breadth": 2.5449967574390566,
+      "corpus_frequency": 3160,
+      "score": 0.8704870003839295
+    },
+    {
+      "piece": "▁gets",
+      "readable": "gets",
+      "ablation_leverage": 0.5935224866867066,
+      "breadth": 2.751810702020159,
+      "corpus_frequency": 1124,
+      "score": 0.870471483477056
+    },
+    {
+      "piece": "▁likely",
+      "readable": "likely",
+      "ablation_leverage": 0.5934610915184021,
+      "breadth": 2.2456872088641804,
+      "corpus_frequency": 1175,
+      "score": 0.8704578252232508
+    },
+    {
+      "piece": "▁conc",
+      "readable": "conc",
+      "ablation_leverage": 0.5933717370033265,
+      "breadth": 2.588886829209863,
+      "corpus_frequency": 3718,
+      "score": 0.870437944478606
+    },
+    {
+      "piece": "▁white",
+      "readable": "white",
+      "ablation_leverage": 0.5932544946670533,
+      "breadth": 2.5439179627556046,
+      "corpus_frequency": 1404,
+      "score": 0.8704118543502665
+    },
+    {
+      "piece": "▁learning",
+      "readable": "learning",
+      "ablation_leverage": 0.5932375657558441,
+      "breadth": 2.382733102727231,
+      "corpus_frequency": 1014,
+      "score": 0.8704080867060465
+    },
+    {
+      "piece": "itten",
+      "readable": "itten",
+      "ablation_leverage": 0.5932277250289917,
+      "breadth": 2.708017591365401,
+      "corpus_frequency": 1218,
+      "score": 0.8704058965360042
+    },
+    {
+      "piece": "lling",
+      "readable": "lling",
+      "ablation_leverage": 0.5931669306755066,
+      "breadth": 2.666087305261004,
+      "corpus_frequency": 4335,
+      "score": 0.8703923652286847
+    },
+    {
+      "piece": "pper",
+      "readable": "pper",
+      "ablation_leverage": 0.5931548976898193,
+      "breadth": 2.7923397578701077,
+      "corpus_frequency": 1548,
+      "score": 0.8703896868216724
+    },
+    {
+      "piece": "ward",
+      "readable": "ward",
+      "ablation_leverage": 0.5930021941661835,
+      "breadth": 2.448470679848594,
+      "corpus_frequency": 5425,
+      "score": 0.8703556920173365
+    },
+    {
+      "piece": "▁then",
+      "readable": "then",
+      "ablation_leverage": 0.5928983855247497,
+      "breadth": 2.5914496542417162,
+      "corpus_frequency": 5767,
+      "score": 0.8703325771757284
+    },
+    {
+      "piece": "▁live",
+      "readable": "live",
+      "ablation_leverage": 0.5927878272533417,
+      "breadth": 2.80493986504271,
+      "corpus_frequency": 5850,
+      "score": 0.8703079549580824
+    },
+    {
+      "piece": "▁present",
+      "readable": "present",
+      "ablation_leverage": 0.5925177812576294,
+      "breadth": 2.757415734852846,
+      "corpus_frequency": 3580,
+      "score": 0.8702477942270691
+    },
+    {
+      "piece": "ig",
+      "readable": "ig",
+      "ablation_leverage": 0.5925013542175293,
+      "breadth": 2.625175094787811,
+      "corpus_frequency": 60419,
+      "score": 0.8702441337334956
+    },
+    {
+      "piece": "▁anti",
+      "readable": "anti",
+      "ablation_leverage": 0.5924700307846069,
+      "breadth": 2.7461164714488544,
+      "corpus_frequency": 3454,
+      "score": 0.8702371535444523
+    },
+    {
+      "piece": "▁beautiful",
+      "readable": "beautiful",
+      "ablation_leverage": 0.5922511458396912,
+      "breadth": 2.7539771990061315,
+      "corpus_frequency": 1251,
+      "score": 0.8701883663954627
+    },
+    {
+      "piece": "▁create",
+      "readable": "create",
+      "ablation_leverage": 0.5921906328201294,
+      "breadth": 2.6952645385618954,
+      "corpus_frequency": 2938,
+      "score": 0.8701748754992327
+    },
+    {
+      "piece": "▁available",
+      "readable": "available",
+      "ablation_leverage": 0.5920828199386596,
+      "breadth": 2.629518435423539,
+      "corpus_frequency": 2805,
+      "score": 0.8701508360587493
+    },
+    {
+      "piece": "▁sin",
+      "readable": "sin",
+      "ablation_leverage": 0.5920713996887207,
+      "breadth": 2.708948431519763,
+      "corpus_frequency": 23476,
+      "score": 0.8701482893866129
+    },
+    {
+      "piece": "▁mel",
+      "readable": "mel",
+      "ablation_leverage": 0.5920499014854431,
+      "breadth": 2.504423940517717,
+      "corpus_frequency": 2151,
+      "score": 0.8701434952360838
+    },
+    {
+      "piece": "▁general",
+      "readable": "general",
+      "ablation_leverage": 0.5917741668224334,
+      "breadth": 2.5507618212252705,
+      "corpus_frequency": 1502,
+      "score": 0.8700819903097697
+    },
+    {
+      "piece": "ama",
+      "readable": "ama",
+      "ablation_leverage": 0.5911204195022584,
+      "breadth": 2.766428207408006,
+      "corpus_frequency": 4680,
+      "score": 0.8699360518977346
+    },
+    {
+      "piece": "ic",
+      "readable": "ic",
+      "ablation_leverage": 0.5909778952598572,
+      "breadth": 2.6555331446470953,
+      "corpus_frequency": 142833,
+      "score": 0.8699042142597823
+    },
+    {
+      "piece": "▁lose",
+      "readable": "lose",
+      "ablation_leverage": 0.5906725323200226,
+      "breadth": 2.733266879019687,
+      "corpus_frequency": 3224,
+      "score": 0.8698359752028889
+    },
+    {
+      "piece": "▁Comm",
+      "readable": "Comm",
+      "ablation_leverage": 0.5906594747304916,
+      "breadth": 2.6101936646948456,
+      "corpus_frequency": 2392,
+      "score": 0.8698330564539762
+    },
+    {
+      "piece": "▁boo",
+      "readable": "boo",
+      "ablation_leverage": 0.5905607450008392,
+      "breadth": 2.601346323740419,
+      "corpus_frequency": 6464,
+      "score": 0.869810985415338
+    },
+    {
+      "piece": "kes",
+      "readable": "kes",
+      "ablation_leverage": 0.5901069009304046,
+      "breadth": 2.5831674221983016,
+      "corpus_frequency": 4858,
+      "score": 0.8697094810501583
+    },
+    {
+      "piece": "per",
+      "readable": "per",
+      "ablation_leverage": 0.5900509810447693,
+      "breadth": 2.637006868150194,
+      "corpus_frequency": 37239,
+      "score": 0.8696969689025763
+    },
+    {
+      "piece": "ard",
+      "readable": "ard",
+      "ablation_leverage": 0.5900311446189881,
+      "breadth": 2.510587262109724,
+      "corpus_frequency": 20928,
+      "score": 0.8696925301914264
+    },
+    {
+      "piece": "▁put",
+      "readable": "put",
+      "ablation_leverage": 0.5897686839103699,
+      "breadth": 2.47025753039994,
+      "corpus_frequency": 5274,
+      "score": 0.8696337864409864
+    },
+    {
+      "piece": "▁sol",
+      "readable": "sol",
+      "ablation_leverage": 0.5895954823493957,
+      "breadth": 2.8068318234555365,
+      "corpus_frequency": 6255,
+      "score": 0.8695950062832224
+    },
+    {
+      "piece": "ibr",
+      "readable": "ibr",
+      "ablation_leverage": 0.5893868732452393,
+      "breadth": 2.471903310189715,
+      "corpus_frequency": 1412,
+      "score": 0.8695482831830141
+    },
+    {
+      "piece": "orn",
+      "readable": "orn",
+      "ablation_leverage": 0.5893003416061401,
+      "breadth": 2.6297214968784877,
+      "corpus_frequency": 5477,
+      "score": 0.8695288974577776
+    },
+    {
+      "piece": "fore",
+      "readable": "fore",
+      "ablation_leverage": 0.5889627492427826,
+      "breadth": 2.7255277444046526,
+      "corpus_frequency": 7259,
+      "score": 0.8694532392504205
+    },
+    {
+      "piece": "▁Wh",
+      "readable": "Wh",
+      "ablation_leverage": 0.5883497786521912,
+      "breadth": 2.4195285993984195,
+      "corpus_frequency": 12658,
+      "score": 0.8693157547921512
+    },
+    {
+      "piece": "▁pass",
+      "readable": "pass",
+      "ablation_leverage": 0.5883284914493561,
+      "breadth": 2.6581201804798242,
+      "corpus_frequency": 3059,
+      "score": 0.8693109776676526
+    },
+    {
+      "piece": "verage",
+      "readable": "verage",
+      "ablation_leverage": 0.5883022236824036,
+      "breadth": 2.6282389850186743,
+      "corpus_frequency": 1394,
+      "score": 0.8693050826017007
+    },
+    {
+      "piece": "veral",
+      "readable": "veral",
+      "ablation_leverage": 0.5882969713211059,
+      "breadth": 2.6574162879766443,
+      "corpus_frequency": 2693,
+      "score": 0.8693039038244649
+    },
+    {
+      "piece": "▁group",
+      "readable": "group",
+      "ablation_leverage": 0.5881142055988312,
+      "breadth": 2.6679552757509253,
+      "corpus_frequency": 2797,
+      "score": 0.8692628795127664
+    },
+    {
+      "piece": "▁blo",
+      "readable": "blo",
+      "ablation_leverage": 0.5879729878902435,
+      "breadth": 2.719340842692299,
+      "corpus_frequency": 4219,
+      "score": 0.8692311724993659
+    },
+    {
+      "piece": "on",
+      "readable": "on",
+      "ablation_leverage": 0.5875390863418579,
+      "breadth": 2.615938446857087,
+      "corpus_frequency": 355329,
+      "score": 0.8691337027565758
+    },
+    {
+      "piece": "▁challenge",
+      "readable": "challenge",
+      "ablation_leverage": 0.5872977375984192,
+      "breadth": 2.5600436864140166,
+      "corpus_frequency": 1170,
+      "score": 0.8690794560729994
+    },
+    {
+      "piece": "▁condition",
+      "readable": "condition",
+      "ablation_leverage": 0.5871580302715301,
+      "breadth": 2.553929336404418,
+      "corpus_frequency": 1637,
+      "score": 0.8690480446063505
+    },
+    {
+      "piece": "▁ended",
+      "readable": "ended",
+      "ablation_leverage": 0.5871310448646545,
+      "breadth": 2.4674645741699637,
+      "corpus_frequency": 2134,
+      "score": 0.8690419764097217
+    },
+    {
+      "piece": "▁comm",
+      "readable": "comm",
+      "ablation_leverage": 0.5870835423469544,
+      "breadth": 2.488442396918396,
+      "corpus_frequency": 11385,
+      "score": 0.8690312938617418
+    },
+    {
+      "piece": "▁face",
+      "readable": "face",
+      "ablation_leverage": 0.5869588661193847,
+      "breadth": 2.395022032733137,
+      "corpus_frequency": 3039,
+      "score": 0.8690032520825872
+    },
+    {
+      "piece": "▁sn",
+      "readable": "sn",
+      "ablation_leverage": 0.5868864750862122,
+      "breadth": 2.711315514570069,
+      "corpus_frequency": 6404,
+      "score": 0.8689869673890647
+    },
+    {
+      "piece": "rote",
+      "readable": "rote",
+      "ablation_leverage": 0.5866061043739319,
+      "breadth": 2.5900252683610048,
+      "corpus_frequency": 3477,
+      "score": 0.8689238777561872
+    },
+    {
+      "piece": "▁Sec",
+      "readable": "Sec",
+      "ablation_leverage": 0.5865322661399841,
+      "breadth": 2.8151817042482845,
+      "corpus_frequency": 1455,
+      "score": 0.8689072574983736
+    },
+    {
+      "piece": "▁election",
+      "readable": "election",
+      "ablation_leverage": 0.586204423904419,
+      "breadth": 2.526971710602062,
+      "corpus_frequency": 1045,
+      "score": 0.8688334381689191
+    },
+    {
+      "piece": "ink",
+      "readable": "ink",
+      "ablation_leverage": 0.5861057841777801,
+      "breadth": 2.554612092108272,
+      "corpus_frequency": 9470,
+      "score": 0.8688112196549396
+    },
+    {
+      "piece": "itional",
+      "readable": "itional",
+      "ablation_leverage": 0.5860686326026916,
+      "breadth": 2.7984233407100634,
+      "corpus_frequency": 2228,
+      "score": 0.8688028503250352
+    },
+    {
+      "piece": "▁Part",
+      "readable": "Part",
+      "ablation_leverage": 0.5859879052639008,
+      "breadth": 2.707855186747932,
+      "corpus_frequency": 1150,
+      "score": 0.8687846626255544
+    },
+    {
+      "piece": "▁etc",
+      "readable": "etc",
+      "ablation_leverage": 0.5857894682884216,
+      "breadth": 2.281046713090361,
+      "corpus_frequency": 1661,
+      "score": 0.8687399445412738
+    },
+    {
+      "piece": "enn",
+      "readable": "enn",
+      "ablation_leverage": 0.5857614940404892,
+      "breadth": 2.6701775006873314,
+      "corpus_frequency": 2300,
+      "score": 0.8687336392822936
+    },
+    {
+      "piece": "▁moment",
+      "readable": "moment",
+      "ablation_leverage": 0.5857019197940826,
+      "breadth": 2.7439549655646953,
+      "corpus_frequency": 1232,
+      "score": 0.8687202105343316
+    },
+    {
+      "piece": "unning",
+      "readable": "unning",
+      "ablation_leverage": 0.5856078684329986,
+      "breadth": 2.570911080176776,
+      "corpus_frequency": 1395,
+      "score": 0.8686990074515956
+    },
+    {
+      "piece": "▁areas",
+      "readable": "areas",
+      "ablation_leverage": 0.5855491888523102,
+      "breadth": 2.534012807128222,
+      "corpus_frequency": 1131,
+      "score": 0.8686857769119924
+    },
+    {
+      "piece": "▁graph",
+      "readable": "graph",
+      "ablation_leverage": 0.585451045036316,
+      "breadth": 2.5917716459086826,
+      "corpus_frequency": 2341,
+      "score": 0.8686636453710211
+    },
+    {
+      "piece": "astic",
+      "readable": "astic",
+      "ablation_leverage": 0.5853372931480407,
+      "breadth": 2.36168137276234,
+      "corpus_frequency": 1236,
+      "score": 0.8686379895496711
+    },
+    {
+      "piece": "plo",
+      "readable": "plo",
+      "ablation_leverage": 0.5853351783752442,
+      "breadth": 2.739090044420278,
+      "corpus_frequency": 4914,
+      "score": 0.8686375125325094
+    },
+    {
+      "piece": "▁development",
+      "readable": "development",
+      "ablation_leverage": 0.5853106236457825,
+      "breadth": 2.7422264634751845,
+      "corpus_frequency": 1680,
+      "score": 0.8686319737369387
+    },
+    {
+      "piece": "LE",
+      "readable": "LE",
+      "ablation_leverage": 0.5851286709308624,
+      "breadth": 2.63468979919726,
+      "corpus_frequency": 1209,
+      "score": 0.8685909235305876
+    },
+    {
+      "piece": "ett",
+      "readable": "ett",
+      "ablation_leverage": 0.584903107881546,
+      "breadth": 2.622503942772143,
+      "corpus_frequency": 11425,
+      "score": 0.868540016706986
+    },
+    {
+      "piece": "▁gra",
+      "readable": "gra",
+      "ablation_leverage": 0.584678144454956,
+      "breadth": 2.697873764981723,
+      "corpus_frequency": 14458,
+      "score": 0.8684892256535643
+    },
+    {
+      "piece": "ld",
+      "readable": "ld",
+      "ablation_leverage": 0.5846232557296753,
+      "breadth": 2.5727740595648836,
+      "corpus_frequency": 52055,
+      "score": 0.8684768302014978
+    },
+    {
+      "piece": "▁function",
+      "readable": "function",
+      "ablation_leverage": 0.5844991314411163,
+      "breadth": 2.6661876917468414,
+      "corpus_frequency": 1342,
+      "score": 0.8684487950768196
+    },
+    {
+      "piece": "zen",
+      "readable": "zen",
+      "ablation_leverage": 0.5844968950748444,
+      "breadth": 2.3712680093359824,
+      "corpus_frequency": 1030,
+      "score": 0.8684482899090974
+    },
+    {
+      "piece": "oth",
+      "readable": "oth",
+      "ablation_leverage": 0.584439885020256,
+      "breadth": 2.703895000735449,
+      "corpus_frequency": 24206,
+      "score": 0.8684354113840145
+    },
+    {
+      "piece": "athe",
+      "readable": "athe",
+      "ablation_leverage": 0.5842906296253204,
+      "breadth": 2.8294183434961617,
+      "corpus_frequency": 4719,
+      "score": 0.8684016887606777
+    },
+    {
+      "piece": "▁sle",
+      "readable": "sle",
+      "ablation_leverage": 0.5839423263072967,
+      "breadth": 2.4635391117326932,
+      "corpus_frequency": 2177,
+      "score": 0.8683229599182943
+    },
+    {
+      "piece": "▁would",
+      "readable": "would",
+      "ablation_leverage": 0.5837207508087158,
+      "breadth": 2.525686859775144,
+      "corpus_frequency": 8888,
+      "score": 0.8682728515930601
+    },
+    {
+      "piece": "▁Je",
+      "readable": "Je",
+      "ablation_leverage": 0.5836206808686256,
+      "breadth": 2.2070178087592236,
+      "corpus_frequency": 3276,
+      "score": 0.8682502149806076
+    },
+    {
+      "piece": "▁enjoy",
+      "readable": "enjoy",
+      "ablation_leverage": 0.5834749126434327,
+      "breadth": 2.555592128339868,
+      "corpus_frequency": 1879,
+      "score": 0.8682172341086345
+    },
+    {
+      "piece": "cially",
+      "readable": "cially",
+      "ablation_leverage": 0.5834693431854248,
+      "breadth": 2.5635434544418194,
+      "corpus_frequency": 1812,
+      "score": 0.868215973824358
+    },
+    {
+      "piece": "▁hy",
+      "readable": "hy",
+      "ablation_leverage": 0.5832572603225707,
+      "breadth": 2.5511760719727556,
+      "corpus_frequency": 9793,
+      "score": 0.8681679737206184
+    },
+    {
+      "piece": "▁town",
+      "readable": "town",
+      "ablation_leverage": 0.5831282293796539,
+      "breadth": 2.591851828564765,
+      "corpus_frequency": 1539,
+      "score": 0.8681387619784191
+    },
+    {
+      "piece": "▁content",
+      "readable": "content",
+      "ablation_leverage": 0.5829104697704315,
+      "breadth": 2.6382838981127494,
+      "corpus_frequency": 1541,
+      "score": 0.8680894479973651
+    },
+    {
+      "piece": "lished",
+      "readable": "lished",
+      "ablation_leverage": 0.5828144860267639,
+      "breadth": 2.639203060454351,
+      "corpus_frequency": 1580,
+      "score": 0.8680677056071159
+    },
+    {
+      "piece": "ris",
+      "readable": "ris",
+      "ablation_leverage": 0.5826796388626099,
+      "breadth": 2.6006825877363684,
+      "corpus_frequency": 11751,
+      "score": 0.86803715376327
+    },
+    {
+      "piece": "▁test",
+      "readable": "test",
+      "ablation_leverage": 0.5826336193084717,
+      "breadth": 2.627535092515494,
+      "corpus_frequency": 4891,
+      "score": 0.8680267256578235
+    },
+    {
+      "piece": "ese",
+      "readable": "ese",
+      "ablation_leverage": 0.5826097989082336,
+      "breadth": 2.587982350642349,
+      "corpus_frequency": 19258,
+      "score": 0.8680213275930614
+    },
+    {
+      "piece": "▁cup",
+      "readable": "cup",
+      "ablation_leverage": 0.5824788033962249,
+      "breadth": 2.7707270764156715,
+      "corpus_frequency": 1306,
+      "score": 0.8679916380742071
+    },
+    {
+      "piece": "ister",
+      "readable": "ister",
+      "ablation_leverage": 0.5823978096293285,
+      "breadth": 2.624979499825291,
+      "corpus_frequency": 1918,
+      "score": 0.8679732778759244
+    },
+    {
+      "piece": "ouch",
+      "readable": "ouch",
+      "ablation_leverage": 0.5823706328868866,
+      "breadth": 2.6534871980884023,
+      "corpus_frequency": 1427,
+      "score": 0.8679671167015892
+    },
+    {
+      "piece": "rist",
+      "readable": "rist",
+      "ablation_leverage": 0.5821016013622284,
+      "breadth": 2.7804903656139777,
+      "corpus_frequency": 3527,
+      "score": 0.8679061096919763
+    },
+    {
+      "piece": "iter",
+      "readable": "iter",
+      "ablation_leverage": 0.5818166708946229,
+      "breadth": 2.7147715969203534,
+      "corpus_frequency": 2381,
+      "score": 0.8678414666019683
+    },
+    {
+      "piece": "ston",
+      "readable": "ston",
+      "ablation_leverage": 0.5815353715419769,
+      "breadth": 2.585832898303915,
+      "corpus_frequency": 1685,
+      "score": 0.8677776162524061
+    },
+    {
+      "piece": "▁music",
+      "readable": "music",
+      "ablation_leverage": 0.5815162181854248,
+      "breadth": 2.3673389647400938,
+      "corpus_frequency": 1856,
+      "score": 0.8677732676309043
+    },
+    {
+      "piece": "▁find",
+      "readable": "find",
+      "ablation_leverage": 0.5811625254154206,
+      "breadth": 2.680904025243624,
+      "corpus_frequency": 4783,
+      "score": 0.8676929386684171
+    },
+    {
+      "piece": "▁actually",
+      "readable": "actually",
+      "ablation_leverage": 0.5810923063755036,
+      "breadth": 2.525207952061153,
+      "corpus_frequency": 1657,
+      "score": 0.8676769850491983
+    },
+    {
+      "piece": "▁loss",
+      "readable": "loss",
+      "ablation_leverage": 0.5809882724285126,
+      "breadth": 2.6282569301339205,
+      "corpus_frequency": 1238,
+      "score": 0.867653345209437
+    },
+    {
+      "piece": "▁min",
+      "readable": "min",
+      "ablation_leverage": 0.5808750450611114,
+      "breadth": 2.739303709103429,
+      "corpus_frequency": 20950,
+      "score": 0.8676276115193977
+    },
+    {
+      "piece": "ato",
+      "readable": "ato",
+      "ablation_leverage": 0.5806271922588349,
+      "breadth": 2.6106640095025777,
+      "corpus_frequency": 5504,
+      "score": 0.8675712633924839
+    },
+    {
+      "piece": "pping",
+      "readable": "pping",
+      "ablation_leverage": 0.580518364906311,
+      "breadth": 2.360200403755841,
+      "corpus_frequency": 2177,
+      "score": 0.8675465144244192
+    },
+    {
+      "piece": "isk",
+      "readable": "isk",
+      "ablation_leverage": 0.5803237640857697,
+      "breadth": 2.681270441295216,
+      "corpus_frequency": 2011,
+      "score": 0.8675022477185522
+    },
+    {
+      "piece": "imin",
+      "readable": "imin",
+      "ablation_leverage": 0.580269240140915,
+      "breadth": 2.782483753027605,
+      "corpus_frequency": 1394,
+      "score": 0.8674898422544461
+    },
+    {
+      "piece": "ay",
+      "readable": "ay",
+      "ablation_leverage": 0.5799487233161926,
+      "breadth": 2.3070112916757273,
+      "corpus_frequency": 67870,
+      "score": 0.8674168936560253
+    },
+    {
+      "piece": "▁install",
+      "readable": "install",
+      "ablation_leverage": 0.5798645734786987,
+      "breadth": 2.519053956014967,
+      "corpus_frequency": 1083,
+      "score": 0.8673977347417758
+    },
+    {
+      "piece": "uk",
+      "readable": "uk",
+      "ablation_leverage": 0.5797046291828155,
+      "breadth": 2.4786638171979307,
+      "corpus_frequency": 1295,
+      "score": 0.8673613115683609
+    },
+    {
+      "piece": "▁individual",
+      "readable": "individual",
+      "ablation_leverage": 0.5796282947063446,
+      "breadth": 2.716603980522569,
+      "corpus_frequency": 1748,
+      "score": 0.8673439248244618
+    },
+    {
+      "piece": "ust",
+      "readable": "ust",
+      "ablation_leverage": 0.579517343044281,
+      "breadth": 2.4224088383486757,
+      "corpus_frequency": 25749,
+      "score": 0.8673186492227483
+    },
+    {
+      "piece": "aging",
+      "readable": "aging",
+      "ablation_leverage": 0.5794185554981232,
+      "breadth": 2.334229160800598,
+      "corpus_frequency": 1500,
+      "score": 0.8672961406230234
+    },
+    {
+      "piece": "ru",
+      "readable": "ru",
+      "ablation_leverage": 0.5794147384166718,
+      "breadth": 2.6058950766163256,
+      "corpus_frequency": 26534,
+      "score": 0.8672952708295235
+    },
+    {
+      "piece": "arm",
+      "readable": "arm",
+      "ablation_leverage": 0.5792555439472199,
+      "breadth": 2.590136258075045,
+      "corpus_frequency": 5017,
+      "score": 0.8672589902842969
+    },
+    {
+      "piece": "▁kill",
+      "readable": "kill",
+      "ablation_leverage": 0.5791757988929749,
+      "breadth": 2.7179514450883575,
+      "corpus_frequency": 2636,
+      "score": 0.8672408125749999
+    },
+    {
+      "piece": "▁benefit",
+      "readable": "benefit",
+      "ablation_leverage": 0.579087650179863,
+      "breadth": 2.6702373320623622,
+      "corpus_frequency": 1533,
+      "score": 0.8672207163576001
+    },
+    {
+      "piece": "▁sell",
+      "readable": "sell",
+      "ablation_leverage": 0.5789248788356781,
+      "breadth": 2.6356675863702983,
+      "corpus_frequency": 1673,
+      "score": 0.8671835995693488
+    },
+    {
+      "piece": "▁perform",
+      "readable": "perform",
+      "ablation_leverage": 0.5786949825286866,
+      "breadth": 2.623974707162117,
+      "corpus_frequency": 2512,
+      "score": 0.867131158477429
+    },
+    {
+      "piece": "▁dom",
+      "readable": "dom",
+      "ablation_leverage": 0.5786917769908905,
+      "breadth": 2.5945767238554507,
+      "corpus_frequency": 2936,
+      "score": 0.8671304271226781
+    },
+    {
+      "piece": "▁anim",
+      "readable": "anim",
+      "ablation_leverage": 0.5786203861236572,
+      "breadth": 2.6107761434582555,
+      "corpus_frequency": 1011,
+      "score": 0.8671141379947
+    },
+    {
+      "piece": "▁season",
+      "readable": "season",
+      "ablation_leverage": 0.5782948648929596,
+      "breadth": 2.329259213901838,
+      "corpus_frequency": 1671,
+      "score": 0.8670398389074181
+    },
+    {
+      "piece": "ength",
+      "readable": "ength",
+      "ablation_leverage": 0.5780783772468567,
+      "breadth": 2.570339159349215,
+      "corpus_frequency": 1570,
+      "score": 0.8669904031964605
+    },
+    {
+      "piece": "▁table",
+      "readable": "table",
+      "ablation_leverage": 0.5780366039276124,
+      "breadth": 2.543155313461952,
+      "corpus_frequency": 4604,
+      "score": 0.8669808619821475
+    },
+    {
+      "piece": "▁wa",
+      "readable": "wa",
+      "ablation_leverage": 0.5779918777942658,
+      "breadth": 2.6336995583491376,
+      "corpus_frequency": 75417,
+      "score": 0.866970645567407
+    },
+    {
+      "piece": "ult",
+      "readable": "ult",
+      "ablation_leverage": 0.5776075541973114,
+      "breadth": 2.5394185401854683,
+      "corpus_frequency": 11988,
+      "score": 0.8668828251612365
+    },
+    {
+      "piece": "▁single",
+      "readable": "single",
+      "ablation_leverage": 0.5774587607383728,
+      "breadth": 2.605652534635128,
+      "corpus_frequency": 1685,
+      "score": 0.8668488092101698
+    },
+    {
+      "piece": "▁thr",
+      "readable": "thr",
+      "ablation_leverage": 0.5774114346504211,
+      "breadth": 2.7386734428875625,
+      "corpus_frequency": 13011,
+      "score": 0.8668379880673719
+    },
+    {
+      "piece": "reat",
+      "readable": "reat",
+      "ablation_leverage": 0.5772429251670838,
+      "breadth": 2.70839682947139,
+      "corpus_frequency": 15721,
+      "score": 0.8667994510547654
+    },
+    {
+      "piece": "▁creat",
+      "readable": "creat",
+      "ablation_leverage": 0.5766282773017883,
+      "breadth": 2.8099492228106384,
+      "corpus_frequency": 5106,
+      "score": 0.8666587897055745
+    },
+    {
+      "piece": "▁document",
+      "readable": "document",
+      "ablation_leverage": 0.5765586221218109,
+      "breadth": 2.270366420400993,
+      "corpus_frequency": 1110,
+      "score": 0.8666428397523444
+    },
+    {
+      "piece": "rough",
+      "readable": "rough",
+      "ablation_leverage": 0.5765121150016784,
+      "breadth": 2.31621907712255,
+      "corpus_frequency": 8590,
+      "score": 0.8666321892720853
+    },
+    {
+      "piece": "ustom",
+      "readable": "ustom",
+      "ablation_leverage": 0.5764014732837677,
+      "breadth": 2.679978727558573,
+      "corpus_frequency": 3377,
+      "score": 0.8666068480328698
+    },
+    {
+      "piece": "▁say",
+      "readable": "say",
+      "ablation_leverage": 0.5761651074886323,
+      "breadth": 2.565682189034887,
+      "corpus_frequency": 6362,
+      "score": 0.8665526948101284
+    },
+    {
+      "piece": "wards",
+      "readable": "wards",
+      "ablation_leverage": 0.5760481488704682,
+      "breadth": 2.8585084961579574,
+      "corpus_frequency": 1747,
+      "score": 0.8665258904738863
+    },
+    {
+      "piece": "▁job",
+      "readable": "job",
+      "ablation_leverage": 0.5760128772258759,
+      "breadth": 2.486569669477439,
+      "corpus_frequency": 2354,
+      "score": 0.8665178059226121
+    },
+    {
+      "piece": "▁Bu",
+      "readable": "Bu",
+      "ablation_leverage": 0.5759865102171898,
+      "breadth": 2.536149424621767,
+      "corpus_frequency": 8926,
+      "score": 0.8665117620638215
+    },
+    {
+      "piece": "▁reading",
+      "readable": "reading",
+      "ablation_leverage": 0.5759420025348664,
+      "breadth": 2.6042190640148015,
+      "corpus_frequency": 1077,
+      "score": 0.8665015593631284
+    },
+    {
+      "piece": "▁sat",
+      "readable": "sat",
+      "ablation_leverage": 0.5758976513147354,
+      "breadth": 2.6475719609469026,
+      "corpus_frequency": 3186,
+      "score": 0.866491391744661
+    },
+    {
+      "piece": "mit",
+      "readable": "mit",
+      "ablation_leverage": 0.5757734191417694,
+      "breadth": 2.6709785879922694,
+      "corpus_frequency": 6669,
+      "score": 0.866462907066273
+    },
+    {
+      "piece": "▁side",
+      "readable": "side",
+      "ablation_leverage": 0.5757089257240295,
+      "breadth": 2.4617582218818685,
+      "corpus_frequency": 11682,
+      "score": 0.8664481172150929
+    },
+    {
+      "piece": "zz",
+      "readable": "zz",
+      "ablation_leverage": 0.5755644237995148,
+      "breadth": 2.5788384678672873,
+      "corpus_frequency": 1551,
+      "score": 0.866414973523683
+    },
+    {
+      "piece": "vers",
+      "readable": "vers",
+      "ablation_leverage": 0.5755045092105866,
+      "breadth": 2.646501652392131,
+      "corpus_frequency": 8849,
+      "score": 0.8664012287704707
+    },
+    {
+      "piece": "▁comment",
+      "readable": "comment",
+      "ablation_leverage": 0.575463410615921,
+      "breadth": 2.5279779764614707,
+      "corpus_frequency": 1118,
+      "score": 0.8663917996877094
+    },
+    {
+      "piece": "cus",
+      "readable": "cus",
+      "ablation_leverage": 0.5751953947544098,
+      "breadth": 2.650219226766338,
+      "corpus_frequency": 7397,
+      "score": 0.8663302933831781
+    },
+    {
+      "piece": "om",
+      "readable": "om",
+      "ablation_leverage": 0.5747706294059753,
+      "breadth": 2.553250318015347,
+      "corpus_frequency": 133692,
+      "score": 0.8662327562951094
+    },
+    {
+      "piece": "▁fund",
+      "readable": "fund",
+      "ablation_leverage": 0.5746934163570404,
+      "breadth": 2.732536226317983,
+      "corpus_frequency": 1982,
+      "score": 0.8662150184439726
+    },
+    {
+      "piece": "▁wide",
+      "readable": "wide",
+      "ablation_leverage": 0.5744575893878937,
+      "breadth": 2.5791393680272816,
+      "corpus_frequency": 1963,
+      "score": 0.8661608280799017
+    },
+    {
+      "piece": "rapy",
+      "readable": "rapy",
+      "ablation_leverage": 0.5744284892082214,
+      "breadth": 2.8024990860480115,
+      "corpus_frequency": 1017,
+      "score": 0.8661541396466357
+    },
+    {
+      "piece": "lic",
+      "readable": "lic",
+      "ablation_leverage": 0.574404067993164,
+      "breadth": 2.7229654650035027,
+      "corpus_frequency": 15112,
+      "score": 0.8661485263728131
+    },
+    {
+      "piece": "▁are",
+      "readable": "are",
+      "ablation_leverage": 0.5743486762046814,
+      "breadth": 2.311865398319876,
+      "corpus_frequency": 57808,
+      "score": 0.8661357935551187
+    },
+    {
+      "piece": "▁parent",
+      "readable": "parent",
+      "ablation_leverage": 0.5742006719112396,
+      "breadth": 2.657265716009683,
+      "corpus_frequency": 1671,
+      "score": 0.8661017660309258
+    },
+    {
+      "piece": "▁board",
+      "readable": "board",
+      "ablation_leverage": 0.5740514624118805,
+      "breadth": 2.8374543600272615,
+      "corpus_frequency": 1756,
+      "score": 0.8660674525395892
+    },
+    {
+      "piece": "erson",
+      "readable": "erson",
+      "ablation_leverage": 0.5740303581953049,
+      "breadth": 2.286522229382754,
+      "corpus_frequency": 5733,
+      "score": 0.8660625985136851
+    },
+    {
+      "piece": "vent",
+      "readable": "vent",
+      "ablation_leverage": 0.573966578245163,
+      "breadth": 2.7244558929965685,
+      "corpus_frequency": 7049,
+      "score": 0.8660479278709386
+    },
+    {
+      "piece": "aring",
+      "readable": "aring",
+      "ablation_leverage": 0.5738266289234162,
+      "breadth": 2.548610918569314,
+      "corpus_frequency": 2422,
+      "score": 0.866015731060942
+    },
+    {
+      "piece": "▁class",
+      "readable": "class",
+      "ablation_leverage": 0.5734233701229096,
+      "breadth": 2.504872758051585,
+      "corpus_frequency": 2518,
+      "score": 0.8659229132117534
+    },
+    {
+      "piece": "itive",
+      "readable": "itive",
+      "ablation_leverage": 0.5733366298675537,
+      "breadth": 2.3679594829031116,
+      "corpus_frequency": 2044,
+      "score": 0.8659029397263783
+    },
+    {
+      "piece": "standing",
+      "readable": "standing",
+      "ablation_leverage": 0.573286110162735,
+      "breadth": 2.7607826194645124,
+      "corpus_frequency": 1404,
+      "score": 0.8658913052739332
+    },
+    {
+      "piece": "▁running",
+      "readable": "running",
+      "ablation_leverage": 0.5729730880260467,
+      "breadth": 2.4983581557739805,
+      "corpus_frequency": 1032,
+      "score": 0.8658191948708143
+    },
+    {
+      "piece": "▁aren",
+      "readable": "aren",
+      "ablation_leverage": 0.5726633417606354,
+      "breadth": 2.4370223176738746,
+      "corpus_frequency": 3054,
+      "score": 0.8657478003358847
+    },
+    {
+      "piece": "hest",
+      "readable": "hest",
+      "ablation_leverage": 0.5725319957733155,
+      "breadth": 2.5030477081992757,
+      "corpus_frequency": 1313,
+      "score": 0.8657175142649753
+    },
+    {
+      "piece": "aterial",
+      "readable": "aterial",
+      "ablation_leverage": 0.5721939373016357,
+      "breadth": 2.549589912285946,
+      "corpus_frequency": 1757,
+      "score": 0.8656395319704712
+    },
+    {
+      "piece": "▁successful",
+      "readable": "successful",
+      "ablation_leverage": 0.5717472434043884,
+      "breadth": 2.5247426441169614,
+      "corpus_frequency": 1040,
+      "score": 0.8655364192983628
+    },
+    {
+      "piece": "▁travel",
+      "readable": "travel",
+      "ablation_leverage": 0.5717402791976929,
+      "breadth": 2.546315743318476,
+      "corpus_frequency": 1530,
+      "score": 0.8655348110766659
+    },
+    {
+      "piece": "rown",
+      "readable": "rown",
+      "ablation_leverage": 0.5716032540798187,
+      "breadth": 2.7139489742044134,
+      "corpus_frequency": 1373,
+      "score": 0.8655031643248362
+    },
+    {
+      "piece": "▁cover",
+      "readable": "cover",
+      "ablation_leverage": 0.5713124585151672,
+      "breadth": 2.3313609901376395,
+      "corpus_frequency": 4218,
+      "score": 0.8654359782485248
+    },
+    {
+      "piece": "▁gl",
+      "readable": "gl",
+      "ablation_leverage": 0.5712731444835663,
+      "breadth": 2.6492058755843058,
+      "corpus_frequency": 12285,
+      "score": 0.8654268924201337
+    },
+    {
+      "piece": "iction",
+      "readable": "iction",
+      "ablation_leverage": 0.5712697947025299,
+      "breadth": 2.653519593292027,
+      "corpus_frequency": 1333,
+      "score": 0.8654261182265216
+    },
+    {
+      "piece": "ram",
+      "readable": "ram",
+      "ablation_leverage": 0.5711928391456604,
+      "breadth": 2.4180476222547815,
+      "corpus_frequency": 7486,
+      "score": 0.8654083311867601
+    },
+    {
+      "piece": "▁features",
+      "readable": "features",
+      "ablation_leverage": 0.5711433744430542,
+      "breadth": 2.7411670871032134,
+      "corpus_frequency": 1168,
+      "score": 0.8653968969507371
+    },
+    {
+      "piece": "self",
+      "readable": "self",
+      "ablation_leverage": 0.571088478565216,
+      "breadth": 2.6041283559247335,
+      "corpus_frequency": 5358,
+      "score": 0.8653842060875491
+    },
+    {
+      "piece": "ert",
+      "readable": "ert",
+      "ablation_leverage": 0.5709735071659088,
+      "breadth": 2.7306125278776285,
+      "corpus_frequency": 12526,
+      "score": 0.8653576229745533
+    },
+    {
+      "piece": "edd",
+      "readable": "edd",
+      "ablation_leverage": 0.5708598768711091,
+      "breadth": 2.3388392069749604,
+      "corpus_frequency": 1089,
+      "score": 0.8653313446850351
+    },
+    {
+      "piece": "▁dating",
+      "readable": "dating",
+      "ablation_leverage": 0.5707459473609924,
+      "breadth": 2.5912191886849563,
+      "corpus_frequency": 1020,
+      "score": 0.8653049919466682
+    },
+    {
+      "piece": "▁tra",
+      "readable": "tra",
+      "ablation_leverage": 0.5707043778896331,
+      "breadth": 2.6008020635790894,
+      "corpus_frequency": 29260,
+      "score": 0.8652953753106137
+    },
+    {
+      "piece": "itted",
+      "readable": "itted",
+      "ablation_leverage": 0.570584065914154,
+      "breadth": 2.675801553219823,
+      "corpus_frequency": 1162,
+      "score": 0.8652675385218213
+    },
+    {
+      "piece": "▁account",
+      "readable": "account",
+      "ablation_leverage": 0.5705781888961792,
+      "breadth": 2.4927142975911423,
+      "corpus_frequency": 1790,
+      "score": 0.8652661785957013
+    },
+    {
+      "piece": "▁market",
+      "readable": "market",
+      "ablation_leverage": 0.5705645275115967,
+      "breadth": 2.606204136683501,
+      "corpus_frequency": 3185,
+      "score": 0.8652630173340031
+    },
+    {
+      "piece": "▁mail",
+      "readable": "mail",
+      "ablation_leverage": 0.5705626058578491,
+      "breadth": 1.9227303924071477,
+      "corpus_frequency": 2784,
+      "score": 0.8652625726548193
+    },
+    {
+      "piece": "OR",
+      "readable": "OR",
+      "ablation_leverage": 0.5704113602638244,
+      "breadth": 2.558821881059851,
+      "corpus_frequency": 1673,
+      "score": 0.8652275690562915
+    },
+    {
+      "piece": "▁fact",
+      "readable": "fact",
+      "ablation_leverage": 0.570396499633789,
+      "breadth": 2.7889406328925634,
+      "corpus_frequency": 4448,
+      "score": 0.865224129278309
+    },
+    {
+      "piece": "▁forward",
+      "readable": "forward",
+      "ablation_leverage": 0.5698908543586731,
+      "breadth": 2.340731042264111,
+      "corpus_frequency": 1227,
+      "score": 0.8651070345431505
+    },
+    {
+      "piece": "yn",
+      "readable": "yn",
+      "ablation_leverage": 0.5697747719287872,
+      "breadth": 2.460846933479732,
+      "corpus_frequency": 2989,
+      "score": 0.8650801381071049
+    },
+    {
+      "piece": "▁bill",
+      "readable": "bill",
+      "ablation_leverage": 0.5694939243793488,
+      "breadth": 2.624095901492683,
+      "corpus_frequency": 1352,
+      "score": 0.8650150427254198
+    },
+    {
+      "piece": "roke",
+      "readable": "roke",
+      "ablation_leverage": 0.5693063938617706,
+      "breadth": 2.7832965878023828,
+      "corpus_frequency": 1189,
+      "score": 0.8649715586669485
+    },
+    {
+      "piece": "www",
+      "readable": "www",
+      "ablation_leverage": 0.5691548269987107,
+      "breadth": 2.566818230157361,
+      "corpus_frequency": 1005,
+      "score": 0.8649364032933511
+    },
+    {
+      "piece": "es",
+      "readable": "es",
+      "ablation_leverage": 0.5691511857509614,
+      "breadth": 2.6308147416503185,
+      "corpus_frequency": 295786,
+      "score": 0.8649355586042433
+    },
+    {
+      "piece": "oon",
+      "readable": "oon",
+      "ablation_leverage": 0.5691326975822448,
+      "breadth": 2.7181830548867554,
+      "corpus_frequency": 3324,
+      "score": 0.8649312696737942
+    },
+    {
+      "piece": "▁leg",
+      "readable": "leg",
+      "ablation_leverage": 0.5687824103236199,
+      "breadth": 2.7804998246005432,
+      "corpus_frequency": 5178,
+      "score": 0.8648499828441584
+    },
+    {
+      "piece": "ael",
+      "readable": "ael",
+      "ablation_leverage": 0.5686135220527649,
+      "breadth": 2.6954051512039423,
+      "corpus_frequency": 1387,
+      "score": 0.8648107731444372
+    },
+    {
+      "piece": "yc",
+      "readable": "yc",
+      "ablation_leverage": 0.5682878649234772,
+      "breadth": 2.650367058171753,
+      "corpus_frequency": 2946,
+      "score": 0.8647351345411973
+    },
+    {
+      "piece": "in",
+      "readable": "in",
+      "ablation_leverage": 0.5681668972969055,
+      "breadth": 2.4598047773898313,
+      "corpus_frequency": 551621,
+      "score": 0.8647070270098814
+    },
+    {
+      "piece": "▁2015",
+      "readable": "2015",
+      "ablation_leverage": 0.5681418228149414,
+      "breadth": 2.6192956159177685,
+      "corpus_frequency": 1014,
+      "score": 0.8647012000594376
+    },
+    {
+      "piece": "▁charge",
+      "readable": "charge",
+      "ablation_leverage": 0.5676761627197265,
+      "breadth": 2.4810912206888087,
+      "corpus_frequency": 1346,
+      "score": 0.8645929405636011
+    },
+    {
+      "piece": "ell",
+      "readable": "ell",
+      "ablation_leverage": 0.5675744962692261,
+      "breadth": 2.586405682443968,
+      "corpus_frequency": 21770,
+      "score": 0.8645692927172796
+    },
+    {
+      "piece": "▁that",
+      "readable": "that",
+      "ablation_leverage": 0.5672899651527404,
+      "breadth": 2.3018044261949693,
+      "corpus_frequency": 58289,
+      "score": 0.864503087612743
+    },
+    {
+      "piece": "ving",
+      "readable": "ving",
+      "ablation_leverage": 0.5671450924873352,
+      "breadth": 2.5974527254709923,
+      "corpus_frequency": 10012,
+      "score": 0.864469365676077
+    },
+    {
+      "piece": "ven",
+      "readable": "ven",
+      "ablation_leverage": 0.5671081686019898,
+      "breadth": 2.4559270142566274,
+      "corpus_frequency": 20504,
+      "score": 0.8644607695445474
+    },
+    {
+      "piece": "ong",
+      "readable": "ong",
+      "ablation_leverage": 0.5670386898517609,
+      "breadth": 2.6649259995498817,
+      "corpus_frequency": 15021,
+      "score": 0.8644445929016323
+    },
+    {
+      "piece": "ually",
+      "readable": "ually",
+      "ablation_leverage": 0.5669458603858948,
+      "breadth": 2.63849142745245,
+      "corpus_frequency": 4318,
+      "score": 0.8644229764497949
+    },
+    {
+      "piece": "xt",
+      "readable": "xt",
+      "ablation_leverage": 0.5666363573074341,
+      "breadth": 2.6161770723210296,
+      "corpus_frequency": 9849,
+      "score": 0.8643508793734083
+    },
+    {
+      "piece": "aim",
+      "readable": "aim",
+      "ablation_leverage": 0.5665758335590363,
+      "breadth": 2.5946765248222707,
+      "corpus_frequency": 2442,
+      "score": 0.8643367760886632
+    },
+    {
+      "piece": "▁bl",
+      "readable": "bl",
+      "ablation_leverage": 0.5665744996070862,
+      "breadth": 2.63972471062012,
+      "corpus_frequency": 48860,
+      "score": 0.8643364652333103
+    },
+    {
+      "piece": "ased",
+      "readable": "ased",
+      "ablation_leverage": 0.5662737929821015,
+      "breadth": 2.802852617743249,
+      "corpus_frequency": 4996,
+      "score": 0.8642663718623463
+    },
+    {
+      "piece": "▁vis",
+      "readable": "vis",
+      "ablation_leverage": 0.5662107610702515,
+      "breadth": 2.6785777538685447,
+      "corpus_frequency": 7432,
+      "score": 0.8642516746865848
+    },
+    {
+      "piece": "▁already",
+      "readable": "already",
+      "ablation_leverage": 0.5660823059082031,
+      "breadth": 2.217611925873005,
+      "corpus_frequency": 1608,
+      "score": 0.864221717680353
+    },
+    {
+      "piece": "old",
+      "readable": "old",
+      "ablation_leverage": 0.5660344129800796,
+      "breadth": 2.619325824364793,
+      "corpus_frequency": 11045,
+      "score": 0.8642105468390759
+    },
+    {
+      "piece": "reen",
+      "readable": "reen",
+      "ablation_leverage": 0.5656503713130951,
+      "breadth": 2.463003081135625,
+      "corpus_frequency": 3151,
+      "score": 0.864120936405065
+    },
+    {
+      "piece": "olic",
+      "readable": "olic",
+      "ablation_leverage": 0.5653493046760559,
+      "breadth": 2.594445460654576,
+      "corpus_frequency": 3010,
+      "score": 0.8640506444122595
+    },
+    {
+      "piece": "▁appe",
+      "readable": "appe",
+      "ablation_leverage": 0.5652505975961685,
+      "breadth": 2.6519521967406012,
+      "corpus_frequency": 5242,
+      "score": 0.8640275904776856
+    },
+    {
+      "piece": "AM",
+      "readable": "AM",
+      "ablation_leverage": 0.5651330852508545,
+      "breadth": 2.2028659214227644,
+      "corpus_frequency": 1260,
+      "score": 0.8640001391527511
+    },
+    {
+      "piece": "idence",
+      "readable": "idence",
+      "ablation_leverage": 0.5650231122970581,
+      "breadth": 2.571789759797748,
+      "corpus_frequency": 1469,
+      "score": 0.8639744438869129
+    },
+    {
+      "piece": "▁love",
+      "readable": "love",
+      "ablation_leverage": 0.5649499523639679,
+      "breadth": 2.7094225832993573,
+      "corpus_frequency": 5171,
+      "score": 0.8639573472415313
+    },
+    {
+      "piece": "▁upon",
+      "readable": "upon",
+      "ablation_leverage": 0.5649207347631454,
+      "breadth": 2.733998175624679,
+      "corpus_frequency": 1366,
+      "score": 0.8639505188014243
+    },
+    {
+      "piece": "▁post",
+      "readable": "post",
+      "ablation_leverage": 0.5649116241931915,
+      "breadth": 2.6523426932508887,
+      "corpus_frequency": 3203,
+      "score": 0.8639483894995673
+    },
+    {
+      "piece": "▁rat",
+      "readable": "rat",
+      "ablation_leverage": 0.5644024336338043,
+      "breadth": 2.691451100534909,
+      "corpus_frequency": 26605,
+      "score": 0.8638293280041903
+    },
+    {
+      "piece": "▁De",
+      "readable": "De",
+      "ablation_leverage": 0.5642076802253723,
+      "breadth": 2.6410477657726146,
+      "corpus_frequency": 10235,
+      "score": 0.8637837613828004
+    },
+    {
+      "piece": "▁need",
+      "readable": "need",
+      "ablation_leverage": 0.5641285610198975,
+      "breadth": 2.6466316618059755,
+      "corpus_frequency": 8972,
+      "score": 0.8637652453016614
+    },
+    {
+      "piece": "▁clos",
+      "readable": "clos",
+      "ablation_leverage": 0.56403764128685,
+      "breadth": 2.3590734001295437,
+      "corpus_frequency": 3108,
+      "score": 0.86374396436385
+    },
+    {
+      "piece": "oc",
+      "readable": "oc",
+      "ablation_leverage": 0.5639775240421295,
+      "breadth": 2.397952066689979,
+      "corpus_frequency": 35158,
+      "score": 0.8637298912622016
+    },
+    {
+      "piece": "▁weight",
+      "readable": "weight",
+      "ablation_leverage": 0.5636469233036041,
+      "breadth": 2.79993393264457,
+      "corpus_frequency": 1116,
+      "score": 0.8636524727103178
+    },
+    {
+      "piece": "▁pretty",
+      "readable": "pretty",
+      "ablation_leverage": 0.563607656955719,
+      "breadth": 2.4934849836683006,
+      "corpus_frequency": 1078,
+      "score": 0.8636432744817707
+    },
+    {
+      "piece": "▁they",
+      "readable": "they",
+      "ablation_leverage": 0.5633780491352082,
+      "breadth": 2.434872902490657,
+      "corpus_frequency": 14855,
+      "score": 0.863589475510771
+    },
+    {
+      "piece": "ave",
+      "readable": "ave",
+      "ablation_leverage": 0.5629451537132263,
+      "breadth": 2.657543423388197,
+      "corpus_frequency": 36789,
+      "score": 0.8634879849439087
+    },
+    {
+      "piece": "▁ste",
+      "readable": "ste",
+      "ablation_leverage": 0.5629315638542175,
+      "breadth": 2.3249777365599957,
+      "corpus_frequency": 27017,
+      "score": 0.8634847975935275
+    },
+    {
+      "piece": "ST",
+      "readable": "ST",
+      "ablation_leverage": 0.5629266583919526,
+      "breadth": 2.45952632668683,
+      "corpus_frequency": 1897,
+      "score": 0.8634836470529763
+    },
+    {
+      "piece": "▁includ",
+      "readable": "includ",
+      "ablation_leverage": 0.5628306722640991,
+      "breadth": 2.8314398109844827,
+      "corpus_frequency": 6823,
+      "score": 0.863461132186052
+    },
+    {
+      "piece": "ification",
+      "readable": "ification",
+      "ablation_leverage": 0.5626479268074036,
+      "breadth": 2.6809219007017915,
+      "corpus_frequency": 1493,
+      "score": 0.8634182561086958
+    },
+    {
+      "piece": "aded",
+      "readable": "aded",
+      "ablation_leverage": 0.5625874698162079,
+      "breadth": 2.686717731657649,
+      "corpus_frequency": 1034,
+      "score": 0.863404068511842
+    },
+    {
+      "piece": "ick",
+      "readable": "ick",
+      "ablation_leverage": 0.5625212240219116,
+      "breadth": 2.4220647656400036,
+      "corpus_frequency": 11279,
+      "score": 0.8633885206910438
+    },
+    {
+      "piece": "▁pain",
+      "readable": "pain",
+      "ablation_leverage": 0.5625088751316071,
+      "breadth": 2.4114794717466386,
+      "corpus_frequency": 2366,
+      "score": 0.8633856222165316
+    },
+    {
+      "piece": "▁them",
+      "readable": "them",
+      "ablation_leverage": 0.5624308860301972,
+      "breadth": 2.2060318642870285,
+      "corpus_frequency": 10690,
+      "score": 0.8633673155047307
+    },
+    {
+      "piece": "ID",
+      "readable": "ID",
+      "ablation_leverage": 0.5622083461284637,
+      "breadth": 2.743742445123181,
+      "corpus_frequency": 1157,
+      "score": 0.8633150638121732
+    },
+    {
+      "piece": "ample",
+      "readable": "ample",
+      "ablation_leverage": 0.5620294034481048,
+      "breadth": 2.5835601589317863,
+      "corpus_frequency": 2962,
+      "score": 0.8632730336106091
+    },
+    {
+      "piece": "▁news",
+      "readable": "news",
+      "ablation_leverage": 0.5618629574775695,
+      "breadth": 2.6045508037346163,
+      "corpus_frequency": 1641,
+      "score": 0.863233926631948
+    },
+    {
+      "piece": "ound",
+      "readable": "ound",
+      "ablation_leverage": 0.5616782093048096,
+      "breadth": 2.6738432407496475,
+      "corpus_frequency": 15130,
+      "score": 0.8631905059279419
+    },
+    {
+      "piece": "▁free",
+      "readable": "free",
+      "ablation_leverage": 0.56153391122818,
+      "breadth": 2.4276328336576407,
+      "corpus_frequency": 4391,
+      "score": 0.8631565821307501
+    },
+    {
+      "piece": "ific",
+      "readable": "ific",
+      "ablation_leverage": 0.5615219438076019,
+      "breadth": 2.7525948867248147,
+      "corpus_frequency": 5731,
+      "score": 0.8631537682551583
+    },
+    {
+      "piece": "▁hot",
+      "readable": "hot",
+      "ablation_leverage": 0.5613275873661041,
+      "breadth": 2.4689434124986596,
+      "corpus_frequency": 5560,
+      "score": 0.8631080612173931
+    },
+    {
+      "piece": "▁race",
+      "readable": "race",
+      "ablation_leverage": 0.5613193595409394,
+      "breadth": 2.478229036399191,
+      "corpus_frequency": 1985,
+      "score": 0.8631061259207211
+    },
+    {
+      "piece": "▁fat",
+      "readable": "fat",
+      "ablation_leverage": 0.5612367403507232,
+      "breadth": 2.58926413755594,
+      "corpus_frequency": 1758,
+      "score": 0.863086691187866
+    },
+    {
+      "piece": "itation",
+      "readable": "itation",
+      "ablation_leverage": 0.5604716378450394,
+      "breadth": 2.725457566365839,
+      "corpus_frequency": 1172,
+      "score": 0.8629065780374697
+    },
+    {
+      "piece": "ware",
+      "readable": "ware",
+      "ablation_leverage": 0.5602532428503036,
+      "breadth": 2.440591787766866,
+      "corpus_frequency": 2732,
+      "score": 0.8628551204563453
+    },
+    {
+      "piece": "ric",
+      "readable": "ric",
+      "ablation_leverage": 0.5601037180423737,
+      "breadth": 2.2302798049186157,
+      "corpus_frequency": 14791,
+      "score": 0.8628198782951187
+    },
+    {
+      "piece": "il",
+      "readable": "il",
+      "ablation_leverage": 0.5600789725780487,
+      "breadth": 2.396415921100541,
+      "corpus_frequency": 116764,
+      "score": 0.8628140450202051
+    },
+    {
+      "piece": "ook",
+      "readable": "ook",
+      "ablation_leverage": 0.5599134016036987,
+      "breadth": 2.692191212223179,
+      "corpus_frequency": 17921,
+      "score": 0.8627750081638369
+    },
+    {
+      "piece": "▁earn",
+      "readable": "earn",
+      "ablation_leverage": 0.5599000215530395,
+      "breadth": 2.5428352515548975,
+      "corpus_frequency": 4440,
+      "score": 0.8627718530300204
+    },
+    {
+      "piece": "ape",
+      "readable": "ape",
+      "ablation_leverage": 0.5596575093269348,
+      "breadth": 2.7706985977293024,
+      "corpus_frequency": 5530,
+      "score": 0.8627146534389414
+    },
+    {
+      "piece": "lo",
+      "readable": "lo",
+      "ablation_leverage": 0.5595950770378113,
+      "breadth": 2.534499931412561,
+      "corpus_frequency": 94905,
+      "score": 0.862699923978192
+    },
+    {
+      "piece": "ined",
+      "readable": "ined",
+      "ablation_leverage": 0.5595558464527131,
+      "breadth": 2.5871933397618485,
+      "corpus_frequency": 4436,
+      "score": 0.8626906675843901
+    },
+    {
+      "piece": "iation",
+      "readable": "iation",
+      "ablation_leverage": 0.5594027280807495,
+      "breadth": 2.6089014166003084,
+      "corpus_frequency": 1898,
+      "score": 0.8626545333388298
+    },
+    {
+      "piece": "ared",
+      "readable": "ared",
+      "ablation_leverage": 0.5593162226676941,
+      "breadth": 2.586136990147989,
+      "corpus_frequency": 2838,
+      "score": 0.8626341146436981
+    },
+    {
+      "piece": "▁type",
+      "readable": "type",
+      "ablation_leverage": 0.5589049565792084,
+      "breadth": 2.8067827822160494,
+      "corpus_frequency": 2185,
+      "score": 0.8625369963818031
+    },
+    {
+      "piece": "ore",
+      "readable": "ore",
+      "ablation_leverage": 0.5584015774726868,
+      "breadth": 2.7788253548523327,
+      "corpus_frequency": 32903,
+      "score": 0.8624180288172234
+    },
+    {
+      "piece": "org",
+      "readable": "org",
+      "ablation_leverage": 0.5581140613555908,
+      "breadth": 2.28837913424913,
+      "corpus_frequency": 6071,
+      "score": 0.8623500297291584
+    },
+    {
+      "piece": "▁things",
+      "readable": "things",
+      "ablation_leverage": 0.5580908131599426,
+      "breadth": 2.453252124926175,
+      "corpus_frequency": 3173,
+      "score": 0.8623445298767916
+    },
+    {
+      "piece": "ival",
+      "readable": "ival",
+      "ablation_leverage": 0.5579898738861084,
+      "breadth": 2.391372051029466,
+      "corpus_frequency": 1447,
+      "score": 0.862320647899619
+    }
+  ]
+}

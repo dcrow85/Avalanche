@@ -19,8 +19,10 @@ Active frontier:
 - altitude as graveyard-reading intervention
 - offline probes as a second-order instrument over accumulated state
 
-Current live branch:
+Current completed branches of interest:
 - four-run calorimeter batch in `v471-phase2b-cal`
+- Qwen full witness in `v471-phase2b-cal-qwen`
+- first Displace pair in `v471-run1-displace-a` and `v471-run1-displace-ctrl`
 
 Current read:
 - negative-space altitude is real, but its late effect depends on basin geometry
@@ -28,6 +30,8 @@ Current read:
 - current batch split:
   - Haiku climbs local ridges more efficiently
   - GPT-5.4-mini excavates more densely inside a narrow extremum ontology
+  - Qwen forms a cheaper, more compact predecessor-count / inversion ontology
+  - Displace can move a run off parity, but naive synthetic injection can over-carve the next horizon
 
 ## What Feels Settled
 
@@ -72,6 +76,14 @@ Major recent additions:
 
 Most important recent finding:
 - targeted synthetic intermediate tombstones can extend the visible horizon of the graveyard toward cycle structure
+
+Most important Monday update:
+- the first completed Displace pair did not escape, but it produced a sharper design lesson: positive Displace without synthetic injection preserved more late reaching than the injected branch, while the injected branch collapsed earlier into a shallow rank/position surrogate
+
+New post-mortem diagnostic:
+- terminal `probe_g_distance` now looks useful for classifying how a run died:
+  - narrow gap = theory and graveyard collapsed into the same shallow basin
+  - wide gap = theory still running ahead of graveyard at termination
 
 New Bridge 2 finding:
 - thermodynamic activity measures search motion, not automatically conceptual ascent. The GPT `V4.7.1` witnesses built large graveyards and high work counts while remaining trapped inside extremum / record ontologies.

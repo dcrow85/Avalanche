@@ -1,0 +1,20 @@
+# Binary data shards (too large for git)
+parameter-golf/data/datasets/
+parameter-golf/data/tokenizers/
+
+# Model checkpoints
+*.ptz
+*.pt
+*.bin
+
+# Nested git repo
+parameter-golf/.git/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Large corpus sample
+data/corpus_sample.txt
+data/large_bpe.model
+data/large_bpe.vocab

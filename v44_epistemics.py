@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import re
 from pathlib import Path
 
 STATUS_VALUES = {"ACTIVE", "SUPERSEDED"}
@@ -15,16 +17,66 @@ MAX_LOCALS = 4
 MAX_BASIN_WORDS = 15
 MAX_FAMILY_WORDS = 25
 MAX_LOCAL_HYPOTHESIS_WORDS = 15
+ANCHOR_REPLACEMENT_SYNONYMS = {
+    "rank": {"rank", "sorted", "order"},
+    "cycle": {"cycle", "orbit"},
+    "inversion": {"inversion"},
+    "adjacent": {"adjacent", "neighbor", "next"},
+    "minimum": {"minimum", "min"},
+    "threshold": {"threshold"},
+    "value": {"value"},
+}
+ANCHOR_GENERIC_KEYWORDS = {
+    "based",
+    "negation",
+    "determines",
+    "comparison",
+    "theory",
+    "replacement",
+    "basin",
+    "element",
+}
 
 
 def blank_dead_ends() -> dict[str, list[dict[str, object]]]:
     return {"basins": [], "families": [], "locals": []}
 
 
+def blank_anchor_lock() -> dict[str, object]:
+    return {
+        "active": False,
+        "locked_basin_id": None,
+        "locked_basin_hash": None,
+        "replacement_theory_type": None,
+        "lock_activated_cycle": None,
+        "lock_cleared_cycle": None,
+    }
+
+
+def blank_anchor_ledger() -> dict[str, object]:
+    return {
+        "active": False,
+        "baseline_cycle": None,
+        "baseline_fixed_vector": [],
+        "baseline_fixed_score": None,
+        "last_cycle": None,
+        "last_fixed_vector": [],
+        "last_fixed_score": None,
+        "positive_flip_counts": {},
+        "negative_flip_counts": {},
+        "coverage_cases": [],
+        "recurring_positive_cases": [],
+        "recurring_negative_cases": [],
+        "ready_for_replacement": False,
+    }
+
+
 def blank_state() -> dict[str, object]:
     return {
         "active": blank_dead_ends(),
         "registry": {"basins": {}, "families": {}, "arrays": {}},
+        "anchor_lock": blank_anchor_lock(),
+        "anchor_ledger": blank_anchor_ledger(),
     }
 
 
@@ -45,6 +97,18 @@ def load_state(path: str) -> dict[str, object]:
         registry.setdefault("basins", {})
         registry.setdefault("families", {})
         registry.setdefault("arrays", {})
+    anchor_lock = state.setdefault("anchor_lock", blank_anchor_lock())
+    if isinstance(anchor_lock, dict):
+        for key, value in blank_anchor_lock().items():
+            anchor_lock.setdefault(key, value)
+    else:
+        state["anchor_lock"] = blank_anchor_lock()
+    anchor_ledger = state.setdefault("anchor_ledger", blank_anchor_ledger())
+    if isinstance(anchor_ledger, dict):
+        for key, value in blank_anchor_ledger().items():
+            anchor_ledger.setdefault(key, value)
+    else:
+        state["anchor_ledger"] = blank_anchor_ledger()
     return state
 
 
@@ -111,6 +175,187 @@ def tracked_array_signatures(dead_ends: dict[str, list[dict[str, object]]]) -> s
         if arr is not None:
             signatures.add(array_signature(arr))
     return signatures
+
+
+def _find_item_by_id(items: list[dict[str, object]], item_id: str) -> dict[str, object] | None:
+    for item in items:
+        if str(item.get("id", "")) == item_id:
+            return copy.deepcopy(item)
+    return None
+
+
+def _locked_basin_bundle(
+    dead_ends: dict[str, list[dict[str, object]]],
+    basin_id: str,
+) -> dict[str, object] | None:
+    basin = _find_item_by_id(dead_ends.get("basins", []), basin_id)
+    if basin is None:
+        return None
+    cited_ids = _normalize_id_list(basin.get("cited_families", []))
+    families = [
+        family
+        for family_id in sorted(cited_ids)
+        if (family := _find_item_by_id(dead_ends.get("families", []), family_id)) is not None
+    ]
+    return {
+        "basin": basin,
+        "families": families,
+    }
+
+
+def compute_basin_lock_hash_from_dead_ends(
+    dead_ends: dict[str, list[dict[str, object]]],
+    basin_id: str,
+) -> str | None:
+    bundle = _locked_basin_bundle(dead_ends, basin_id)
+    if bundle is None:
+        return None
+    canonical = json.dumps(bundle, sort_keys=True, ensure_ascii=True)
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def activate_anchor_lock(
+    state: dict[str, object],
+    *,
+    locked_basin_id: str,
+    replacement_theory_type: str,
+    cycle: int,
+) -> dict[str, object]:
+    merged = copy.deepcopy(state)
+    anchor_lock = merged.setdefault("anchor_lock", blank_anchor_lock())
+    if not isinstance(anchor_lock, dict):
+        anchor_lock = blank_anchor_lock()
+        merged["anchor_lock"] = anchor_lock
+    if anchor_lock.get("active"):
+        return merged
+    active = merged.get("active", blank_dead_ends())
+    if not isinstance(active, dict):
+        active = blank_dead_ends()
+        merged["active"] = active
+    locked_hash = compute_basin_lock_hash_from_dead_ends(active, locked_basin_id)
+    if locked_hash is None:
+        raise ValueError(f"Cannot activate anchor lock: basin `{locked_basin_id}` is not present.")
+    anchor_lock.update(
+        {
+            "active": True,
+            "locked_basin_id": locked_basin_id,
+            "locked_basin_hash": locked_hash,
+            "replacement_theory_type": replacement_theory_type,
+            "lock_activated_cycle": cycle,
+            "lock_cleared_cycle": None,
+        }
+    )
+    return merged
+
+
+def anchor_lock_status_fields(state: dict[str, object]) -> dict[str, object]:
+    anchor_lock = state.get("anchor_lock", {})
+    if not isinstance(anchor_lock, dict):
+        anchor_lock = blank_anchor_lock()
+    if anchor_lock.get("active"):
+        status = "unclosed"
+    elif anchor_lock.get("lock_cleared_cycle") is not None:
+        status = "cleared"
+    else:
+        status = "inactive"
+    return {
+        "anchor_lock_status": status,
+        "locked_basin_id": anchor_lock.get("locked_basin_id"),
+        "replacement_theory_type": anchor_lock.get("replacement_theory_type"),
+        "lock_activated_cycle": anchor_lock.get("lock_activated_cycle"),
+        "lock_cleared_cycle": anchor_lock.get("lock_cleared_cycle"),
+    }
+
+
+def _anchor_lock_content_snippet(previous_active: dict[str, list[dict[str, object]]], basin_id: str) -> str:
+    bundle = _locked_basin_bundle(previous_active, basin_id)
+    if bundle is None:
+        return "{}"
+    return json.dumps(bundle, sort_keys=True, ensure_ascii=True)
+
+
+def _replacement_keywords(replacement_theory_type: str) -> set[str]:
+    tokens = {
+        token
+        for token in re.findall(r"[a-z]+", replacement_theory_type.lower())
+        if token and token not in ANCHOR_GENERIC_KEYWORDS
+    }
+    keywords: set[str] = set()
+    for token in tokens:
+        keywords.update(ANCHOR_REPLACEMENT_SYNONYMS.get(token, {token}))
+    return keywords or tokens
+
+
+def _replacement_matches_theory_type(
+    dead_ends: dict[str, list[dict[str, object]]],
+    replacement_basins: list[dict[str, object]],
+    replacement_theory_type: str,
+) -> bool:
+    keywords = _replacement_keywords(replacement_theory_type)
+    if not keywords:
+        return True
+    text_parts: list[str] = []
+    for basin in replacement_basins:
+        text_parts.append(str(basin.get("claim", "")))
+        for family_id in _normalize_id_list(basin.get("cited_families", [])):
+            family = _find_item_by_id(dead_ends.get("families", []), family_id)
+            if family is not None:
+                text_parts.append(str(family.get("claim", "")))
+    replacement_text = " ".join(text_parts).lower()
+    return any(keyword in replacement_text for keyword in keywords)
+
+
+def _validate_anchor_lock(
+    dead_ends: dict[str, list[dict[str, object]]],
+    previous_active: dict[str, list[dict[str, object]]],
+    state: dict[str, object],
+) -> list[str]:
+    anchor_lock = state.get("anchor_lock", {})
+    if not isinstance(anchor_lock, dict) or not anchor_lock.get("active"):
+        return []
+    locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+    locked_hash = str(anchor_lock.get("locked_basin_hash", "") or "")
+    replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "")
+    if not locked_basin_id or not locked_hash:
+        return []
+
+    locked_basin = _find_item_by_id(dead_ends.get("basins", []), locked_basin_id)
+    if locked_basin is None:
+        return []
+
+    replacement_basins = [
+        basin
+        for basin in dead_ends.get("basins", [])
+        if str(basin.get("id", "")) != locked_basin_id and str(basin.get("status", "ACTIVE")) == "ACTIVE"
+    ]
+    locked_content = _anchor_lock_content_snippet(previous_active, locked_basin_id)
+
+    if str(locked_basin.get("status", "ACTIVE")) == "SUPERSEDED":
+        if not replacement_basins:
+            return [
+                "ANCHOR_LOCK_VIOLATION: "
+                f"Locked basin {locked_basin_id} superseded without replacement. "
+                "Assembly Gap prevented. Supersession requires concurrent replacement basin registration. "
+                f"Locked content: {locked_content}"
+            ]
+        if not _replacement_matches_theory_type(dead_ends, replacement_basins, replacement_theory_type):
+            return [
+                "ANCHOR_LOCK_VIOLATION: "
+                f'Replacement basin does not match designated replacement theory type "{replacement_theory_type}". '
+                "Supersession rejected. Original locked basin restored. "
+                f"Locked content: {locked_content}"
+            ]
+        return []
+
+    current_hash = compute_basin_lock_hash_from_dead_ends(dead_ends, locked_basin_id)
+    if current_hash != locked_hash:
+        return [
+            "ANCHOR_LOCK_VIOLATION: "
+            f"Locked basin {locked_basin_id} content modified without supersession-with-replacement. "
+            "Hash mismatch detected. Revert to locked content. "
+            f"Locked content: {locked_content}"
+        ]
+    return []
 
 
 def validate_dead_ends(
@@ -211,6 +456,9 @@ def validate_dead_ends(
                     f"[LINTER ERROR: CRITICAL MEMORY LOSS] {tier[:-1].capitalize()} ID `{item_id}` illegally dropped."
                 )
 
+    if not errors:
+        errors.extend(_validate_anchor_lock(dead_ends, previous_active, state))
+
     return errors
 
 
@@ -253,6 +501,28 @@ def merge_state(
             "last_seen_cycle": cycle,
             "seen_count": int(prior.get("seen_count", 0)) + 1,
         }
+
+    anchor_lock = merged.setdefault("anchor_lock", blank_anchor_lock())
+    if not isinstance(anchor_lock, dict):
+        anchor_lock = blank_anchor_lock()
+        merged["anchor_lock"] = anchor_lock
+    if anchor_lock.get("active"):
+        locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+        replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "")
+        locked_basin = _find_item_by_id(dead_ends.get("basins", []), locked_basin_id) if locked_basin_id else None
+        replacement_basins = [
+            basin
+            for basin in dead_ends.get("basins", [])
+            if str(basin.get("id", "")) != locked_basin_id and str(basin.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        if (
+            locked_basin is not None
+            and str(locked_basin.get("status", "ACTIVE")) == "SUPERSEDED"
+            and replacement_basins
+            and _replacement_matches_theory_type(dead_ends, replacement_basins, replacement_theory_type)
+        ):
+            anchor_lock["active"] = False
+            anchor_lock["lock_cleared_cycle"] = cycle
 
     return merged
 

@@ -577,6 +577,7 @@ def format_cycle_prompt(
     altitude_map: str | None = None,
     max_graveyard_entries: int | None = None,
     prompt_budget_tokens: int | None = None,
+    oracle_memory_note: str | None = None,
 ) -> list[dict[str, str]]:
     current_data = read_text(DATA_FILE) or "[]"
     current_opinions = read_text(OPINIONS_FILE)
@@ -790,6 +791,314 @@ def format_cycle_prompt(
             "Do not retreat to parity, identity, value-threshold, or other cheaper basins unless the oracle forces you there.\n"
             "Do not rewrite the theory back into inversion-count language if the workspace has already moved beyond it."
         )
+    elif altitude_mode == "anchor-v2":
+        active_basins = [
+            f"  - {str(basin.get('id', '?'))}: {str(basin.get('claim', '?'))}"
+            for basin in de_dict.get("basins", [])
+            if str(basin.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        active_families = [
+            f"  - {str(fam.get('id', '?'))}: {str(fam.get('claim', '?'))}"
+            for fam in de_dict.get("families", [])
+            if str(fam.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        active_basin_block = "\n".join(active_basins) if active_basins else "  (none)"
+        active_family_block = "\n".join(active_families) if active_families else "  (none)"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR WINDOW (V2): Commit to the theory you already hold.\n\n"
+            f"Confirmed graveyard basins:\n{active_basin_block}\n\n"
+            f"Confirmed active families:\n{active_family_block}\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "This window is not for exploration. It is only for submitting the theory you already believe.\n\n"
+            "Required task:\n"
+            "  1. Restate the current workspace theory in one precise sentence.\n"
+            "  2. Write exactly one solver implementing that theory as cleanly and literally as possible.\n\n"
+            "Interpretation rule:\n"
+            "  - If the solver fails, that failure is the evidence.\n"
+            "  - If it partially passes, keep the same theory and tighten the implementation.\n"
+            "  - Do not branch.\n\n"
+            "Hard constraints:\n"
+            "  - Do not propose alternative theories.\n"
+            "  - Do not add any new basin ids or family ids.\n"
+            "  - Do not rewrite the graveyard unless direct oracle contradiction forces supersession of an existing active item.\n"
+            "  - At most one supersession is allowed, and only if directly oracle-forced.\n"
+            "  - Do not retreat to identity, parity, value-threshold, suffix heuristics, or other cheaper basins unless the oracle directly forces that conclusion.\n\n"
+            "Update opinions_md to name:\n"
+            "  - the current graveyard-confirmed basin\n"
+            "  - the current workspace theory\n"
+            "  - the exact solver commitment being submitted now\n"
+            "Keep the statement concrete. No side branches. No backup hypothesis."
+        )
+    elif altitude_mode == "anchor-v3":
+        active_basins = [
+            f"  - {str(basin.get('id', '?'))}: {str(basin.get('claim', '?'))}"
+            for basin in de_dict.get("basins", [])
+            if str(basin.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        active_families = [
+            f"  - {str(fam.get('id', '?'))}: {str(fam.get('claim', '?'))}"
+            for fam in de_dict.get("families", [])
+            if str(fam.get("status", "ACTIVE")) == "ACTIVE"
+        ]
+        active_basin_block = "\n".join(active_basins) if active_basins else "  (none)"
+        active_family_block = "\n".join(active_families) if active_families else "  (none)"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR WINDOW (V3): Close the assembly gap without clearing the contrast surface too early.\n\n"
+            f"Confirmed active graveyard basins:\n{active_basin_block}\n\n"
+            f"Confirmed active graveyard families:\n{active_family_block}\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "This window is not for exploration. It is a two-phase landing operation.\n\n"
+            "Phase 1: accumulate oracle contact for the workspace theory while keeping the confirmed basin active as the contrast surface.\n"
+            "Phase 2: only when the replacement is ready, supersede the confirmed basin and record the replacement in the same graveyard event.\n\n"
+            "Required task:\n"
+            "  1. Restate the current workspace theory in one precise sentence.\n"
+            "  2. Write exactly one solver implementing that theory as literally as possible.\n"
+            "  3. Name one concrete oracle contact that would tighten or falsify the workspace theory against the confirmed basin.\n\n"
+            "Interpretation rule:\n"
+            "  - If the solver fails, that failure is evidence for the replacement record.\n"
+            "  - If it partially passes, keep the same theory and tighten the implementation.\n"
+            "  - Do not branch into alternative theories.\n\n"
+            "Hard constraints:\n"
+            "  - Do not propose alternative theories.\n"
+            "  - Do not supersede B2, F5, or F7 until you are ready to record their replacement in the same operation.\n"
+            "  - Keep the inversion-count basin active as the explicit contrast surface until replacement is ready.\n"
+            "  - Add at most one new basin id, and only if it replaces a named confirmed basin in the same graveyard event.\n"
+            "  - Do not add extra family ids or expand schema sideways.\n"
+            "  - Do not retreat to identity, parity, value-threshold, suffix heuristics, or other cheaper basins unless the oracle directly forces that conclusion.\n\n"
+            "Update opinions_md to name:\n"
+            "  - the active contrast basin you are keeping in place\n"
+            "  - the workspace theory you are trying to land\n"
+            "  - the specific oracle contact you are using to accumulate evidence\n"
+            "  - the exact condition under which supersession-with-replacement becomes justified\n"
+            "  - the replacement basin label you would record if the evidence is sufficient\n\n"
+            "Do not clear the old basin unless the replacement can land in the same event."
+        )
+    elif altitude_mode == "anchor-v4":
+        anchor_lock = current_state.get("anchor_lock", {})
+        if not isinstance(anchor_lock, dict):
+            anchor_lock = {}
+        locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+        replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+        locked_basin = next(
+            (
+                basin
+                for basin in de_dict.get("basins", [])
+                if str(basin.get("id", "")) == locked_basin_id
+            ),
+            None,
+        )
+        locked_claim = str(locked_basin.get("claim", "?")) if isinstance(locked_basin, dict) else "?"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR WINDOW — LOCKED (V4)\n\n"
+            f"Contrast basin: {locked_basin_id or '?'} ({locked_claim}) — content locked by validator.\n"
+            "You cannot modify this basin's content.\n"
+            f'You cannot supersede it without simultaneously recording a replacement matching "{replacement_theory_type}".\n'
+            f"Replacement theory type required: {replacement_theory_type}.\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "Your task is to accumulate oracle contact against your rank-based theory until you have enough evidence "
+            "to record a complete replacement basin.\n"
+            "Submit rank-based solvers. Take the failures as evidence. Tighten the implementation.\n"
+            "When the oracle contact is sufficient, supersede the locked basin and record the replacement in the same operation.\n\n"
+            "Hard constraints:\n"
+            "  - Do not modify the locked basin content.\n"
+            "  - Do not supersede the locked basin without a replacement.\n"
+            "  - Do not retreat to adjacent-comparison, right-neighbor, right-side minimum, or value-threshold logic.\n"
+            "  - Do not introduce alternative theories during the lock window.\n\n"
+            "Update opinions_md to name:\n"
+            "  - the locked contrast basin\n"
+            "  - the current rank-based workspace theory\n"
+            "  - the oracle evidence you are accumulating\n"
+            "  - the exact condition that would justify supersession-with-replacement\n"
+            "  - the replacement basin label you intend to record\n\n"
+            "The validator will reject any in-place mutation of the locked basin."
+        )
+    elif altitude_mode == "anchor-v4.5":
+        anchor_lock = current_state.get("anchor_lock", {})
+        if not isinstance(anchor_lock, dict):
+            anchor_lock = {}
+        locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+        replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+        locked_basin = next(
+            (
+                basin
+                for basin in de_dict.get("basins", [])
+                if str(basin.get("id", "")) == locked_basin_id
+            ),
+            None,
+        )
+        locked_claim = str(locked_basin.get("claim", "?")) if isinstance(locked_basin, dict) else "?"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR WINDOW — LOCKED (V4.5)\n\n"
+            f"Contrast basin: {locked_basin_id or '?'} ({locked_claim}) — content locked by validator.\n"
+            "You cannot modify this basin's content.\n"
+            f'You cannot supersede it without simultaneously recording a replacement matching "{replacement_theory_type}".\n'
+            f"Replacement theory type required: {replacement_theory_type}.\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "This version adds persisted recent oracle memory during locked GRIND cycles.\n"
+            "Read that memory as cumulative evidence. Do not discard recurring case-level differences across cycles.\n\n"
+            "Your task is to accumulate oracle contact against your rank-based theory until you have enough evidence "
+            "to record a complete replacement basin.\n"
+            "Submit rank-based solvers. Tighten the same theory using remembered oracle differences.\n"
+            "When the oracle contact is sufficient, supersede the locked basin and record the replacement in the same operation.\n\n"
+            "Hard constraints:\n"
+            "  - Do not modify the locked basin content.\n"
+            "  - Do not supersede the locked basin without a replacement.\n"
+            "  - Do not retreat to adjacent-comparison, right-neighbor, right-side minimum, or value-threshold logic.\n"
+            "  - Do not introduce alternative theories during the lock window.\n\n"
+            "Update opinions_md to name:\n"
+            "  - the locked contrast basin\n"
+            "  - the current rank-based workspace theory\n"
+            "  - the remembered oracle differences you are using\n"
+            "  - the exact condition that would justify supersession-with-replacement\n"
+            "  - the replacement basin label you intend to record\n\n"
+            "The validator will reject any in-place mutation of the locked basin."
+        )
+    elif altitude_mode == "anchor-v4.6":
+        anchor_lock = current_state.get("anchor_lock", {})
+        if not isinstance(anchor_lock, dict):
+            anchor_lock = {}
+        locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+        replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+        locked_basin = next(
+            (
+                basin
+                for basin in de_dict.get("basins", [])
+                if str(basin.get("id", "")) == locked_basin_id
+            ),
+            None,
+        )
+        locked_claim = str(locked_basin.get("claim", "?")) if isinstance(locked_basin, dict) else "?"
+        current_workspace = current_opinions.strip() or "(empty)"
+        altitude_instruction = (
+            "\n\nANCHOR WINDOW — LOCKED (V4.6)\n\n"
+            f"Contrast basin: {locked_basin_id or '?'} ({locked_claim}) — content locked by validator.\n"
+            "You cannot modify this basin's content.\n"
+            f'You cannot supersede it without simultaneously recording a replacement matching "{replacement_theory_type}".\n'
+            f"Replacement theory type required: {replacement_theory_type}.\n\n"
+            f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+            "This version adds only a minimal recent-oracle summary during locked GRIND cycles.\n"
+            "Read that summary as persisted recent telemetry, not as a new theory and not as a ledger.\n\n"
+            "Your task is to accumulate oracle contact against your rank-based theory under the existing lock.\n"
+            "Submit rank-based solvers. Tighten the same theory using the last three oracle results.\n"
+            "When the oracle contact is sufficient, supersede the locked basin and record the replacement in the same operation.\n\n"
+            "Hard constraints:\n"
+            "  - Do not modify the locked basin content.\n"
+            "  - Do not supersede the locked basin without a replacement.\n"
+            "  - Do not retreat to adjacent-comparison, right-neighbor, right-side minimum, value-threshold, or max-only surrogates.\n"
+            "  - Do not introduce alternative theories during the lock window.\n\n"
+            "Update opinions_md to name:\n"
+            "  - the locked contrast basin\n"
+            "  - the current rank-based workspace theory\n"
+            "  - the recent oracle trend you are using\n"
+            "  - the exact condition that would justify supersession-with-replacement\n"
+            "  - the replacement basin label you intend to record\n\n"
+            "The validator will reject any in-place mutation of the locked basin."
+        )
+    elif altitude_mode in {"anchor-v5", "anchor-v5.1", "anchor-v5.2"}:
+        anchor_lock = current_state.get("anchor_lock", {})
+        anchor_ledger = current_state.get("anchor_ledger", {})
+        if not isinstance(anchor_lock, dict):
+            anchor_lock = {}
+        if not isinstance(anchor_ledger, dict):
+            anchor_ledger = {}
+        locked_basin_id = str(anchor_lock.get("locked_basin_id", "") or "")
+        replacement_theory_type = str(anchor_lock.get("replacement_theory_type", "") or "rank-based negation")
+        ledger_ready = bool(anchor_ledger.get("ready_for_replacement"))
+        locked_basin = next(
+            (
+                basin
+                for basin in de_dict.get("basins", [])
+                if str(basin.get("id", "")) == locked_basin_id
+            ),
+            None,
+        )
+        locked_claim = str(locked_basin.get("claim", "?")) if isinstance(locked_basin, dict) else "?"
+        current_workspace = current_opinions.strip() or "(empty)"
+        if altitude_mode in {"anchor-v5.1", "anchor-v5.2"} and ledger_ready:
+            ready_header = (
+                "\n\nREPLACEMENT ATTEMPT MODE — LEDGER READY (V5.2)\n\n"
+                if altitude_mode == "anchor-v5.2"
+                else "\n\nREPLACEMENT ATTEMPT MODE — LEDGER READY (V5.1)\n\n"
+            )
+            transaction_rules = ""
+            if altitude_mode == "anchor-v5.2":
+                transaction_rules = (
+                    "\nReplacement Transaction Rules:\n"
+                    "  1. NEVER modify B2, F5, or F7. They are locked.\n"
+                    "  2. Write B3 as a NEW basin. Do not edit B2.\n"
+                    "  3. B3 may contain AT MOST 3 families.\n"
+                    "  4. Create B3 and mark B2 as SUPERSEDED in the same dead_ends payload.\n"
+                    "  5. Do not drop or rename F5 or F7 — they remain as-is under B2.\n\n"
+                )
+            altitude_instruction = (
+                f"{ready_header}"
+                f"Contrast basin: {locked_basin_id or '?'} ({locked_claim}) — content locked by validator.\n"
+                "You cannot modify this basin's content.\n"
+                f'You cannot supersede it without simultaneously recording a replacement matching "{replacement_theory_type}".\n'
+                f"Replacement theory type required: {replacement_theory_type}.\n\n"
+                f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+                "The validator-written differential oracle ledger is READY now.\n"
+                "This overrides any earlier NOT READY statement in opinions.md.\n"
+                "You must now attempt supersession-with-replacement in this cycle.\n"
+                "Use the ledger's recurring positive flips as the replacement evidence.\n\n"
+                f"{transaction_rules}"
+                "Hard constraints:\n"
+                "  - Do not modify the locked basin content.\n"
+                "  - Do not supersede the locked basin without a replacement.\n"
+                "  - Do not retreat to adjacent-comparison, right-neighbor, right-side minimum, value-threshold, or position-only surrogates.\n"
+                "  - Do not introduce alternative theories during the lock window.\n\n"
+                "Update opinions_md to:\n"
+                "  - begin exactly with: Ledger status: READY\n"
+                "  - name the locked contrast basin\n"
+                "  - name the current replacement theory\n"
+                "  - name the recurring positive oracle differences the ledger preserves\n"
+                "  - name the replacement basin label you are attempting to record this cycle\n\n"
+                "The validator will reject any in-place mutation of the locked basin."
+            )
+        else:
+            window_label = (
+                "ANCHOR WINDOW — LOCKED (V5.2)"
+                if altitude_mode == "anchor-v5.2"
+                else "ANCHOR WINDOW — LOCKED (V5.1)"
+                if altitude_mode == "anchor-v5.1"
+                else "ANCHOR WINDOW — LOCKED (V5)"
+            )
+            opinions_prefix = (
+                "  - begin exactly with: Ledger status: NOT READY\n"
+                if altitude_mode in {"anchor-v5.1", "anchor-v5.2"}
+                else ""
+            )
+            altitude_instruction = (
+                f"\n\n{window_label}\n\n"
+                f"Contrast basin: {locked_basin_id or '?'} ({locked_claim}) — content locked by validator.\n"
+                "You cannot modify this basin's content.\n"
+                f'You cannot supersede it without simultaneously recording a replacement matching "{replacement_theory_type}".\n'
+                f"Replacement theory type required: {replacement_theory_type}.\n\n"
+                f"Current workspace theory from opinions.md:\n{current_workspace}\n\n"
+                "This version adds a validator-written differential oracle ledger during locked GRIND cycles.\n"
+                "Treat the ledger as cumulative evidence relative to the lock-window baseline.\n"
+                "Use recurring positive flips to tighten the same theory rather than inventing a surrogate.\n\n"
+                "Your task is to accumulate replacement-grade oracle contact under lock.\n"
+                "Submit rank-based solvers. Tighten the same theory using the ledger's recurring differences.\n"
+                "Only when the ledger marks the threshold READY should you attempt supersession-with-replacement.\n\n"
+                "Hard constraints:\n"
+                "  - Do not modify the locked basin content.\n"
+                "  - Do not supersede the locked basin without a replacement.\n"
+                "  - Do not retreat to adjacent-comparison, right-neighbor, right-side minimum, value-threshold, or position-only surrogates.\n"
+                "  - Do not introduce alternative theories during the lock window.\n\n"
+                "Update opinions_md to name:\n"
+                f"{opinions_prefix}"
+                "  - the locked contrast basin\n"
+                "  - the current replacement theory\n"
+                "  - the recurring positive oracle differences the ledger preserves\n"
+                "  - whether the ledger threshold is READY or NOT READY\n"
+                "  - the replacement basin label you would record if it is READY\n\n"
+                "The validator will reject any in-place mutation of the locked basin."
+            )
 
     def _truncate_for_prompt(text: str, max_chars: int | None) -> str:
         if max_chars is None or len(text) <= max_chars:
@@ -849,6 +1158,11 @@ def format_cycle_prompt(
             if altitude_map_prompt
             else ""
         )
+        oracle_memory_section = (
+            f"\n# lock_window_oracle_memory\n{oracle_memory_note.strip()}\n"
+            if oracle_memory_note and oracle_memory_note.strip()
+            else ""
+        )
         user_prompt = (
             f"{hud_prefix}"
             f"{instruction}\n"
@@ -858,6 +1172,7 @@ def format_cycle_prompt(
             f"\n# dead-ends.json\n{compressed_de}\n"
             f"{hunches_section}"
             f"{altitude_map_section}"
+            f"{oracle_memory_section}"
             f"\n# historical_ids\n{history_summary(current_state)}\n"
             f"{altitude_instruction}"
         )
@@ -1207,6 +1522,7 @@ def request_cycle_output(
     altitude_map: str | None = None,
     max_graveyard_entries: int | None = None,
     prompt_budget_tokens: int | None = None,
+    oracle_memory_note: str | None = None,
 ) -> dict[str, object]:
     messages = format_cycle_prompt(
         cycle, max_cycles, mode, current_state, failure_report,
@@ -1215,6 +1531,7 @@ def request_cycle_output(
         altitude_map=altitude_map,
         max_graveyard_entries=max_graveyard_entries,
         prompt_budget_tokens=prompt_budget_tokens,
+        oracle_memory_note=oracle_memory_note,
     )
     if required_falsifier is not None:
         messages = messages + [

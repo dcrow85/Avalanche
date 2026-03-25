@@ -1,0 +1,17 @@
+{
+  "beta_0.0": {
+    "bytes_per_token": 2.4462964756112116,
+    "seq_ratio": 1.0,
+    "iterations": 2000
+  },
+  "beta_0.3": {
+    "bytes_per_token": 1.704428174930456,
+    "seq_ratio": 1.4352593506681648,
+    "iterations": 2870
+  },
+  "beta_1.0": {
+    "bytes_per_token": 1.0507390082139967,
+    "seq_ratio": 2.3281675625323235,
+    "iterations": 4656
+  }
+}
