@@ -1,0 +1,299 @@
+{
+  "model": "roberta-base",
+  "description": "Bidirectional control for causal light-cone probe",
+  "n_templates": 4,
+  "n_connectives": 22,
+  "results": [
+    {
+      "word": "because",
+      "category": "backward_causal",
+      "mean_daa": 0.01081093326476625,
+      "mean_conn_asymmetry": -0.006328964709395708,
+      "mean_right_absorbs_conn": 0.027677465695887804,
+      "mean_left_absorbs_conn": 0.027331952936947346,
+      "mean_conn_absorbs_left": 0.02223242772743106,
+      "mean_conn_absorbs_right": 0.021858752705156803,
+      "n_templates": 4,
+      "std_daa": 0.10048014008187338
+    },
+    {
+      "word": "since",
+      "category": "backward_causal",
+      "mean_daa": 0.11462530207919165,
+      "mean_conn_asymmetry": 0.14717934101690103,
+      "mean_right_absorbs_conn": 0.03895888943225145,
+      "mean_left_absorbs_conn": 0.030690040439367294,
+      "mean_conn_absorbs_left": 0.022947875782847404,
+      "mean_conn_absorbs_right": 0.03163226507604122,
+      "n_templates": 4,
+      "std_daa": 0.08576423101178433
+    },
+    {
+      "word": "after",
+      "category": "backward_causal",
+      "mean_daa": 0.151619424483098,
+      "mean_conn_asymmetry": 0.24659083559896305,
+      "mean_right_absorbs_conn": 0.039419922046363354,
+      "mean_left_absorbs_conn": 0.028641660697758198,
+      "mean_conn_absorbs_left": 0.022492764983326197,
+      "mean_conn_absorbs_right": 0.03901211265474558,
+      "n_templates": 4,
+      "std_daa": 0.07777630850647035
+    },
+    {
+      "word": "when",
+      "category": "backward_causal",
+      "mean_daa": 0.11108897343285024,
+      "mean_conn_asymmetry": 0.10198151190750963,
+      "mean_right_absorbs_conn": 0.03632749803364277,
+      "mean_left_absorbs_conn": 0.029325103852897882,
+      "mean_conn_absorbs_left": 0.023319181986153126,
+      "mean_conn_absorbs_right": 0.029107247944921255,
+      "n_templates": 4,
+      "std_daa": 0.079821440150669
+    },
+    {
+      "word": "while",
+      "category": "backward_causal",
+      "mean_daa": 0.16248491505205626,
+      "mean_conn_asymmetry": 0.15349252624324436,
+      "mean_right_absorbs_conn": 0.03841010760515928,
+      "mean_left_absorbs_conn": 0.02773393550887704,
+      "mean_conn_absorbs_left": 0.02330851089209318,
+      "mean_conn_absorbs_right": 0.0317996758967638,
+      "n_templates": 4,
+      "std_daa": 0.06844437642140656
+    },
+    {
+      "word": "whether",
+      "category": "backward_causal",
+      "mean_daa": 0.05883562234685988,
+      "mean_conn_asymmetry": 0.04738752771382791,
+      "mean_right_absorbs_conn": 0.031934416852891445,
+      "mean_left_absorbs_conn": 0.028538065496832132,
+      "mean_conn_absorbs_left": 0.02425017487257719,
+      "mean_conn_absorbs_right": 0.026603215374052525,
+      "n_templates": 4,
+      "std_daa": 0.06221546948356776
+    },
+    {
+      "word": "until",
+      "category": "backward_causal",
+      "mean_daa": 0.055368651058286394,
+      "mean_conn_asymmetry": 0.02306382342727118,
+      "mean_right_absorbs_conn": 0.03293780842795968,
+      "mean_left_absorbs_conn": 0.029457793571054935,
+      "mean_conn_absorbs_left": 0.023796002380549908,
+      "mean_conn_absorbs_right": 0.024546874687075615,
+      "n_templates": 4,
+      "std_daa": 0.08830472334258335
+    },
+    {
+      "word": "so",
+      "category": "forward_causal",
+      "mean_daa": 0.09695665675633588,
+      "mean_conn_asymmetry": 0.1023036774763443,
+      "mean_right_absorbs_conn": 0.03325166692957282,
+      "mean_left_absorbs_conn": 0.027268489822745323,
+      "mean_conn_absorbs_left": 0.022996663581579924,
+      "mean_conn_absorbs_right": 0.027498009614646435,
+      "n_templates": 4,
+      "std_daa": 0.060579620797725255
+    },
+    {
+      "word": "before",
+      "category": "forward_causal",
+      "mean_daa": 0.1743032932919742,
+      "mean_conn_asymmetry": 0.22677887222851814,
+      "mean_right_absorbs_conn": 0.03968905098736286,
+      "mean_left_absorbs_conn": 0.027809286955744028,
+      "mean_conn_absorbs_left": 0.021303110290318727,
+      "mean_conn_absorbs_right": 0.03448307095095515,
+      "n_templates": 4,
+      "std_daa": 0.033781555607218565
+    },
+    {
+      "word": "still",
+      "category": "symmetric",
+      "mean_daa": 0.17241957471007885,
+      "mean_conn_asymmetry": 0.1854502787563293,
+      "mean_right_absorbs_conn": 0.03604855900630355,
+      "mean_left_absorbs_conn": 0.02523316629230976,
+      "mean_conn_absorbs_left": 0.022198768332600594,
+      "mean_conn_absorbs_right": 0.03276529582217336,
+      "n_templates": 4,
+      "std_daa": 0.09665979228110964
+    },
+    {
+      "word": "every",
+      "category": "symmetric",
+      "mean_daa": 0.10651609404056828,
+      "mean_conn_asymmetry": 0.2120766061272373,
+      "mean_right_absorbs_conn": 0.03283183556050062,
+      "mean_left_absorbs_conn": 0.026459630113095045,
+      "mean_conn_absorbs_left": 0.024829445872455835,
+      "mean_conn_absorbs_right": 0.039750455878674984,
+      "n_templates": 4,
+      "std_daa": 0.09401405660967649
+    },
+    {
+      "word": "both",
+      "category": "symmetric",
+      "mean_daa": 0.2185018271116278,
+      "mean_conn_asymmetry": 0.18149917908136842,
+      "mean_right_absorbs_conn": 0.034855919890105724,
+      "mean_left_absorbs_conn": 0.022482336033135653,
+      "mean_conn_absorbs_left": 0.028104268480092287,
+      "mean_conn_absorbs_right": 0.0408657998777926,
+      "n_templates": 4,
+      "std_daa": 0.07600447314323934
+    },
+    {
+      "word": "either",
+      "category": "symmetric",
+      "mean_daa": 0.13771819148755388,
+      "mean_conn_asymmetry": 0.14855548233046376,
+      "mean_right_absorbs_conn": 0.028491526376456022,
+      "mean_left_absorbs_conn": 0.02169113652780652,
+      "mean_conn_absorbs_left": 0.024844974745064974,
+      "mean_conn_absorbs_right": 0.03380931541323662,
+      "n_templates": 4,
+      "std_daa": 0.10198369687073207
+    },
+    {
+      "word": "such",
+      "category": "symmetric",
+      "mean_daa": 0.2190588484324304,
+      "mean_conn_asymmetry": 0.2126138058892351,
+      "mean_right_absorbs_conn": 0.042925973422825336,
+      "mean_left_absorbs_conn": 0.02648282004520297,
+      "mean_conn_absorbs_left": 0.024037709226831794,
+      "mean_conn_absorbs_right": 0.03976598335430026,
+      "n_templates": 4,
+      "std_daa": 0.1316434060821745
+    },
+    {
+      "word": "quite",
+      "category": "symmetric",
+      "mean_daa": 0.24168557851957256,
+      "mean_conn_asymmetry": 0.22563403783671934,
+      "mean_right_absorbs_conn": 0.03630584431812167,
+      "mean_left_absorbs_conn": 0.021979108452796936,
+      "mean_conn_absorbs_left": 0.024863522965461016,
+      "mean_conn_absorbs_right": 0.04108159523457289,
+      "n_templates": 4,
+      "std_daa": 0.0773976469312426
+    },
+    {
+      "word": "rather",
+      "category": "symmetric",
+      "mean_daa": 0.06130937002051048,
+      "mean_conn_asymmetry": 0.09176849893118974,
+      "mean_right_absorbs_conn": 0.031047089956700802,
+      "mean_left_absorbs_conn": 0.0274798097088933,
+      "mean_conn_absorbs_left": 0.023188882507383823,
+      "mean_conn_absorbs_right": 0.028126418590545654,
+      "n_templates": 4,
+      "std_daa": 0.07090902415189161
+    },
+    {
+      "word": "however",
+      "category": "relational",
+      "mean_daa": 0.10043878049226612,
+      "mean_conn_asymmetry": 0.11788105663607852,
+      "mean_right_absorbs_conn": 0.03196685668081045,
+      "mean_left_absorbs_conn": 0.026125082280486822,
+      "mean_conn_absorbs_left": 0.019401748199015856,
+      "mean_conn_absorbs_right": 0.024911500047892332,
+      "n_templates": 4,
+      "std_daa": 0.037830284135929024
+    },
+    {
+      "word": "between",
+      "category": "relational",
+      "mean_daa": 0.21898838103243132,
+      "mean_conn_asymmetry": 0.23178765355410527,
+      "mean_right_absorbs_conn": 0.044931573793292046,
+      "mean_left_absorbs_conn": 0.029017597436904907,
+      "mean_conn_absorbs_left": 0.03159929998219013,
+      "mean_conn_absorbs_right": 0.05149064539000392,
+      "n_templates": 4,
+      "std_daa": 0.0723001317739046
+    },
+    {
+      "word": "without",
+      "category": "relational",
+      "mean_daa": 0.18912217727349867,
+      "mean_conn_asymmetry": 0.14227385268034531,
+      "mean_right_absorbs_conn": 0.04766085743904114,
+      "mean_left_absorbs_conn": 0.03212999505922198,
+      "mean_conn_absorbs_left": 0.0272599458694458,
+      "mean_conn_absorbs_right": 0.037105726543813944,
+      "n_templates": 4,
+      "std_daa": 0.07790026002132462
+    },
+    {
+      "word": "through",
+      "category": "relational",
+      "mean_daa": 0.3234384282955858,
+      "mean_conn_asymmetry": 0.2866679333657753,
+      "mean_right_absorbs_conn": 0.050359747372567654,
+      "mean_left_absorbs_conn": 0.025160026270896196,
+      "mean_conn_absorbs_left": 0.028784293681383133,
+      "mean_conn_absorbs_right": 0.05274881049990654,
+      "n_templates": 4,
+      "std_daa": 0.12091422477020793
+    },
+    {
+      "word": "during",
+      "category": "relational",
+      "mean_daa": 0.3077691997372963,
+      "mean_conn_asymmetry": 0.30827459960464765,
+      "mean_right_absorbs_conn": 0.04960930813103914,
+      "mean_left_absorbs_conn": 0.025820037815719843,
+      "mean_conn_absorbs_left": 0.026421509217470884,
+      "mean_conn_absorbs_right": 0.052683429792523384,
+      "n_templates": 4,
+      "std_daa": 0.08558497665064739
+    },
+    {
+      "word": "against",
+      "category": "relational",
+      "mean_daa": 0.2920940419641363,
+      "mean_conn_asymmetry": 0.1900683426725585,
+      "mean_right_absorbs_conn": 0.06267897132784128,
+      "mean_left_absorbs_conn": 0.03415394201874733,
+      "mean_conn_absorbs_left": 0.037030020728707314,
+      "mean_conn_absorbs_right": 0.05446221027523279,
+      "n_templates": 4,
+      "std_daa": 0.10510762033897662
+    }
+  ],
+  "category_summary": {
+    "backward_causal": {
+      "mean_daa": 0.09497626024530124,
+      "std_daa": 0.05122817525388564,
+      "n": 7
+    },
+    "forward_causal": {
+      "mean_daa": 0.13562997502415503,
+      "std_daa": 0.038673318267819154,
+      "n": 2
+    },
+    "symmetric": {
+      "mean_daa": 0.16531564061747744,
+      "std_daa": 0.06168612522209512,
+      "n": 7
+    },
+    "relational": {
+      "mean_daa": 0.2386418347992024,
+      "std_daa": 0.0782780644549394,
+      "n": 6
+    }
+  },
+  "predictions": {
+    "because_flips_positive": true,
+    "so_stays_negative": false,
+    "backward_minus_forward": -0.04065371477885378
+  }
+}

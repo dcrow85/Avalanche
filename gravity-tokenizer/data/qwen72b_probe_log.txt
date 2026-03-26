@@ -1,0 +1,93 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+=== Qwen2.5-72B Depth Efficiency Probe ===
+CUDA devices: 2
+  GPU 0: NVIDIA A100-SXM4-80GB
+  GPU 1: NVIDIA A100-SXM4-80GB
+
+Loading Qwen2.5-72B (bf16, auto device map)...
+Loading weights:   0%|          | 0/963 [00:00<?, ?it/s]Loading weights:   0%|          | 1/963 [00:00<02:35,  6.17it/s]Loading weights:   1%|          | 6/963 [00:00<00:43, 21.76it/s]Loading weights:   2%|▏         | 17/963 [00:00<00:19, 48.12it/s]Loading weights:   3%|▎         | 28/963 [00:00<00:15, 61.73it/s]Loading weights:   4%|▎         | 35/963 [00:00<00:15, 60.91it/s]Loading weights:   4%|▍         | 42/963 [00:00<00:17, 53.41it/s]Loading weights:   6%|▌         | 53/963 [00:00<00:14, 61.47it/s]Loading weights:   7%|▋         | 64/963 [00:01<00:13, 66.14it/s]Loading weights:   7%|▋         | 71/963 [00:01<00:13, 64.09it/s]Loading weights:   8%|▊         | 78/963 [00:01<00:15, 55.33it/s]Loading weights:   9%|▉         | 89/963 [00:01<00:13, 63.65it/s]Loading weights:  10%|█         | 100/963 [00:01<00:12, 69.68it/s]Loading weights:  11%|█         | 108/963 [00:01<00:12, 67.79it/s]Loading weights:  12%|█▏        | 115/963 [00:01<00:14, 59.88it/s]Loading weights:  13%|█▎        | 125/963 [00:02<00:13, 63.46it/s]Loading weights:  14%|█▍        | 136/963 [00:02<00:11, 69.42it/s]Loading weights:  15%|█▍        | 144/963 [00:02<00:12, 68.11it/s]Loading weights:  16%|█▌        | 151/963 [00:02<00:13, 61.39it/s]Loading weights:  17%|█▋        | 160/963 [00:02<00:12, 66.28it/s]Loading weights:  17%|█▋        | 167/963 [00:02<00:12, 62.89it/s]Loading weights:  18%|█▊        | 174/963 [00:02<00:14, 56.00it/s]Loading weights:  19%|█▉        | 185/963 [00:03<00:12, 63.14it/s]Loading weights:  20%|██        | 196/963 [00:03<00:11, 68.75it/s]Loading weights:  21%|██        | 203/963 [00:03<00:11, 66.16it/s]Loading weights:  22%|██▏       | 210/963 [00:03<00:13, 57.90it/s]Loading weights:  23%|██▎       | 221/963 [00:03<00:11, 65.12it/s]Loading weights:  24%|██▍       | 232/963 [00:03<00:10, 70.32it/s]Loading weights:  25%|██▍       | 240/963 [00:03<00:10, 67.08it/s]Loading weights:  26%|██▌       | 247/963 [00:04<00:11, 61.65it/s]Loading weights:  27%|██▋       | 257/963 [00:04<00:10, 66.55it/s]Loading weights:  28%|██▊       | 268/963 [00:04<00:09, 72.50it/s]Loading weights:  29%|██▊       | 276/963 [00:04<00:09, 70.51it/s]Loading weights:  29%|██▉       | 284/963 [00:04<00:11, 60.36it/s]Loading weights:  30%|███       | 292/963 [00:04<00:10, 63.37it/s]Loading weights:  31%|███       | 299/963 [00:04<00:11, 59.99it/s]Loading weights:  32%|███▏      | 306/963 [00:05<00:12, 51.81it/s]Loading weights:  33%|███▎      | 317/963 [00:05<00:10, 61.33it/s]Loading weights:  34%|███▍      | 328/963 [00:05<00:10, 62.20it/s]Loading weights:  35%|███▌      | 340/963 [00:05<00:08, 70.71it/s]Loading weights:  36%|███▌      | 348/963 [00:05<00:08, 69.54it/s]Loading weights:  37%|███▋      | 356/963 [00:05<00:09, 64.86it/s]Loading weights:  38%|███▊      | 365/963 [00:05<00:08, 66.96it/s]Loading weights:  39%|███▉      | 376/963 [00:05<00:07, 73.47it/s]Loading weights:  40%|███▉      | 384/963 [00:06<00:08, 71.20it/s]Loading weights:  41%|████      | 392/963 [00:06<00:08, 66.21it/s]Loading weights:  42%|████▏     | 401/963 [00:06<00:08, 64.98it/s]Loading weights:  43%|████▎     | 412/963 [00:06<00:08, 68.65it/s]Loading weights:  44%|████▎     | 419/963 [00:06<00:08, 67.71it/s]Loading weights:  44%|████▍     | 426/963 [00:06<00:08, 60.35it/s]Loading weights:  45%|████▌     | 437/963 [00:06<00:08, 65.44it/s]Loading weights:  46%|████▌     | 444/963 [00:07<00:08, 63.09it/s]Loading weights:  47%|████▋     | 451/963 [00:07<00:08, 56.90it/s]Loading weights:  48%|████▊     | 460/963 [00:07<00:08, 60.21it/s]Loading weights:  49%|████▉     | 472/963 [00:07<00:06, 73.09it/s]Loading weights:  50%|████▉     | 480/963 [00:07<00:06, 70.21it/s]Loading weights:  51%|█████     | 488/963 [00:07<00:07, 65.37it/s]Loading weights:  52%|█████▏    | 497/963 [00:07<00:07, 61.71it/s]Loading weights:  53%|█████▎    | 508/963 [00:07<00:06, 66.15it/s]Loading weights:  53%|█████▎    | 515/963 [00:08<00:07, 60.60it/s]Loading weights:  54%|█████▍    | 522/963 [00:08<00:08, 49.78it/s]Loading weights:  55%|█████▌    | 533/963 [00:08<00:07, 58.51it/s]Loading weights:  56%|█████▋    | 544/963 [00:08<00:06, 63.38it/s]Loading weights:  57%|█████▋    | 551/963 [00:08<00:06, 62.46it/s]Loading weights:  58%|█████▊    | 558/963 [00:08<00:07, 55.91it/s]Loading weights:  59%|█████▉    | 569/963 [00:09<00:06, 64.34it/s]Loading weights:  60%|██████    | 580/963 [00:09<00:05, 70.37it/s]Loading weights:  61%|██████    | 588/963 [00:09<00:05, 69.12it/s]Loading weights:  62%|██████▏   | 596/963 [00:09<00:05, 63.36it/s]Loading weights:  63%|██████▎   | 605/963 [00:09<00:05, 64.58it/s]Loading weights:  64%|██████▍   | 616/963 [00:09<00:04, 70.96it/s]Loading weights:  65%|██████▍   | 624/963 [00:09<00:04, 68.82it/s]Loading weights:  66%|██████▌   | 631/963 [00:09<00:05, 60.15it/s]Loading weights:  67%|██████▋   | 641/963 [00:10<00:04, 66.33it/s]Loading weights:  68%|██████▊   | 652/963 [00:10<00:04, 68.35it/s]Loading weights:  68%|██████▊   | 659/963 [00:10<00:04, 67.18it/s]Loading weights:  69%|██████▉   | 666/963 [00:10<00:04, 59.40it/s]Loading weights:  70%|███████   | 677/963 [00:10<00:04, 67.51it/s]Loading weights:  71%|███████▏  | 688/963 [00:10<00:03, 71.35it/s]Loading weights:  72%|███████▏  | 696/963 [00:10<00:03, 70.21it/s]Loading weights:  73%|███████▎  | 704/963 [00:11<00:04, 54.67it/s]Loading weights:  74%|███████▍  | 712/963 [00:11<00:04, 58.12it/s]Loading weights:  75%|███████▍  | 719/963 [00:11<00:04, 52.94it/s]Loading weights:  75%|███████▌  | 725/963 [00:11<00:04, 47.80it/s]Loading weights:  76%|███████▋  | 736/963 [00:11<00:04, 54.69it/s]Loading weights:  77%|███████▋  | 742/963 [00:11<00:04, 49.51it/s]Loading weights:  78%|███████▊  | 748/963 [00:12<00:04, 45.73it/s]Loading weights:  78%|███████▊  | 754/963 [00:12<00:04, 48.32it/s]Loading weights:  79%|███████▉  | 761/963 [00:12<00:04, 46.54it/s]Loading weights:  80%|████████  | 772/963 [00:12<00:03, 53.72it/s]Loading weights:  81%|████████  | 778/963 [00:12<00:03, 53.29it/s]Loading weights:  82%|████████▏ | 785/963 [00:12<00:03, 50.66it/s]Loading weights:  83%|████████▎ | 796/963 [00:12<00:02, 59.99it/s]Loading weights:  83%|████████▎ | 803/963 [00:13<00:02, 60.10it/s]Loading weights:  84%|████████▍ | 810/963 [00:13<00:02, 55.71it/s]Loading weights:  85%|████████▌ | 821/963 [00:13<00:02, 64.78it/s]Loading weights:  86%|████████▋ | 832/963 [00:13<00:01, 69.93it/s]Loading weights:  87%|████████▋ | 840/963 [00:13<00:01, 69.16it/s]Loading weights:  88%|████████▊ | 847/963 [00:13<00:01, 62.70it/s]Loading weights:  89%|████████▉ | 857/963 [00:13<00:01, 65.09it/s]Loading weights:  90%|█████████ | 867/963 [00:13<00:01, 66.00it/s]Loading weights:  91%|█████████ | 874/963 [00:14<00:01, 64.01it/s]Loading weights:  91%|█████████▏| 881/963 [00:14<00:01, 64.11it/s]Loading weights:  93%|█████████▎| 892/963 [00:14<00:01, 70.11it/s]Loading weights:  93%|█████████▎| 899/963 [00:14<00:00, 64.23it/s]Loading weights:  94%|█████████▍| 906/963 [00:14<00:01, 53.98it/s]Loading weights:  95%|█████████▌| 917/963 [00:14<00:00, 57.39it/s]Loading weights:  96%|█████████▌| 923/963 [00:14<00:00, 56.59it/s]Loading weights:  96%|█████████▋| 929/963 [00:15<00:00, 50.37it/s]Loading weights:  98%|█████████▊| 940/963 [00:15<00:00, 59.30it/s]Loading weights:  98%|█████████▊| 947/963 [00:15<00:00, 59.50it/s]Loading weights:  99%|█████████▉| 954/963 [00:15<00:00, 49.36it/s]Loading weights: 100%|██████████| 963/963 [00:15<00:00, 61.75it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Model loaded in 42.1s
+Layers: 80, Vocab size: 151643
+Registered 80 velocity hooks
+
+Loading FineWeb sample...
+
+Running inference on ~100000 tokens...
+      6037 tokens |   20 docs | 805 tok/s | 7.5s
+     12183 tokens |   40 docs | 877 tok/s | 13.9s
+     19187 tokens |   60 docs | 924 tok/s | 20.8s
+     25888 tokens |   80 docs | 947 tok/s | 27.3s
+     34053 tokens |  100 docs | 970 tok/s | 35.1s
+     41637 tokens |  120 docs | 981 tok/s | 42.5s
+     49527 tokens |  140 docs | 991 tok/s | 50.0s
+     54913 tokens |  160 docs | 981 tok/s | 56.0s
+     61151 tokens |  180 docs | 978 tok/s | 62.5s
+     67127 tokens |  200 docs | 977 tok/s | 68.7s
+     74710 tokens |  220 docs | 982 tok/s | 76.1s
+     80893 tokens |  240 docs | 980 tok/s | 82.5s
+     87873 tokens |  260 docs | 983 tok/s | 89.4s
+     94692 tokens |  280 docs | 985 tok/s | 96.2s
+
+Done: 100341 tokens from 298 docs in 102.0s
+
+Computing per-token velocity profiles...
+Tokens with sufficient data: 2935
+
+Results saved to /workspace/qwen72b_depth_probe_results.json
+
+=== Top 20 most depth-efficient tokens (lowest uniformity CV) ===
+             NASA  CV=1.481  panic=5.35  work=5045  obs=5
+        captivity  CV=1.535  panic=4.51  work=5214  obs=8
+             Java  CV=1.565  panic=5.87  work=5690  obs=9
+         @example  CV=1.605  panic=4.47  work=5082  obs=7
+               ug  CV=1.619  panic=4.66  work=5551  obs=6
+            swire  CV=1.637  panic=4.23  work=5918  obs=5
+           retrie  CV=1.639  panic=4.77  work=5055  obs=5
+             Phil  CV=1.728  panic=6.18  work=5756  obs=10
+              Mac  CV=1.734  panic=5.88  work=5597  obs=5
+              Sal  CV=1.735  panic=5.58  work=5002  obs=6
+             oids  CV=1.747  panic=4.89  work=5589  obs=6
+             Beth  CV=1.750  panic=7.12  work=5437  obs=5
+        radiation  CV=1.773  panic=5.54  work=5731  obs=9
+               PR  CV=1.780  panic=5.07  work=5690  obs=5
+               ph  CV=1.787  panic=5.55  work=5621  obs=5
+               Sk  CV=1.801  panic=6.47  work=5203  obs=6
+              Mah  CV=1.817  panic=5.81  work=5014  obs=5
+               av  CV=1.817  panic=6.00  work=5532  obs=8
+              HIV  CV=1.836  panic=6.27  work=5623  obs=10
+             shed  CV=1.841  panic=5.30  work=5879  obs=6
+
+=== Top 20 most depth-WASTEFUL tokens (highest panic ratio) ===
+             Free  panic=12.92  CV=3.637  work=12147  obs=5
+              Our  panic=12.75  CV=3.359  work=10383  obs=13
+              rom  panic=12.13  CV=3.592  work=7997  obs=6
+            spect  panic=11.82  CV=3.565  work=8874  obs=7
+               US  panic=11.65  CV=3.625  work=11444  obs=5
+                B  panic=11.40  CV=3.134  work=9735  obs=27
+               sh  panic=11.26  CV=2.772  work=7268  obs=6
+            After  panic=11.22  CV=2.814  work=8226  obs=6
+                P  panic=11.19  CV=2.961  work=9059  obs=15
+               -m  panic=11.17  CV=2.714  work=7502  obs=7
+           Before  panic=11.13  CV=2.911  work=8662  obs=5
+              inv  panic=11.09  CV=3.041  work=7972  obs=5
+                t  panic=11.06  CV=2.571  work=7141  obs=7
+             What  panic=10.99  CV=2.977  work=9069  obs=12
+               As  panic=10.94  CV=2.885  work=8489  obs=13
+               Re  panic=10.87  CV=2.631  work=8102  obs=7
+                T  panic=10.86  CV=2.938  work=8668  obs=12
+               fl  panic=10.82  CV=2.860  work=7580  obs=9
+            "This  panic=10.80  CV=2.899  work=8477  obs=5
+              -of  panic=10.75  CV=3.006  work=8832  obs=17
+
+=== Summary statistics ===
+Panic ratio:  mean=8.271  std=0.871  min=4.230  max=12.925
+Uniformity CV: mean=2.489  std=0.196  min=1.481  max=3.637
+Active work:  mean=6887  std=474  min=4972  max=12147
+
+Probe complete.
+'[Errno 9] Bad file descriptor' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb/resolve/9bb295ddab0e05d785b879661af7260fed5140fc/sample/10BT/000_00000.parquet
+Retrying in 1s [Retry 1/5].
+Fatal Python error: PyGILState_Release: auto-releasing thread-state, but no thread-state for this thread
+Python runtime state: finalizing (tstate=0x0000000000a6a1d8)
+
