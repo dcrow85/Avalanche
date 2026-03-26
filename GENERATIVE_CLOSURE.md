@@ -2,7 +2,7 @@
 
 **A Framework for the Assembly of Knowledge Through Constrained Interaction**
 
-Che Crowley
+Daniel Crowley
 Syntropy.City — Avalanche Research Center
 March 2026
 
