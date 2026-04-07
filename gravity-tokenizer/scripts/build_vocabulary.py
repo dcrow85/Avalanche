@@ -254,6 +254,9 @@ def main():
                         help="Apply Gravity Tokenizer v2 prefilters: volume floor + parasitism veto")
     parser.add_argument("--successor-stats", type=str, default=None,
                         help="Path to successor stats file (required with --gravity-v2)")
+    parser.add_argument("--v2-volume-floor", type=int, default=None,
+                        help="Override the default v2 volume floor (default 2903). "
+                             "Used for ablations like the 3500 fallback.")
     parser.add_argument("--with-space", action="store_true",
                         help="Replace the lowest-scoring merge token with a bare \u2581 "
                              "(SentencePiece space plumbing). Required for the SP encoder to "
@@ -263,6 +266,12 @@ def main():
 
     if args.gravity_v2 and not args.successor_stats:
         parser.error("--gravity-v2 requires --successor-stats")
+
+    # Allow CLI override of the volume floor for ablations.
+    global V2_VOLUME_FLOOR
+    if args.v2_volume_floor is not None:
+        V2_VOLUME_FLOOR = args.v2_volume_floor
+        print(f"[override] V2_VOLUME_FLOOR = {V2_VOLUME_FLOOR}")
 
     n_merge_tokens = args.vocab_size - 256 - 3  # Reserve 256 byte + 3 control tokens (<unk>, <s>, </s>)
 
@@ -356,7 +365,10 @@ def main():
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    tag = f"v2_beta_{args.beta}" if args.gravity_v2 else f"beta_{args.beta}"
+    if args.gravity_v2:
+        tag = f"v2_floor{V2_VOLUME_FLOOR}_beta_{args.beta}"
+    else:
+        tag = f"beta_{args.beta}"
     if args.with_space:
         tag = f"{tag}_with_space"
 
