@@ -1,11 +1,37 @@
-"""Execute Python code on RunPod pod via Jupyter kernel websocket."""
-import requests, json, time, websocket, uuid, sys
+"""Execute Python code on a RunPod pod via the Jupyter kernel websocket.
 
-POD_ID = "e778yhdiu8ysta"
-PASSWORD = "parameter-golf"
-BASE = f"https://{POD_ID}-8888.proxy.runpod.net"
+Credentials are intentionally read from the environment so this helper can stay
+tracked without leaking a live pod ID or password into Git history.
+
+Required env vars:
+    RPOD_EXEC_POD_ID
+    RPOD_EXEC_PASSWORD
+"""
+import json
+import os
+import sys
+import time
+import uuid
+
+import requests
+import websocket
+
+
+POD_ID = os.environ.get("RPOD_EXEC_POD_ID", "")
+PASSWORD = os.environ.get("RPOD_EXEC_PASSWORD", "")
+BASE = f"https://{POD_ID}-8888.proxy.runpod.net" if POD_ID else ""
+
+
+def _require_config():
+    if POD_ID and PASSWORD:
+        return
+    raise SystemExit(
+        "Missing RunPod credentials. Set RPOD_EXEC_POD_ID and "
+        "RPOD_EXEC_PASSWORD before running rpod_exec.py."
+    )
 
 def execute(code, timeout=600):
+    _require_config()
     s = requests.Session()
     s.get(f"{BASE}/login")
     xsrf = s.cookies.get("_xsrf", "")

@@ -1,0 +1,146 @@
+{
+  "beta": 1.0,
+  "n_graveyard_tokens": 20,
+  "tokens": [
+    {
+      "piece": "▁run",
+      "readable": "run",
+      "ablation_leverage": 0.543502026796341,
+      "corpus_frequency": 4150,
+      "score": 0.8708408650441058
+    },
+    {
+      "piece": "▁book",
+      "readable": "book",
+      "ablation_leverage": 0.5431734323501587,
+      "corpus_frequency": 5356,
+      "score": 0.87075990160761
+    },
+    {
+      "piece": "▁get",
+      "readable": "get",
+      "ablation_leverage": 0.5427317070960999,
+      "corpus_frequency": 15907,
+      "score": 0.8706509862992609
+    },
+    {
+      "piece": "▁bo",
+      "readable": "bo",
+      "ablation_leverage": 0.5426489877700805,
+      "corpus_frequency": 46125,
+      "score": 0.8706305805072319
+    },
+    {
+      "piece": "te",
+      "readable": "te",
+      "ablation_leverage": 0.5423637557029725,
+      "corpus_frequency": 257077,
+      "score": 0.8705601935678812
+    },
+    {
+      "piece": "ff",
+      "readable": "ff",
+      "ablation_leverage": 0.5423534500598908,
+      "corpus_frequency": 34434,
+      "score": 0.8705576497434786
+    },
+    {
+      "piece": "▁Pe",
+      "readable": "Pe",
+      "ablation_leverage": 0.5421860468387604,
+      "corpus_frequency": 5428,
+      "score": 0.8705163214948318
+    },
+    {
+      "piece": "▁bit",
+      "readable": "bit",
+      "ablation_leverage": 0.5419279932975769,
+      "corpus_frequency": 4241,
+      "score": 0.8704525886325728
+    },
+    {
+      "piece": "▁win",
+      "readable": "win",
+      "ablation_leverage": 0.5417493557929993,
+      "corpus_frequency": 11156,
+      "score": 0.8704084517950332
+    },
+    {
+      "piece": "▁sp",
+      "readable": "sp",
+      "ablation_leverage": 0.5415505075454712,
+      "corpus_frequency": 38563,
+      "score": 0.8703593042708379
+    },
+    {
+      "piece": "▁fl",
+      "readable": "fl",
+      "ablation_leverage": 0.5413315367698669,
+      "corpus_frequency": 12158,
+      "score": 0.8703051623610629
+    },
+    {
+      "piece": "▁cr",
+      "readable": "cr",
+      "ablation_leverage": 0.5412185668945313,
+      "corpus_frequency": 33448,
+      "score": 0.8702772212799607
+    },
+    {
+      "piece": "▁acc",
+      "readable": "acc",
+      "ablation_leverage": 0.541129812002182,
+      "corpus_frequency": 10016,
+      "score": 0.8702552652511333
+    },
+    {
+      "piece": "▁even",
+      "readable": "even",
+      "ablation_leverage": 0.5410824263095856,
+      "corpus_frequency": 11304,
+      "score": 0.8702435415874082
+    },
+    {
+      "piece": "▁inform",
+      "readable": "inform",
+      "ablation_leverage": 0.5409868884086609,
+      "corpus_frequency": 4741,
+      "score": 0.8702199014946917
+    },
+    {
+      "piece": "▁fun",
+      "readable": "fun",
+      "ablation_leverage": 0.5407266104221344,
+      "corpus_frequency": 5225,
+      "score": 0.870155476593931
+    },
+    {
+      "piece": "▁member",
+      "readable": "member",
+      "ablation_leverage": 0.5401285719871521,
+      "corpus_frequency": 4077,
+      "score": 0.8700073305044468
+    },
+    {
+      "piece": "▁hon",
+      "readable": "hon",
+      "ablation_leverage": 0.5400269031524658,
+      "corpus_frequency": 4569,
+      "score": 0.8699821287870939
+    },
+    {
+      "piece": "▁pr",
+      "readable": "pr",
+      "ablation_leverage": 0.5396832287311554,
+      "corpus_frequency": 90473,
+      "score": 0.8698969034733397
+    },
+    {
+      "piece": "ital",
+      "readable": "ital",
+      "ablation_leverage": 0.5396570348739624,
+      "corpus_frequency": 3405,
+      "score": 0.8698904056239916
+    }
+  ]
+}

@@ -5,17 +5,41 @@ For a given beta value, computes:
     score(t) = freq_norm(t)^(1-beta) * leverage_norm(t)^beta
 
 Both frequency and leverage are log-scaled before normalization.
-Breadth was dropped: mean 2.57, std 0.15 across all candidates — no
-discriminative power. The frozen-entanglement problem doesn't exist in
-this candidate pool.
+
+GRAVITY TOKENIZER v2 (April 7, 2026): Two prefilters are applied BEFORE scoring.
+The merge pool is restricted to candidates that satisfy both:
+
+    1. Volume floor: corpus_frequency >= 2903
+       Below this threshold, no token in the seed-1337 coherence run crossed the
+       integrated-gradient-energy floor (E_crit ~ 1.20). Empirically derived from
+       parameter-golf/logs/coherence_seed_1337.
+
+    2. Parasitism veto: NOT (top1_successor_frac > 0.95 AND top1_char.isalpha())
+       Tokens whose dominant continuation is a word-internal letter (e.g.
+       'produ' -> 'c') are hostage pointers; gravity scoring misreads syntactic
+       dependence as semantic leverage. The boundary-aware gate (isalpha) avoids
+       false-flagging whole words whose top successor is a space.
+
+Both filters apply only when --gravity-v2 is set, and they require a candidate
+successor-stats file from scripts/compute_candidate_successor_stats.py.
 
 Selects top 765 candidates (+ 256 byte + 3 control = 1024 total vocabulary).
 Outputs the graveyard list (high-leverage tokens that didn't make the cut).
 
 Usage:
+    # Legacy v1 (no filters)
     python scripts/build_vocabulary.py \
         --scored-candidates data/candidates_scored.jsonl \
         --beta 0.3 \
+        --output data/vocabularies/ \
+        --vocab-size 1024
+
+    # v2
+    python scripts/build_vocabulary.py \
+        --scored-candidates data/candidates_scored.jsonl \
+        --successor-stats data/candidates_successor_stats.jsonl \
+        --gravity-v2 \
+        --beta 1.0 \
         --output data/vocabularies/ \
         --vocab-size 1024
 """
@@ -26,6 +50,88 @@ import math
 from pathlib import Path
 
 import numpy as np
+
+
+# Gravity Tokenizer v2 filter constants (April 7, 2026)
+V2_VOLUME_FLOOR = 2903           # corpus_frequency floor; data-derived from seed_1337
+V2_PARASITISM_THRESHOLD = 0.95   # top1 successor fraction veto threshold
+
+
+def is_v2_parasite(top1_char: str | None, top1_frac: float) -> bool:
+    """Boundary-aware parasitism rule.
+
+    A candidate is a parasite if its dominant byte successor is a *word-internal*
+    character (operationalized as isalpha()) and that successor accounts for
+    >95% of occurrences. Whole words whose dominant successor is space or
+    punctuation are NOT parasites — that's a complete-unit signal.
+    """
+    if top1_char is None:
+        return False
+    return top1_frac > V2_PARASITISM_THRESHOLD and top1_char.isalpha()
+
+
+def apply_v2_filters(
+    candidates: list[dict],
+    successor_stats: dict[str, dict],
+) -> tuple[list[dict], dict]:
+    """Apply v2 prefilters to the merge candidate pool.
+
+    Returns (eligible_candidates, audit) where audit is a dict of counts and
+    rejected lists for the report.
+
+    Rules:
+      - in_base_vocab tokens are always retained (they're SP base bytes, not merges)
+      - other candidates must pass volume floor AND not be a parasite
+    """
+    eligible = []
+    rejected_below_floor = []
+    rejected_parasite = []
+
+    for c in candidates:
+        if c.get("in_base_vocab", False):
+            eligible.append(c)
+            continue
+
+        if c.get("corpus_frequency", 0) < V2_VOLUME_FLOOR:
+            rejected_below_floor.append(c)
+            continue
+
+        s = successor_stats.get(c["piece"])
+        top1_char = s.get("top1_successor_char") if s else None
+        top1_frac = s.get("top1_successor_frac", 0.0) if s else 0.0
+        if is_v2_parasite(top1_char, top1_frac):
+            rj = dict(c)
+            rj["top1_successor_char"] = top1_char
+            rj["top1_successor_frac"] = top1_frac
+            rejected_parasite.append(rj)
+            continue
+
+        # Annotate survivors with successor stats for downstream introspection
+        c2 = dict(c)
+        c2["top1_successor_char"] = top1_char
+        c2["top1_successor_frac"] = top1_frac
+        eligible.append(c2)
+
+    audit = {
+        "n_input": len(candidates),
+        "n_eligible": len(eligible),
+        "n_rejected_below_floor": len(rejected_below_floor),
+        "n_rejected_parasite": len(rejected_parasite),
+        "rejected_parasites": [
+            {
+                "piece": r["piece"],
+                "readable": r.get("readable", ""),
+                "corpus_frequency": r.get("corpus_frequency", 0),
+                "ablation_leverage": r.get("ablation_leverage", 0.0),
+                "top1_successor_char": r.get("top1_successor_char"),
+                "top1_successor_frac": r.get("top1_successor_frac", 0.0),
+            }
+            for r in sorted(rejected_parasite, key=lambda x: -x.get("top1_successor_frac", 0.0))
+        ],
+        "volume_floor": V2_VOLUME_FLOOR,
+        "parasitism_threshold": V2_PARASITISM_THRESHOLD,
+    }
+    return eligible, audit
 
 
 def normalize_to_01(values: list[float]) -> list[float]:
@@ -144,7 +250,19 @@ def main():
                         help="Output directory for vocabulary files")
     parser.add_argument("--vocab-size", type=int, default=1024,
                         help="Total vocabulary size including 256 byte tokens")
+    parser.add_argument("--gravity-v2", action="store_true",
+                        help="Apply Gravity Tokenizer v2 prefilters: volume floor + parasitism veto")
+    parser.add_argument("--successor-stats", type=str, default=None,
+                        help="Path to successor stats file (required with --gravity-v2)")
+    parser.add_argument("--with-space", action="store_true",
+                        help="Replace the lowest-scoring merge token with a bare \u2581 "
+                             "(SentencePiece space plumbing). Required for the SP encoder to "
+                             "produce clean round-trip decoding. This is the 'space token fix' "
+                             "from the v1 investigation.")
     args = parser.parse_args()
+
+    if args.gravity_v2 and not args.successor_stats:
+        parser.error("--gravity-v2 requires --successor-stats")
 
     n_merge_tokens = args.vocab_size - 256 - 3  # Reserve 256 byte + 3 control tokens (<unk>, <s>, </s>)
 
@@ -155,7 +273,30 @@ def main():
             candidates.append(json.loads(line))
     print(f"Loaded {len(candidates)} scored candidates")
 
-    # Compute scores (two-dimensional: freq x leverage)
+    audit = None
+    if args.gravity_v2:
+        # Load successor stats and apply v2 prefilters
+        successor_stats = {}
+        with open(args.successor_stats, "r", encoding="utf-8") as f:
+            for line in f:
+                r = json.loads(line)
+                successor_stats[r["piece"]] = r
+        print(f"Loaded successor stats for {len(successor_stats)} candidates")
+
+        candidates, audit = apply_v2_filters(candidates, successor_stats)
+        print(f"\n=== Gravity v2 prefilter pass ===")
+        print(f"  input candidates:           {audit['n_input']}")
+        print(f"  rejected (below floor {V2_VOLUME_FLOOR}): {audit['n_rejected_below_floor']}")
+        print(f"  rejected (parasite > {V2_PARASITISM_THRESHOLD}):     {audit['n_rejected_parasite']}")
+        print(f"  eligible after filters:     {audit['n_eligible']}")
+        print(f"  slot budget:                {n_merge_tokens}")
+        print(f"  oversubscription:           {audit['n_eligible'] / n_merge_tokens:.2f}x")
+        print(f"\n  Top vetoed parasites:")
+        for r in audit["rejected_parasites"][:10]:
+            print(f"    {r['piece']!r:18} top1={r['top1_successor_char']!r} "
+                  f"frac={r['top1_successor_frac']:.4f} freq={r['corpus_frequency']}")
+
+    # Compute scores (two-dimensional: freq x leverage) over the (filtered) pool
     candidates = compute_scores(candidates, args.beta)
 
     # Select vocabulary
@@ -164,6 +305,32 @@ def main():
     print(f"\nVocabulary selection (beta={args.beta}):")
     print(f"  Selected: {len(selected)} tokens")
     print(f"  Graveyard: {len(graveyard)} high-leverage tokens rejected")
+
+    if args.with_space:
+        # Space token fix: replace lowest-scoring merge with bare U+2581.
+        # Without this, the SP encoder cannot emit a standalone space token and
+        # round-trip decoding of retokenized corpora leaks literal \u2581
+        # characters into the training text. Same fix applied to v1's
+        # vocabulary_beta_1.0_with_space.json.
+        selected.sort(key=lambda c: c.get("score", 0))
+        dropped = selected[0]
+        selected = selected[1:]
+        space_token = {
+            "piece": "\u2581",
+            "readable": "SPACE",
+            "token_bytes": [0xe2, 0x96, 0x81],
+            "ablation_leverage": 0.0,
+            "score": 1.0,
+            "corpus_frequency": 3315,  # historical; matches v1 for provenance
+            "static_core": True,
+            "note": "Plumbing token. Replaces 3-byte fallback for word boundaries.",
+        }
+        selected.append(space_token)
+        # Re-sort by score descending to preserve the original ordering convention
+        selected.sort(key=lambda c: -c.get("score", 0))
+        print(f"\n[space token fix] replaced lowest-score merge "
+              f"{dropped.get('piece')!r} (score={dropped.get('score', 0):.4f}) "
+              f"with bare \u2581")
 
     # Categorize selected and graveyard
     sel_cats = categorize_tokens(selected)
@@ -189,7 +356,9 @@ def main():
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    tag = f"beta_{args.beta}"
+    tag = f"v2_beta_{args.beta}" if args.gravity_v2 else f"beta_{args.beta}"
+    if args.with_space:
+        tag = f"{tag}_with_space"
 
     # Save vocabulary
     vocab_path = output_dir / f"vocabulary_{tag}.json"
@@ -198,6 +367,20 @@ def main():
         "vocab_size": args.vocab_size,
         "n_byte_tokens": 256,
         "n_merge_tokens": len(selected),
+        "gravity_v2": bool(args.gravity_v2),
+        "v2_audit": (
+            {
+                "volume_floor": V2_VOLUME_FLOOR,
+                "parasitism_threshold": V2_PARASITISM_THRESHOLD,
+                "n_input_candidates": audit["n_input"],
+                "n_rejected_below_floor": audit["n_rejected_below_floor"],
+                "n_rejected_parasite": audit["n_rejected_parasite"],
+                "n_eligible_after_filters": audit["n_eligible"],
+                "rejected_parasites": audit["rejected_parasites"],
+            }
+            if audit is not None
+            else None
+        ),
         "tokens": [
             {
                 "piece": t.get("piece", ""),

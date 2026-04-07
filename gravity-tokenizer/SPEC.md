@@ -494,3 +494,79 @@ As of March 23, 2026:
 - **Sliding window eval alone gives ~0.034 BPB free improvement** — must include in our baseline
 
 The gravity tokenizer is orthogonal to all current competition approaches. It can be combined with any of them.
+
+---
+
+## Appendix C: Dynamic Gravity Tokenizer Addendum (March 27, 2026)
+
+This spec began as the design document for the **static** Gravity Tokenizer: an offline vocabulary construction pipeline driven by external ablation leverage and breadth. That framing remains correct for the submitted static tokenizer.
+
+The Dynamic Gravity Tokenizer (DGT-v1) uses a different sensor for a different job.
+
+### Static Gravity vs. Dynamic Gravity
+
+The two systems answer different questions:
+
+- **Ablation leverage:** "How much does a trained external reference model depend on this token as an atomic unit?"
+- **Residual velocity:** "How much work is this model still doing on this token right now?"
+
+These are not interchangeable signals.
+
+Ablation leverage is an **external counterfactual importance** measure. It is well-suited to one-time vocabulary construction because it asks whether a token is globally load-bearing for a trained model.
+
+Residual velocity is a **live token-maturity / boundary-utility** measure. It is well-suited to dynamic mutation because DGT must decide, during training, whether a boundary is still helping the current model or has become a burden.
+
+The DGT should therefore not be evaluated by asking whether velocity is a high-correlation proxy for leverage. That is the wrong target.
+
+### What the Phase 4 probe actually showed
+
+In the first real DGT Phase 4 run at step `2000`, the velocity instrument produced a coherent phase-space partition but only weak alignment with static leverage:
+
+- `corr(leverage, panic_ratio) ≈ -0.013`
+- `corr(leverage, active_work) ≈ 0.099`
+
+This should not be read as instrument failure.
+
+At step `2000`, the model is still early in training and the residual geometry is still forming. The velocity signal is reporting **model-specific processing state**, not language-universal importance. The strongest evidence from that run was semantic face-validity of the classes themselves:
+
+- `DEBRIS`: ambiguous branching prefixes and overloaded starts such as `▁ser`, `▁dis`, `▁inter`, `▁par`
+- `GRADUATED`: routinized suffixes and closures such as `ed`, `ng`, `ial`, `nal`, `nd`
+
+That separation is useful for DGT even if it never converges to leverage, because DGT needs to know what **this** model still needs from the boundary.
+
+### The DGT interpretation
+
+For dynamic mutation, the phase-space should be interpreted as a token lifecycle:
+
+- **DEBRIS** = bad current boundary. The token lands too early in the branching process, creating high panic and high work. Fission candidate.
+- **CRYSTAL** = useful live scaffold. The token is doing steady structured work without late panic. Keep.
+- **GRADUATED** = spent scaffold. The model has absorbed the pattern internally; the boundary is no longer buying enough utility. Fission candidate.
+- **STATIC** = protected routing infrastructure. Closed-class function words remain permanent scaffolds even if they look cheap in live telemetry.
+
+This is a different ontology from leverage. A token can have nontrivial static leverage and still be `GRADUATED` if the current model has already internalized it. A token can have modest leverage and still be `DEBRIS` if the current boundary is actively hurting live processing.
+
+### Validation target for DGT
+
+The primary validation target for DGT is **operational usefulness**, not leverage correlation.
+
+The right tests are:
+
+1. **Lifecycle coherence across checkpoints**
+   Track whether tokens move through plausible trajectories such as `DEBRIS -> CRYSTAL -> GRADUATED` as training progresses.
+2. **Semantic face-validity**
+   Check whether top `DEBRIS` and `GRADUATED` tokens continue to look like unstable branching fragments versus routinized closures.
+3. **Operational surgery recovery**
+   Compare maturity-guided swaps against random swaps. If fissioning `DEBRIS` / `GRADUATED` tokens and fusing bleeding byte-runs recovers faster and cleaner than random surgery, the instrument is validated for its actual use case.
+
+Leverage remains valuable as a **secondary external reference**, especially for the static tokenizer and for contamination checks. It is no longer the primary success criterion for DGT-v1.
+
+### Design consequence
+
+The DGT mutation policy should be stated in these terms:
+
+- **Fission when the boundary hurts** (`DEBRIS`)
+- **Fission when the boundary is spent** (`GRADUATED`)
+- **Keep the tokens still carrying live structured work** (`CRYSTAL`)
+- **Fuse byte-runs that are bleeding loss because the model needs a new boundary**
+
+That is a cleaner and more faithful description of what the Phase 4 data actually supports than treating velocity as a weaker version of leverage.
