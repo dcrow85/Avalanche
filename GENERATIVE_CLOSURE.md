@@ -8,6 +8,32 @@ March 2026
 
 ---
 
+## Author's Note — April 2026
+
+This essay still states the framework intuition, but several claims have since
+been tightened by the Fast Bench and follow-on probes.
+
+- The graveyard remains path-dependent negative space, but current bench work
+  separates exact knowledge from diagnostic memory. In the Fast Bench, exact
+  state lives in an affine posterior; the graveyard and diagnostic index are
+  auxiliary retrieval surfaces, not the posterior itself.
+- Thermodynamic activity and epistemic ascent dissociate. A system can be
+  highly active, spend energy, and even produce many tombstones while
+  remaining trapped inside one ontology family.
+- Earlier strong "graveyard gravity" language should be read as historical
+  framing, not settled law. Some graveyard-drag readings collapsed under
+  controls and now stand as negative or open results rather than durable
+  physics.
+- The current public Drosophila substrate is the Fast Bench. Its living spec
+  and Campaign 1 manifest bundle now live under
+  [`docs/generative_closure/`](docs/generative_closure/README.md).
+- For Campaign 1, local-functional primitives are explicitly restricted to the
+  affine-linear family. Broader primitive libraries require a new manifest
+  version and a rerun of adversarial screening.
+
+Read the essay below as the March 2026 conceptual statement, constrained by
+the empirical updates above.
+
 ## I. The Claim
 
 Non-fungibility is the generative principle. It is not given. It is produced — through constrained interaction at boundaries, deepened through sustained friction, accumulated as irreversible structure, and experienced from the inside as knowing.
@@ -58,11 +84,11 @@ Thinking that doesn't touch the world doesn't produce knowledge. It produces nar
 
 ## V. The Graveyard
 
-Every hypothesis that is tested against the oracle and falsified becomes a tombstone. The tombstones accumulate. They never reset. The accumulated record — the graveyard — is the most important cognitive artifact in any system that operates this way.
+Every hypothesis that is tested against the oracle and falsified becomes a tombstone. The tombstones accumulate. They never reset. The accumulated record — the graveyard — is a load-bearing cognitive artifact in any system that operates this way.
 
 The graveyard is not a record of failure. It is a negative space — the structured absence that defines what the system knows by recording everything it has ruled out. Each tombstone carves away a region of possibility. What remains, uncarved, is where the truth lives. The knowledge is in the shape of what died, not in the surviving hypothesis.
 
-The graveyard has specific properties that make it the primary epistemic object:
+The graveyard has specific properties that make it a load-bearing epistemic object:
 
 **It is path-dependent.** Each entry presupposes every prior entry. The order in which theories were tried and killed shapes the structure of the accumulated record. A different sequence of failures produces a different graveyard pointing at a different region of uncarved space.
 
@@ -74,7 +100,7 @@ The graveyard has specific properties that make it the primary epistemic object:
 
 **It has a spiral arrow of time.** The construction history is not a linear ascent from simple to complex. It spirals — the system revisits simpler forms at higher epistemic altitudes. A neighbor-comparison theory at cycle five and the same theory at cycle ninety-five occupy the same conceptual altitude but different positions on the spiral, because the graveyard grew between visits. The system cannot return to a prior state. It can only revisit a prior altitude with a richer negative space beneath it.
 
-**It acts as a gravitational field.** When one graveyard encounters another — when a system reads a foreign record of structured elimination — the foreign graveyard bends the local system's trajectory. It does not transfer its conclusions. It deforms. The deformation is proportional to the foreign graveyard's mass. Epistemic value is relational, not transferable. Novelty is generated in the encounter between incompatible structures, not through information copying.
+**It can deform search, but not by default.** When one graveyard encounters another — when a system reads a foreign record of structured elimination — the foreign record can make new regions legible or change what the local system tries next. But current evidence does not justify treating graveyard mass as a generic causal field. Some earlier graveyard-drag readings collapsed under controls and now stand as negative or open results. Epistemic value is still relational rather than simply transferable, but the mechanism is more constrained than the original gravitational metaphor suggested.
 
 ## VI. The Arrow and the Spiral
 
@@ -244,7 +270,7 @@ Schopenhauer's Will is blind — it strives without direction. This framework's 
 
 Generative closure is the name for a process that feeds its own findings back into the architecture that produces them.
 
-The apparatus studies how knowledge assembles. It discovers that the graveyard is the primary cognitive artifact. That finding reshapes the altitude cycle design to read the graveyard's negative space. The redesigned altitude produces richer data. The richer data reveals the horizon, the spiral, the thermodynamic regimes. Those findings reshape the calorimeter, which reveals new properties of the process, which reshape the intervention architecture.
+The apparatus studies how knowledge assembles. The March read emphasized the graveyard as the primary cognitive artifact. The current read is sharper and more modest: the graveyard is a structured negative image, but exact knowledge and diagnostic memory must be separated. In the Fast Bench, that means an exact posterior plus a diagnostic graveyard/index. That refinement still reshapes the altitude cycle, the calorimeter, and the intervention architecture; it just does so under stricter bookkeeping.
 
 Each revolution produces non-fungible structure — findings that couldn't have been produced without the specific construction history that preceded them. The loop doesn't repeat. It deepens. The output of each revolution becomes the input of the next, and the input is richer than what went in before.
 

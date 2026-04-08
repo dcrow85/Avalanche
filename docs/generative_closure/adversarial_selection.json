@@ -1,0 +1,317 @@
+[
+  {
+    "name": "ADV1_d4_m7",
+    "constant": 0,
+    "monomials": [
+      [
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        0,
+        2,
+        6,
+        8
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        4
+      ]
+    ],
+    "degree": 4,
+    "n_monomials": 7,
+    "weight": 240,
+    "fingerprint_sha256_16": "56b79175ba59f692",
+    "alignment": {
+      "C4_rotation": 0.4838709677419355,
+      "Z2_horizontal": 0.5,
+      "D4_dihedral": 0.48292682926829267,
+      "color_inversion": 0.5,
+      "outer_totalistic": 0.5080971659919028,
+      "best_affine_linear": 0.53125
+    },
+    "best_affine_linear_coeffs": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      0
+    ]
+  },
+  {
+    "name": "ADV2_d3_m7",
+    "constant": 1,
+    "monomials": [
+      [
+        4,
+        7
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        0,
+        2,
+        7
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4,
+        7
+      ]
+    ],
+    "degree": 3,
+    "n_monomials": 7,
+    "weight": 272,
+    "fingerprint_sha256_16": "24e5c589d7c5e98e",
+    "alignment": {
+      "C4_rotation": 0.521505376344086,
+      "Z2_horizontal": 0.5,
+      "D4_dihedral": 0.5390243902439025,
+      "color_inversion": 0.5,
+      "outer_totalistic": 0.46153846153846156,
+      "best_affine_linear": 0.53125
+    },
+    "best_affine_linear_coeffs": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      1
+    ]
+  },
+  {
+    "name": "ADV3_d4_m9",
+    "constant": 0,
+    "monomials": [
+      [
+        5,
+        8
+      ],
+      [
+        4,
+        7
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        0,
+        1,
+        3,
+        6
+      ],
+      [
+        0,
+        1,
+        2,
+        7
+      ],
+      [
+        1
+      ],
+      [
+        1,
+        5,
+        7
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        6
+      ]
+    ],
+    "degree": 4,
+    "n_monomials": 9,
+    "weight": 240,
+    "fingerprint_sha256_16": "35207c12c008b774",
+    "alignment": {
+      "C4_rotation": 0.49193548387096775,
+      "Z2_horizontal": 0.5178571428571429,
+      "D4_dihedral": 0.48902439024390243,
+      "color_inversion": 0.5,
+      "outer_totalistic": 0.5323886639676113,
+      "best_affine_linear": 0.546875
+    },
+    "best_affine_linear_coeffs": [
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      0
+    ]
+  },
+  {
+    "name": "ADV4_d3_m6",
+    "constant": 1,
+    "monomials": [
+      [
+        0,
+        5
+      ],
+      [
+        3,
+        5,
+        8
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        1,
+        7,
+        8
+      ],
+      [
+        2,
+        7
+      ]
+    ],
+    "degree": 3,
+    "n_monomials": 6,
+    "weight": 288,
+    "fingerprint_sha256_16": "5985ed346d08e44a",
+    "alignment": {
+      "C4_rotation": 0.5591397849462365,
+      "Z2_horizontal": 0.5,
+      "D4_dihedral": 0.5414634146341464,
+      "color_inversion": 0.5,
+      "outer_totalistic": 0.5364372469635628,
+      "best_affine_linear": 0.5625
+    },
+    "best_affine_linear_coeffs": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      1
+    ]
+  },
+  {
+    "name": "ADV5_d3_m8",
+    "constant": 1,
+    "monomials": [
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        2
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        5,
+        7,
+        8
+      ],
+      [
+        4
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        7
+      ]
+    ],
+    "degree": 3,
+    "n_monomials": 8,
+    "weight": 256,
+    "fingerprint_sha256_16": "58af248438bd3573",
+    "alignment": {
+      "C4_rotation": 0.4731182795698925,
+      "Z2_horizontal": 0.5,
+      "D4_dihedral": 0.4682926829268293,
+      "color_inversion": 0.5,
+      "outer_totalistic": 0.48380566801619435,
+      "best_affine_linear": 0.5625
+    },
+    "best_affine_linear_coeffs": [
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      1
+    ]
+  }
+]

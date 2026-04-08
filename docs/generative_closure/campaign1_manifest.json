@@ -1,0 +1,957 @@
+{
+  "spec_version": "v0.2.2",
+  "manifest_version": "campaign-1.0",
+  "generated_for": "Generative Closure Fast Bench, first throughput campaign",
+  "campaign1_local_functional_library": {
+    "kind": "affine_linear",
+    "n_functions": 1024,
+    "description": "Campaign 1 restricts local-functional primitives to affine linear functions of the 9 neighborhood bits, including constant."
+  },
+  "canonical_emitter": {
+    "script": "assemble_manifest.py",
+    "policy": "single canonical manifest-emission path for campaign-1.0"
+  },
+  "indexing_convention": {
+    "grid": "3x3 row-major",
+    "positions": {
+      "0": "(0,0) top-left",
+      "1": "(0,1) top-mid",
+      "2": "(0,2) top-right",
+      "3": "(1,0) mid-left",
+      "4": "(1,1) center",
+      "5": "(1,2) mid-right",
+      "6": "(2,0) bot-left",
+      "7": "(2,1) bot-mid",
+      "8": "(2,2) bot-right"
+    },
+    "config_encoding": "n in [0,512); bit at position k = (n >> (8-k)) & 1",
+    "rule_semantics": "r[n] is the next state of the center cell (position 4)"
+  },
+  "library_primitive_ranks": {
+    "C4_rotation": {
+      "rows": 1488,
+      "rank": 372,
+      "target": 372,
+      "match": true
+    },
+    "Z2_horizontal": {
+      "rows": 448,
+      "rank": 224,
+      "target": 224,
+      "match": true
+    },
+    "D4_dihedral": {
+      "rows": 3280,
+      "rank": 410,
+      "target": 410,
+      "match": true
+    },
+    "color_inversion": {
+      "rows": 256,
+      "rank": 256,
+      "target": 256,
+      "match": true
+    },
+    "outer_totalistic": {
+      "rows": 494,
+      "rank": 494,
+      "target": 494,
+      "match": true
+    }
+  },
+  "random_alignment_baseline": {
+    "n_samples": 200,
+    "seed": 999,
+    "by_primitive": {
+      "C4_rotation": {
+        "mean": 0.4976478494623656,
+        "std": 0.019589448569563336,
+        "max": 0.5497311827956989,
+        "p99": 0.543010752688172
+      },
+      "Z2_horizontal": {
+        "mean": 0.49529017857142854,
+        "std": 0.03244278931110022,
+        "max": 0.5803571428571429,
+        "p99": 0.5759374999999999
+      },
+      "D4_dihedral": {
+        "mean": 0.49705182926829267,
+        "std": 0.015350696344852319,
+        "max": 0.5414634146341464,
+        "p99": 0.5365975609756097
+      },
+      "color_inversion": {
+        "mean": 0.501328125,
+        "std": 0.031862742741327214,
+        "max": 0.60546875,
+        "p99": 0.5667578124999997
+      },
+      "outer_totalistic": {
+        "mean": 0.5004352226720649,
+        "std": 0.02072984947319764,
+        "max": 0.5607287449392713,
+        "p99": 0.5486234817813765
+      }
+    },
+    "best_affine_linear": {
+      "mean": 0.5715625,
+      "std": 0.007569562656362239,
+      "max": 0.595703125,
+      "p99": 0.591796875
+    }
+  },
+  "adversariality_verdict": [
+    {
+      "name": "ADV1_d4_m7",
+      "passes_adversariality_check": true,
+      "primitive_details": {
+        "C4_rotation": {
+          "score": 0.4838709677419355,
+          "baseline_p99": 0.543010752688172,
+          "pass": true
+        },
+        "Z2_horizontal": {
+          "score": 0.5,
+          "baseline_p99": 0.5759374999999999,
+          "pass": true
+        },
+        "D4_dihedral": {
+          "score": 0.48292682926829267,
+          "baseline_p99": 0.5365975609756097,
+          "pass": true
+        },
+        "color_inversion": {
+          "score": 0.5,
+          "baseline_p99": 0.5667578124999997,
+          "pass": true
+        },
+        "outer_totalistic": {
+          "score": 0.5080971659919028,
+          "baseline_p99": 0.5486234817813765,
+          "pass": true
+        },
+        "best_affine_linear": {
+          "score": 0.53125,
+          "baseline_p99": 0.591796875,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "ADV2_d3_m7",
+      "passes_adversariality_check": true,
+      "primitive_details": {
+        "C4_rotation": {
+          "score": 0.521505376344086,
+          "baseline_p99": 0.543010752688172,
+          "pass": true
+        },
+        "Z2_horizontal": {
+          "score": 0.5,
+          "baseline_p99": 0.5759374999999999,
+          "pass": true
+        },
+        "D4_dihedral": {
+          "score": 0.5390243902439025,
+          "baseline_p99": 0.5365975609756097,
+          "pass": true
+        },
+        "color_inversion": {
+          "score": 0.5,
+          "baseline_p99": 0.5667578124999997,
+          "pass": true
+        },
+        "outer_totalistic": {
+          "score": 0.46153846153846156,
+          "baseline_p99": 0.5486234817813765,
+          "pass": true
+        },
+        "best_affine_linear": {
+          "score": 0.53125,
+          "baseline_p99": 0.591796875,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "ADV3_d4_m9",
+      "passes_adversariality_check": true,
+      "primitive_details": {
+        "C4_rotation": {
+          "score": 0.49193548387096775,
+          "baseline_p99": 0.543010752688172,
+          "pass": true
+        },
+        "Z2_horizontal": {
+          "score": 0.5178571428571429,
+          "baseline_p99": 0.5759374999999999,
+          "pass": true
+        },
+        "D4_dihedral": {
+          "score": 0.48902439024390243,
+          "baseline_p99": 0.5365975609756097,
+          "pass": true
+        },
+        "color_inversion": {
+          "score": 0.5,
+          "baseline_p99": 0.5667578124999997,
+          "pass": true
+        },
+        "outer_totalistic": {
+          "score": 0.5323886639676113,
+          "baseline_p99": 0.5486234817813765,
+          "pass": true
+        },
+        "best_affine_linear": {
+          "score": 0.546875,
+          "baseline_p99": 0.591796875,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "ADV4_d3_m6",
+      "passes_adversariality_check": true,
+      "primitive_details": {
+        "C4_rotation": {
+          "score": 0.5591397849462365,
+          "baseline_p99": 0.543010752688172,
+          "pass": true
+        },
+        "Z2_horizontal": {
+          "score": 0.5,
+          "baseline_p99": 0.5759374999999999,
+          "pass": true
+        },
+        "D4_dihedral": {
+          "score": 0.5414634146341464,
+          "baseline_p99": 0.5365975609756097,
+          "pass": true
+        },
+        "color_inversion": {
+          "score": 0.5,
+          "baseline_p99": 0.5667578124999997,
+          "pass": true
+        },
+        "outer_totalistic": {
+          "score": 0.5364372469635628,
+          "baseline_p99": 0.5486234817813765,
+          "pass": true
+        },
+        "best_affine_linear": {
+          "score": 0.5625,
+          "baseline_p99": 0.591796875,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "ADV5_d3_m8",
+      "passes_adversariality_check": true,
+      "primitive_details": {
+        "C4_rotation": {
+          "score": 0.4731182795698925,
+          "baseline_p99": 0.543010752688172,
+          "pass": true
+        },
+        "Z2_horizontal": {
+          "score": 0.5,
+          "baseline_p99": 0.5759374999999999,
+          "pass": true
+        },
+        "D4_dihedral": {
+          "score": 0.4682926829268293,
+          "baseline_p99": 0.5365975609756097,
+          "pass": true
+        },
+        "color_inversion": {
+          "score": 0.5,
+          "baseline_p99": 0.5667578124999997,
+          "pass": true
+        },
+        "outer_totalistic": {
+          "score": 0.48380566801619435,
+          "baseline_p99": 0.5486234817813765,
+          "pass": true
+        },
+        "best_affine_linear": {
+          "score": 0.5625,
+          "baseline_p99": 0.591796875,
+          "pass": true
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "stratum": "aligned",
+      "name": "Conway_Life",
+      "kind": "life_like",
+      "B": [
+        3
+      ],
+      "S": [
+        2,
+        3
+      ],
+      "weight": 140,
+      "fingerprint_sha256_16": "0ea2e608e78e4422",
+      "alignment": {
+        "C4_rotation": 1.0,
+        "Z2_horizontal": 1.0,
+        "D4_dihedral": 1.0,
+        "color_inversion": 0.546875,
+        "outer_totalistic": 1.0,
+        "best_affine_linear": 0.7265625
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "aligned",
+      "name": "HighLife",
+      "kind": "life_like",
+      "B": [
+        3,
+        6
+      ],
+      "S": [
+        2,
+        3
+      ],
+      "weight": 168,
+      "fingerprint_sha256_16": "f7f40fb8e547a042",
+      "alignment": {
+        "C4_rotation": 1.0,
+        "Z2_horizontal": 1.0,
+        "D4_dihedral": 1.0,
+        "color_inversion": 0.4375,
+        "outer_totalistic": 1.0,
+        "best_affine_linear": 0.671875
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "aligned",
+      "name": "Day_and_Night",
+      "kind": "life_like",
+      "B": [
+        3,
+        6,
+        7,
+        8
+      ],
+      "S": [
+        3,
+        4,
+        6,
+        7,
+        8
+      ],
+      "weight": 256,
+      "fingerprint_sha256_16": "7a414d3b8e6407f2",
+      "alignment": {
+        "C4_rotation": 1.0,
+        "Z2_horizontal": 1.0,
+        "D4_dihedral": 1.0,
+        "color_inversion": 1.0,
+        "outer_totalistic": 1.0,
+        "best_affine_linear": 0.63671875
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "aligned",
+      "name": "Seeds",
+      "kind": "life_like",
+      "B": [
+        2
+      ],
+      "S": [],
+      "weight": 28,
+      "fingerprint_sha256_16": "28c8b5f3c12ff6db",
+      "alignment": {
+        "C4_rotation": 1.0,
+        "Z2_horizontal": 1.0,
+        "D4_dihedral": 1.0,
+        "color_inversion": 0.109375,
+        "outer_totalistic": 1.0,
+        "best_affine_linear": 0.9453125
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "aligned",
+      "name": "Parity_9bit",
+      "kind": "linear_functional",
+      "L": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "constant": 0,
+      "weight": 256,
+      "fingerprint_sha256_16": "0f23315c65cbff66",
+      "alignment": {
+        "C4_rotation": 1.0,
+        "Z2_horizontal": 1.0,
+        "D4_dihedral": 1.0,
+        "color_inversion": 1.0,
+        "outer_totalistic": 1.0,
+        "best_affine_linear": 1.0
+      },
+      "best_affine_linear_coeffs": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "adversarial",
+      "name": "ADV1_d4_m7",
+      "kind": "f2_polynomial",
+      "constant": 0,
+      "monomials": [
+        [
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          0,
+          2,
+          6,
+          8
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4
+        ]
+      ],
+      "degree": 4,
+      "n_monomials": 7,
+      "weight": 240,
+      "fingerprint_sha256_16": "56b79175ba59f692",
+      "alignment": {
+        "C4_rotation": 0.4838709677419355,
+        "Z2_horizontal": 0.5,
+        "D4_dihedral": 0.48292682926829267,
+        "color_inversion": 0.5,
+        "outer_totalistic": 0.5080971659919028,
+        "best_affine_linear": 0.53125
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "adversarial",
+      "name": "ADV2_d3_m7",
+      "kind": "f2_polynomial",
+      "constant": 1,
+      "monomials": [
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          0,
+          2,
+          7
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4,
+          7
+        ]
+      ],
+      "degree": 3,
+      "n_monomials": 7,
+      "weight": 272,
+      "fingerprint_sha256_16": "24e5c589d7c5e98e",
+      "alignment": {
+        "C4_rotation": 0.521505376344086,
+        "Z2_horizontal": 0.5,
+        "D4_dihedral": 0.5390243902439025,
+        "color_inversion": 0.5,
+        "outer_totalistic": 0.46153846153846156,
+        "best_affine_linear": 0.53125
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        1
+      ]
+    },
+    {
+      "stratum": "adversarial",
+      "name": "ADV3_d4_m9",
+      "kind": "f2_polynomial",
+      "constant": 0,
+      "monomials": [
+        [
+          5,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          0,
+          1,
+          3,
+          6
+        ],
+        [
+          0,
+          1,
+          2,
+          7
+        ],
+        [
+          1
+        ],
+        [
+          1,
+          5,
+          7
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          6
+        ]
+      ],
+      "degree": 4,
+      "n_monomials": 9,
+      "weight": 240,
+      "fingerprint_sha256_16": "35207c12c008b774",
+      "alignment": {
+        "C4_rotation": 0.49193548387096775,
+        "Z2_horizontal": 0.5178571428571429,
+        "D4_dihedral": 0.48902439024390243,
+        "color_inversion": 0.5,
+        "outer_totalistic": 0.5323886639676113,
+        "best_affine_linear": 0.546875
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "adversarial",
+      "name": "ADV4_d3_m6",
+      "kind": "f2_polynomial",
+      "constant": 1,
+      "monomials": [
+        [
+          0,
+          5
+        ],
+        [
+          3,
+          5,
+          8
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          1,
+          7,
+          8
+        ],
+        [
+          2,
+          7
+        ]
+      ],
+      "degree": 3,
+      "n_monomials": 6,
+      "weight": 288,
+      "fingerprint_sha256_16": "5985ed346d08e44a",
+      "alignment": {
+        "C4_rotation": 0.5591397849462365,
+        "Z2_horizontal": 0.5,
+        "D4_dihedral": 0.5414634146341464,
+        "color_inversion": 0.5,
+        "outer_totalistic": 0.5364372469635628,
+        "best_affine_linear": 0.5625
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        1
+      ]
+    },
+    {
+      "stratum": "adversarial",
+      "name": "ADV5_d3_m8",
+      "kind": "f2_polynomial",
+      "constant": 1,
+      "monomials": [
+        [
+          4,
+          5,
+          6
+        ],
+        [
+          2
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          5,
+          7,
+          8
+        ],
+        [
+          4
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          7
+        ]
+      ],
+      "degree": 3,
+      "n_monomials": 8,
+      "weight": 256,
+      "fingerprint_sha256_16": "58af248438bd3573",
+      "alignment": {
+        "C4_rotation": 0.4731182795698925,
+        "Z2_horizontal": 0.5,
+        "D4_dihedral": 0.4682926829268293,
+        "color_inversion": 0.5,
+        "outer_totalistic": 0.48380566801619435,
+        "best_affine_linear": 0.5625
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        1
+      ]
+    },
+    {
+      "stratum": "random",
+      "name": "RND1",
+      "kind": "uniform_random",
+      "seed_master": 20260408,
+      "draw_index": 0,
+      "weight": 271,
+      "fingerprint_sha256_16": "a50dcb9c4b478109",
+      "alignment": {
+        "C4_rotation": 0.4959677419354839,
+        "Z2_horizontal": 0.4955357142857143,
+        "D4_dihedral": 0.5060975609756098,
+        "color_inversion": 0.41015625,
+        "outer_totalistic": 0.5080971659919028,
+        "best_affine_linear": 0.583984375
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "random",
+      "name": "RND2",
+      "kind": "uniform_random",
+      "seed_master": 20260408,
+      "draw_index": 1,
+      "weight": 250,
+      "fingerprint_sha256_16": "72af08d2727c5937",
+      "alignment": {
+        "C4_rotation": 0.5241935483870968,
+        "Z2_horizontal": 0.5044642857142857,
+        "D4_dihedral": 0.5146341463414634,
+        "color_inversion": 0.40625,
+        "outer_totalistic": 0.5222672064777328,
+        "best_affine_linear": 0.57421875
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "random",
+      "name": "RND3",
+      "kind": "uniform_random",
+      "seed_master": 20260408,
+      "draw_index": 2,
+      "weight": 242,
+      "fingerprint_sha256_16": "6e53f19e4c9050a3",
+      "alignment": {
+        "C4_rotation": 0.5080645161290323,
+        "Z2_horizontal": 0.5133928571428571,
+        "D4_dihedral": 0.5030487804878049,
+        "color_inversion": 0.5078125,
+        "outer_totalistic": 0.5161943319838057,
+        "best_affine_linear": 0.56640625
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        0
+      ]
+    },
+    {
+      "stratum": "random",
+      "name": "RND4",
+      "kind": "uniform_random",
+      "seed_master": 20260408,
+      "draw_index": 3,
+      "weight": 257,
+      "fingerprint_sha256_16": "99d8ed2564357c58",
+      "alignment": {
+        "C4_rotation": 0.4731182795698925,
+        "Z2_horizontal": 0.5,
+        "D4_dihedral": 0.47317073170731705,
+        "color_inversion": 0.48828125,
+        "outer_totalistic": 0.4939271255060729,
+        "best_affine_linear": 0.580078125
+      },
+      "best_affine_linear_coeffs": [
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        1
+      ]
+    },
+    {
+      "stratum": "random",
+      "name": "RND5",
+      "kind": "uniform_random",
+      "seed_master": 20260408,
+      "draw_index": 4,
+      "weight": 244,
+      "fingerprint_sha256_16": "7213eb038ddf87bd",
+      "alignment": {
+        "C4_rotation": 0.46639784946236557,
+        "Z2_horizontal": 0.5044642857142857,
+        "D4_dihedral": 0.48292682926829267,
+        "color_inversion": 0.5234375,
+        "outer_totalistic": 0.46153846153846156,
+        "best_affine_linear": 0.5625
+      },
+      "best_affine_linear_coeffs": [
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        0
+      ]
+    }
+  ]
+}
