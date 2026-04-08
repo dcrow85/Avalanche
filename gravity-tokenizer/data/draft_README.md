@@ -1,18 +1,30 @@
 # Gravity Tokenizer
 
-**val_bpb: 1.0321** (3-seed mean, std 0.0011) | **15.6 MB** | 8×H100 SXM
+> Archival note (April 2026): the BPB numbers in this draft were produced
+> through an OpenAI evaluation harness bug. They are preserved for provenance
+> only. This was not a valid competitive submission.
+
+**Archived harness outputs only; not a valid benchmark result.**
 
 ## Core Idea
 
-Every submission to this challenge has optimized the model. Nobody has optimized the tokenizer.
+This draft preserves the original competition-era framing, but it should now be
+read as an archival record of a tokenizer idea rather than as a valid
+submission.
 
 At 1024 vocabulary tokens, every merge slot matters. Standard BPE allocates those slots by frequency. But frequency and structural importance are not the same thing. Some tokens are load-bearing: shatter them back to bytes and downstream loss spikes. Others are convenient shortcuts the model barely notices losing.
 
 The Gravity Tokenizer replaces 659 of 765 merge tokens with tokens selected by **ablation leverage** — the downstream loss increase when a token is removed from the vocabulary and its occurrences are decomposed to bytes. The vocabulary size stays exactly 1024. Only which tokens occupy the merge slots changes.
 
-This single change — vocabulary composition — accounts for the entire improvement. The model architecture is a vanilla transformer with no novel components.
+The original draft claimed this single change accounted for the entire
+improvement. That claim does not stand as benchmark evidence once the harness
+bug is taken into account. The model architecture was a vanilla transformer
+with no novel components.
 
-## 3-Seed Results
+## Archived Harness Outputs
+
+These runs are kept for provenance only and should not be treated as valid BPB
+measurements or as evidence that the tokenizer was competitive.
 
 | Seed | val_bpb | artifact_bytes | training_time | ms/step | valid |
 |------|---------|---------------|---------------|---------|-------|
@@ -88,7 +100,13 @@ Tokens removed by gravity scoring (examples): single characters with space prefi
 
 Tokens promoted by gravity scoring (examples): `every`(0.99), `under`(0.96), `first`(0.90), `take`(0.82), `help`(0.78), `may`(0.78) — common English words that BPE would not include at vocab=1024 but that the model structurally depends on.
 
-**Compression ratio:** The gravity tokenizer achieves 1.05 bytes/token vs BPE's 2.45 bytes/token. This means more tokens per byte of text — the model must predict more tokens to cover the same content. The BPB metric penalizes this directly: `val_bpb = bits_per_token * tokens_per_byte`. The improvement is entirely in per-token prediction quality overcoming the worse compression ratio.
+**Compression ratio:** The gravity tokenizer achieves 1.05 bytes/token vs BPE's
+2.45 bytes/token. This means more tokens per byte of text — the model must
+predict more tokens to cover the same content. The BPB metric penalizes this
+directly: `val_bpb = bits_per_token * tokens_per_byte`. The original
+interpretation was that per-token prediction quality overcame the worse
+compression ratio. Because the reported BPB depended on a harness bug, that
+conclusion should be treated as historical rather than settled.
 
 ## The Tokenizer as Ontology
 
@@ -106,45 +124,54 @@ Consider: "The water because caused the damage."
 
 The crystallized tokens are the load-bearing walls. The byte-gas is the fill. BPE hides this distinction — it tokenizes by frequency, so common fragments get tokens regardless of structural importance. A BPE tokenization tells you "this substring appears often." A gravity tokenization tells you "this is where the model's structural commitments are."
 
-This has measurable consequences for information routing. In a preliminary attention probe, we inserted high-gravity tokens between a subject and object and measured the deflection of the direct attention path. The word "because" (a single gravity crystal, leverage 0.735) pulled 23% of the subject's attention mass into an indirect path through itself — a 20% collapse of the direct geodesic. The word "not," which the gravity tokenizer had judged structurally redundant and shattered into three bytes, produced zero deflection. Diffuse byte-gas cannot lens information. Only crystallized tokens create the gravitational wells that the attention mechanism routes through.
+An early attention-deflection probe seemed to support a stronger
+"gravity/lensing" interpretation. Later matched-position controls weakened that
+story substantially: much of the deflection signal was positional, and the
+lensing claim is no longer treated as established. The more durable takeaway is
+narrower: some tokens appear to provide cleaner structural handles than
+byte-fragmented alternatives, but the routing mechanism needs more careful
+measurement than the original draft implied.
 
-This was measured at training step 100 — before the model has learned English. The mass distribution from the vocabulary is already shaping information geometry before the statistical details are painted. The structural lattice locks in first. The language comes after.
-
-The gravity vocabulary doesn't just compress better. It gives the transformer a skeleton to build on. BPE gives it dust.
+The original framing said the gravity vocabulary gave the transformer a
+skeleton while BPE gave it dust. That intuition remains suggestive, but the
+benchmark evidence here is archival and the stronger causal language should be
+read as superseded.
 
 For the full theoretical framework connecting these observations to dissipative structure theory and the thermodynamics of meaning, see [`GENERATIVE_CLOSURE.md`](../../GENERATIVE_CLOSURE.md) (Section VIII).
 
-## Why It Works: The Vocabulary Is the Geometry
+## Historical Interpretation
 
-The competition result and the attention probe result are the same result.
+The original draft bundled together three claims:
 
-A transformer's attention matrix is a bilinear form — it maps queries to keys and determines how information flows between positions. This is a metric tensor. It defines the geodesic structure of the model's information space. The token embeddings define the mass-energy distribution across that space. The forward pass computes geodesics. The residual stream is the manifold.
+- vocabulary composition changes model behavior
+- early attention probes were reading something structural
+- the reported BPB numbers validated the geometric interpretation
 
-When the gravity tokenizer concentrates structural importance into single crystallized tokens, it creates a curved spacetime. Information routes along the geodesics carved by the vocabulary's mass distribution. When BPE shatters structurally important concepts across multiple byte tokens, it creates a flat, featureless space where the model must build all structure internally from gradient updates alone.
+The first claim remains interesting. The second is mixed. The third does not
+survive: the reported BPB values were artifacts of a harness bug, so they are
+not valid evidence of a winning compression benchmark.
 
-We measured this directly. At training step 100 — before the model has learned English — the attention geometry is already curving around high-gravity tokens. The word "because" (a single gravity crystal) deflects the direct attention path between subject and object by 20%, pulling information into an indirect route through itself. The word "not" (shattered into three bytes by the gravity tokenizer) produces zero deflection. Byte-gas cannot lens information.
-
-At step 11,000, the flat background has burned away entirely. The baseline direct attention collapsed from ~0.05 to ~0.015. The model no longer sends diffuse attention across empty space — it only travels along the geodesics the vocabulary carved. The mass distribution didn't deepen the dents in a flat stage. It became the stage. Background independence.
-
-Three specific structures emerged in the trained manifold:
-
-- **Byte-shattered tokens are transparent.** The model cannot use them as structural anchors. To perform negation with a shattered "not," the model must burn MLP capacity to hold bytes in superposition. The vocabulary's decision to shatter a concept is a decision to deny the model a structural handle on it.
-- **Syntax is geometry.** The model routes 7x more attention through "if" (leverage 0.289) than through "an" (leverage 0.516), despite "an" being heavier by scalar mass. "If" bridges two clauses across the sequence — a topological wormhole. "An" constrains only its immediate successor — a point mass. The trained model learned to override scalar mass and route through topological structure.
-- **Causality has light-cones.** "Because" and "so" express the same causal relationship in opposite temporal directions. The attention tensor separates them perfectly: the object routes 3.4x more attention into "because" (effect seeking cause, information flowing backward), while the subject routes 2.2x more into "so" (cause projecting effect, information flowing forward). The model didn't learn grammar. It built a directed graph out of attention mass to enforce causal directionality.
-
-The vocabulary that wins the compression benchmark is the vocabulary that produces the correct mass distribution for the attention geometry. The model that predicts language best is the model whose spacetime is curved correctly.
-
-This is not a metaphor. It is the same mathematics operating on a different substrate.
+What still seems worth keeping from this line is a narrower mechanistic
+hypothesis: tokenizer choice can change how much of a fixed network's depth is
+used productively, and byte-fragmented vocabularies may force the model to
+spend more late-layer effort reconstructing structure internally. The
+depth-efficiency probes remain relevant to that question even though the old
+competitive framing does not.
 
 ## Tokenizer Correctness
 
-The val_bpb calculation uses the competition's own `build_sentencepiece_luts()` and `eval_val()` functions with **zero modifications**. The byte-counting lookup tables are built from the SentencePiece model proto using the same code path as stock BPE.
+The original submission used the competition's own `build_sentencepiece_luts()`
+and `eval_val()` functions with **zero modifications**. The byte-counting
+lookup tables were built from the SentencePiece model proto using the same code
+path as stock BPE.
 
-The gravity tokenizer's lower compression ratio (1.05 vs 2.45 bytes/token) results in a **higher** `tokens_per_byte` multiplier in the BPB formula. This penalizes the gravity tokenizer — any BPB improvement must come from genuinely better per-token prediction quality, not from gaming the metric.
+Later audit still found that the public BPB result depended on an OpenAI
+harness bug. So this section should be read as archival documentation of the
+attempted accounting path, not as proof that the benchmark result was valid.
 
 Detailed tokenizer correctness documentation: see `tokenizer_scrutiny_doc.md` in this submission.
 
-## Controlled Experiments (RTX 5080, matched conditions)
+## Controlled Experiments (RTX 5080, pre-competition internal runs)
 
 The vocabulary effect was isolated through controlled A/B experiments before the competition run. All conditions use identical architecture (9L, 512d), identical training budget (matched on bytes seen, not steps), and differ only in vocabulary composition.
 
@@ -157,7 +184,8 @@ The vocabulary effect was isolated through controlled A/B experiments before the
 | BPE control | 4,656 | 1.3649 | -- |
 | Gravity beta=1.0 (659 swaps) | 4,656 | 1.2262 | **-0.139** |
 
-The effect scales linearly: 9.4x more token swaps produced 8.2x more BPB improvement.
+These runs were useful for internal direction-finding, but they should not be
+read as public benchmark evidence.
 
 ## Negative Results
 

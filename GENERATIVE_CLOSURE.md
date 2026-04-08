@@ -170,7 +170,13 @@ A byte-gas token — a token that the gravity scoring identified as structurally
 
 The U-curve is not a failure of the model. It is the model correctly recognizing that there is no productive work to do at depth for a token that carries no structure. The model allocates its computational budget rationally — it spends layers where spending layers helps prediction. A bad vocabulary forces the model into a position where rational allocation means wasting most of its depth.
 
-This reframes the competition result. The gravity tokenizer's 0.212 BPB improvement is not "better tokens." It is better utilization of existing architecture. A 12-layer model with a BPE vocabulary is effectively a 3-4 layer model for the byte-gas portions of its sequence — the portions where the vocabulary provides no structural scaffolding. The same 12-layer model with a gravity vocabulary uses all 12 layers productively across a much larger fraction of the sequence. The vocabulary determines the effective depth of the architecture.
+This reframes the earlier competition-era tokenizer line. Some reported BPB
+gains were later traced to a bug in the OpenAI harness, so the durable point is
+not a benchmark delta but a mechanistic one: a better vocabulary can let a
+fixed architecture use more of its depth productively. A 12-layer model with a
+poor vocabulary may behave like a shallower model on byte-gas regions because
+it must reconstruct structure internally instead of receiving it at the token
+boundary.
 
 The implication extends beyond small models. At any scale, if a fraction of the vocabulary consists of structurally unimportant tokens, the deep layers of the model receive attenuated gradient signal from those positions during training. The parameters in those layers learn less from those positions. Over trillions of training tokens, the cumulative effect is a model whose deep layers are undertrained relative to what a better vocabulary would allow. The scaling laws that predict performance as a function of parameter count and data volume are implicitly conditioned on vocabulary quality. A better vocabulary changes the return on depth.
 

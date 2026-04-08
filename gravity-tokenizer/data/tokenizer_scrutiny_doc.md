@@ -4,7 +4,15 @@
 
 The Gravity Tokenizer replaces 659 of 765 merge tokens in the standard 1024-vocabulary BPE tokenizer with tokens selected by ablation leverage scoring. The vocabulary size remains exactly 1024 (256 byte + 3 control + 765 merge). No tokens are added or removed — only which merge tokens occupy the 765 slots changes.
 
-The val_bpb calculation uses the competition's own `build_sentencepiece_luts()` function with zero modifications. The gravity tokenizer is a standard SentencePiece Unigram model with byte fallback, compatible with the existing evaluation pipeline.
+> Archival note (April 2026): although this document describes the original
+> accounting path faithfully, the public BPB result was later traced to an
+> OpenAI harness bug. The tokenizer line is preserved for provenance and
+> diagnosis, not as evidence of a valid competitive submission.
+
+The original submission used the competition's own
+`build_sentencepiece_luts()` function with zero modifications. The gravity
+tokenizer is a standard SentencePiece Unigram model with byte fallback,
+compatible with the intended evaluation pipeline.
 
 ## The BPB Calculation Chain
 
@@ -85,8 +93,8 @@ The resulting `.model` file is a valid SentencePiece Unigram model with byte fal
 | `eval_val()` unmodified | Yes (competition code, no changes) |
 | Roundtrip decode/encode preserves text | Yes (verified via spot checks) |
 | Compression ratio penalizes gravity (1.05 vs 2.45 bytes/token) | Yes |
-| int8+zlib quantization roundtrip evaluated | Yes (final_int8_zlib_roundtrip val_bpb reported) |
-| 3-seed runs for statistical significance | Pending |
+| int8+zlib quantization roundtrip evaluated | Yes (archived harness output reported) |
+| 3-seed runs for statistical significance | Not applicable; benchmark result invalidated by harness bug |
 
 ## Reproducibility
 
@@ -121,4 +129,6 @@ TOKENIZER_PATH=./data/tokenizers/gravity_beta_1.0.model \
 torchrun --standalone --nproc_per_node=8 train_gpt.py
 ```
 
-The scoring pipeline (steps 1-2) requires ~4 hours on a single GPU. Steps 3-5 are deterministic and complete in minutes. The training script is the competition's `train_gpt.py` with only `DATA_PATH` and `TOKENIZER_PATH` changed.
+The scoring pipeline (steps 1-2) requires ~4 hours on a single GPU. Steps 3-5
+are deterministic and complete in minutes. Reproducing this setup reproduces
+the historical pipeline, not a valid public benchmark claim.

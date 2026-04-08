@@ -1,5 +1,10 @@
 ## Your AI is Wasting Most of Its Brain on the Wrong Words
 
+> Archival note (April 2026): this document preserves a useful probe result,
+> but its original benchmark framing is stale. The old Gravity Tokenizer BPB
+> numbers were later traced to an OpenAI harness bug, so they should not be
+> read as valid benchmark results or evidence of a competitive submission.
+
 We ran a probe on Qwen 2.5, a 72-billion parameter language model with 80 layers of neural network depth. We measured how much work each layer does for every token in the vocabulary — 2,935 tokens, 100,000 tokens of text, one forward pass with hooks on all 80 layers.
 
 The finding: the model doesn't use all 80 layers equally. Not even close.
@@ -66,11 +71,17 @@ Think of it this way: you're paying for an 80-story office building, but 60 floo
 
 ### What can be done about it
 
-Earlier this week, we submitted a tokenizer called the **Gravity Tokenizer** to OpenAI's Parameter Golf competition. Instead of selecting vocabulary tokens by frequency, it selects them by **structural importance** — measured by how much the model's predictions collapse when you remove a token from the vocabulary.
+An earlier Gravity Tokenizer line explored this idea in the Parameter Golf
+setting by selecting vocabulary items by ablation leverage rather than
+frequency.
 
-On a 12-layer model, replacing 86% of the vocabulary by this method improved compression by 0.212 bits per byte — more than any architectural change on the leaderboard. The submission beat every other entry with a vanilla transformer and no architectural novelties.
+The original writeup reported a large BPB gain. That number was later traced to
+a bug in the OpenAI harness, so it should not be treated as a valid benchmark
+result or as evidence that the tokenizer was competitive.
 
-The depth probe explains why. The gravity tokenizer gives the model tokens it can actually use across its full depth. Standard BPE gives it fragments that waste most of the architecture.
+The depth probe still matters for a different reason. It suggests a mechanistic
+link between vocabulary structure and how much network depth is actually usable.
+That remains interesting even after the benchmark framing is stripped away.
 
 This probe is the first measurement of depth efficiency across a full frontier-scale vocabulary. The same physics that works at 12 layers works at 80. The waste just gets more expensive.
 
@@ -80,5 +91,5 @@ All probe results are available in this repository. The probe ran on 2x A100 GPU
 
 - Probe results: [`data/qwen72b_depth_probe_results.json`](data/qwen72b_depth_probe_results.json)
 - Probe script: [`scripts/qwen72b_depth_probe.py`](scripts/qwen72b_depth_probe.py)
-- Gravity Tokenizer competition submission: [`parameter-golf/records/gravity_tokenizer/`](parameter-golf/records/gravity_tokenizer/)
+- Archival Gravity Tokenizer materials: [`submission/`](submission/)
 - Full theoretical framework: [`GENERATIVE_CLOSURE.md`](../GENERATIVE_CLOSURE.md)
