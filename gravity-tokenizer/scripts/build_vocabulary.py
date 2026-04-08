@@ -70,6 +70,21 @@ def is_v2_parasite(top1_char: str | None, top1_frac: float) -> bool:
     return top1_frac > V2_PARASITISM_THRESHOLD and top1_char.isalpha()
 
 
+def is_v2_prefilter_exempt(candidate: dict) -> bool:
+    """Return True only for literal plumbing tokens that should bypass v2 filters.
+
+    Important: `in_base_vocab` in the scored-candidate export does NOT mean
+    "raw byte token". It includes many seeded SentencePiece pieces such as
+    `▁will`, `▁from`, and `▁produ`, and those must still be checked against the
+    volume floor and parasitism veto.
+
+    The only safe exemption is a literal single-byte token, which would be
+    vocabulary plumbing rather than a merge-like linguistic unit.
+    """
+    token_bytes = candidate.get("token_bytes") or []
+    return len(token_bytes) == 1
+
+
 def apply_v2_filters(
     candidates: list[dict],
     successor_stats: dict[str, dict],
@@ -80,16 +95,18 @@ def apply_v2_filters(
     rejected lists for the report.
 
     Rules:
-      - in_base_vocab tokens are always retained (they're SP base bytes, not merges)
+      - literal single-byte plumbing tokens are always retained
       - other candidates must pass volume floor AND not be a parasite
     """
     eligible = []
     rejected_below_floor = []
     rejected_parasite = []
+    n_prefilter_exempt = 0
 
     for c in candidates:
-        if c.get("in_base_vocab", False):
+        if is_v2_prefilter_exempt(c):
             eligible.append(c)
+            n_prefilter_exempt += 1
             continue
 
         if c.get("corpus_frequency", 0) < V2_VOLUME_FLOOR:
@@ -117,6 +134,7 @@ def apply_v2_filters(
         "n_eligible": len(eligible),
         "n_rejected_below_floor": len(rejected_below_floor),
         "n_rejected_parasite": len(rejected_parasite),
+        "n_prefilter_exempt": n_prefilter_exempt,
         "rejected_parasites": [
             {
                 "piece": r["piece"],

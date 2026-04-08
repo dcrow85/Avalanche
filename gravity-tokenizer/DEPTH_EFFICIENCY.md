@@ -66,13 +66,17 @@ Think of it this way: you're paying for an 80-story office building, but 60 floo
 
 ### What can be done about it
 
-Earlier this week, we submitted a tokenizer called the **Gravity Tokenizer** to OpenAI's Parameter Golf competition. Instead of selecting vocabulary tokens by frequency, it selects them by **structural importance** — measured by how much the model's predictions collapse when you remove a token from the vocabulary.
+The first answer is not "pick the deepest-looking fragments and call it a day." We tried that. The original **Gravity Tokenizer** was directionally right — it cared about structural importance instead of raw frequency — but it also taught a harder lesson. A vocabulary can be ambitious in the wrong way. If it spends too many slots on rare tokens that never receive enough gradient signal, or on half-words that are really just pointers to their next letter, the model still wastes its depth.
 
-On a 12-layer model, replacing 86% of the vocabulary by this method improved compression by 0.212 bits per byte — more than any architectural change on the leaderboard. The submission beat every other entry with a vanilla transformer and no architectural novelties.
+What actually helps is a more disciplined vocabulary design:
 
-The depth probe explains why. The gravity tokenizer gives the model tokens it can actually use across its full depth. Standard BPE gives it fragments that waste most of the architecture.
+- Keep tokens that appear often enough to accumulate real training signal.
+- Reject tokens that are almost always completed by the same alphabetic successor, because those are fragments, not independent units.
+- Then, among the survivors, prefer tokens with real structural load.
 
-This probe is the first measurement of depth efficiency across a full frontier-scale vocabulary. The same physics that works at 12 layers works at 80. The waste just gets more expensive.
+That correction became **Gravity Tokenizer v2**. On the same 12-layer witness where v1 produced only 8 graduated tokens, v2 produced 29. It expanded the pool of tokens that crossed the practical energy floor from 125 to 341, and it compressed the corpus better than v1 instead of worse. The gain did not fully close the gap to dense BPE, but it moved the system into a different regime.
+
+The deeper lesson is simple: **semantic ambition requires syntactic infrastructure**. A good vocabulary cannot be all heavy semantic bricks. It also needs function words, closures, and morphological mortar — the connective tissue that lets the model route meaning through its depth instead of forcing the final layer to rescue unresolved fragments. The tokenizer is not just compression. It is the boundary condition that decides how much of the network can become usable.
 
 ### The data
 
