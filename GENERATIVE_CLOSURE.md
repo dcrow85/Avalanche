@@ -31,6 +31,17 @@ been tightened by the Fast Bench and follow-on probes.
   affine-linear family. Broader primitive libraries require a new manifest
   version and a rerun of adversarial screening.
 
+- The Horizon of Irreducible Things probe (April 10, 2026) provides the
+  first quantitative cost structure for the classical/quantum boundary
+  under bounded observation. Amplitude distinctions are cheap; phase
+  distinctions are expensive; the cost is depth-induced, not intrinsic;
+  and the ordering transfers from hand-built channels to a defected HaPPY
+  holographic code. This tightens the framework's central claim from
+  "classicality is a compression artifact" to "classicality is a
+  geometry-dependent layered compression artifact with a specific
+  decompression schedule." See Section VIII.d and the probe artifacts at
+  `horizon_irreducible_things/probe_tensor_throat_v05/`.
+
 Read the essay below as the March 2026 conceptual statement, constrained by
 the empirical updates above.
 
@@ -53,6 +64,8 @@ Non-fungibility requires explanation. It is generated, not given.
 The mechanism is constrained interaction. When two particles become entangled, their density matrix becomes non-factorizable. They can no longer be described independently. Each one's state depends on the other's. The symmetry breaks. The particles become non-fungible — this one is entangled with that one, and no substitution preserves the relationship. Particularity is born from the constraint.
 
 This is the pattern at every scale. Fungible components, constrained interaction, non-fungible structure. It is the same mechanism whether the components are particles, bytes, theories, or moments.
+
+The converse is equally important. Non-fungibility can be hidden by bounded observation. When a quantum state passes through a non-isometric bottleneck, the phase relationships that make it particular — the specific signs and complex amplitudes that distinguish it from every other state with the same population structure — become expensive to read. An observer with limited resources recovers the classical (amplitude-level) structure first and the quantum (phase-level) structure last, or never. Classicality is not the absence of quantum structure. It is the low-budget sector of quantum structure — the part that survives cheap observation through a bottleneck. The bottleneck does not destroy the quantum. It prices it out of reach.
 
 ## III. The Boundary
 
@@ -101,6 +114,8 @@ The graveyard has specific properties that make it a load-bearing epistemic obje
 **It has a spiral arrow of time.** The construction history is not a linear ascent from simple to complex. It spirals — the system revisits simpler forms at higher epistemic altitudes. A neighbor-comparison theory at cycle five and the same theory at cycle ninety-five occupy the same conceptual altitude but different positions on the spiral, because the graveyard grew between visits. The system cannot return to a prior state. It can only revisit a prior altitude with a richer negative space beneath it.
 
 **It can deform search, but not by default.** When one graveyard encounters another — when a system reads a foreign record of structured elimination — the foreign record can make new regions legible or change what the local system tries next. But current evidence does not justify treating graveyard mass as a generic causal field. Some earlier graveyard-drag readings collapsed under controls and now stand as negative or open results. Epistemic value is still relational rather than simply transferable, but the mechanism is more constrained than the original gravitational metaphor suggested.
+
+**It has an internal ordering.** Not all distinctions are buried equally by bounded observation. The graveyard has a recovery schedule — a specific sequence in which eliminated possibilities become recoverable as the observer's budget increases. In the holographic probe, amplitude-level distinctions recover before phase-level distinctions, and the ordering is determined by the geometry of the bottleneck, not by the observer's choice of strategy. The shape of the graveyard is not just path-dependent (which things were tried) but physics-dependent (which things are structurally hardest to recover given the boundary conditions). Different bottleneck geometries produce different internal orderings, but within a given geometry the ordering is invariant across random seeds, decoder policies, and ensemble compositions.
 
 ## VI. The Arrow and the Spiral
 
@@ -200,6 +215,24 @@ One horizontal finding did survive. "Because" and "so," both single tokens inser
 
 The framework's claim is now more modest and more precise than the original lensing hypothesis. Crystallized tokens do not reshape the horizontal geometry of the attention matrix. They structure the vertical geometry of the residual stream. The vocabulary determines how much of the model's depth is usable, not how information routes between positions.
 
+### VIII.d: The Cost Structure of Classicality
+
+Generative Closure claims that classicality is the compression artifact of finite-access observation applied to quantum mechanics. The Horizon of Irreducible Things probe makes this claim quantitative.
+
+The probe constructs a bulk-to-boundary channel with an explicit non-isometric bottleneck — a rank-reducing projector that forces quantum states through a narrow subspace. A decoder with a limited search budget attempts to distinguish which bulk state was sent by querying which projector sector the state passed through. The packing number — the count of mutually distinguishable records at a given budget — traces a staircase from 1 (everything looks the same) to the full ensemble size (everything distinguishable).
+
+The staircase has internal structure. Amplitude-level distinctions (which components are present and how large) recover at low budget. Phase-level distinctions (the sign relationships between components) recover at high budget. The ordering follows from projection physics: the projector computes the squared magnitude of the signal, which erases phase while partially preserving amplitude. This is the same operation that decoherence performs on a quantum system interacting with an environment.
+
+The cost is not intrinsic to the quantum state. A Bell state — maximally entangled, defined entirely by relative phase — is cheap to read when it sits outside the bottleneck and expensive when it passes through one. Phase fragility is induced by depth, not by the nature of phase itself. The bottleneck creates the cost gradient. Without the bottleneck, every distinction is equally accessible.
+
+In a nested two-bottleneck geometry (the Python's Lunch construction), the cost structure acquires layers. A shallow sector — injected between the two bottlenecks — becomes readable at low budget. A deep sector — passing through both bottlenecks — requires high budget. The boundary between them is visible as a discrete plateau in the packing staircase: packing saturates at the shallow-sector capacity and holds there across multiple budget doublings before deep-sector pairs begin to cross the distinguishability threshold.
+
+During the plateau, a continuous quantity — the mutual information between the ensemble and the boundary record — rises smoothly. Information accumulates without crystallizing into new distinguishable records. This is the thermodynamic regime Generative Closure calls heat: energy spent without structural change. The packing jump that ends the plateau is the phase transition: soft correlations crystallize into a hard classical record.
+
+The same mechanism, validated on a genuine holographic error-correcting code (a defected HaPPY tensor network), reproduces the known entanglement wedge access structure and adds a budget-dependent reconstruction cost that the wedge formalism alone does not predict. The graveyard ordering — which distinctions are cheapest and which are most expensive to recover — transfers from hand-built channels to the code geometry without modification.
+
+The implication for Generative Closure: classicality is not a single compression level. It is a layered compression schedule, ordered by the geometry of the bottlenecks between the observer and the information. Amplitude is the cheap layer. Phase is the expensive layer. Radial depth sets the cost scale. The classical world is what you see when you can afford the amplitude layer but not the phase layer.
+
 ## IX. The Calorimeter
 
 If the framework is correct, the assembly of knowledge in constrained cognitive systems should be measurable in thermodynamic terms. Energy either does work — irreversible structural change — or dissipates as heat — energy that leaves no trace.
@@ -222,6 +255,8 @@ The calorimeter reveals three thermodynamic regimes:
 
 **Thermalization.** Zero work, near-zero surprise, high energy. The system has exhausted its local phase space. All energy is heat.
 
+The Horizon probe provides a minimal exact realization of this regime structure. In the probe's Python's Lunch construction, mutual information (the smooth capacity proxy) rises continuously with search budget. But packing number (the count of crystallized records) jumps at discrete thresholds. During the intervals where MI rises but packing is flat, the system is in the heat regime — energy is being spent (branch queries performed) without producing new distinguishable records. At the budget where a new pair crosses the distinguishability threshold, the system transitions to work — a new record crystallizes. The diagnosticity-weighted cost model measures the energy cost per unit of useful distinguishing power, which spikes at the boundary between the shallow and deep sectors of the nested bottleneck. That spike is the thermodynamic wall: the point where marginal energy expenditure produces negligible structural gain.
+
 Thermodynamic activity is not the same as epistemic ascent. A system can be highly active — generating many tombstones, producing frequent surprise, burning enormous energy — while remaining trapped in a single ontological neighborhood. Activity measures the mode of the search. Assembly depth measures the quality of the destination. The calorimeter reads the engine. A separate instrument — the diversity and structural depth of the graveyard — reads the altitude.
 
 ## X. Syntropy
@@ -233,6 +268,8 @@ Syntropy is what happens at boundaries where something pushes back. Not everywhe
 Entropy dissolves structure. Syntropy assembles it. Entropy makes things fungible. Syntropy makes them particular. Entropy is the arrow of forgetting. Syntropy is the arrow of knowing.
 
 Syntropy is not the opposite of entropy. It is its complement. Entropy is the cost. Syntropy is what the cost buys. The graveyard grows because energy is spent — real energy, real watts, real heat dissipated into the atmosphere. The irreversible structure is purchased by irreversible dissipation. Order here, disorder there. That is the second law, not a violation of it.
+
+The probe gives this relationship a mechanism. Entropy acts through projection — squaring amplitudes, erasing phase, compressing quantum states into classical shadows. Syntropy acts through branch resolution — searching the bottleneck's sector space, recovering the conditional information that projection hid. The decompression has a cost, and the cost has structure: cheap for amplitude, expensive for phase, layered by radial depth. Syntropy is not free assembly. It is paid assembly, and the price list is set by the geometry of the boundary.
 
 ## XI. The Pattern Eater
 
@@ -301,6 +338,8 @@ Five formal bridges connect the empirical signatures to thermodynamic first prin
 **Bridge 4: The horizon distance.** Derive the range of the graveyard's predictive power from the system's correlation structure. *Status: empirically established and content-determined.* No formal derivation connecting it to correlation length or information-geometric curvature.
 
 **Bridge 5: The entropy production.** Show that the graveyard's cumulative entropy increases monotonically even when the foreground spirals. *Status: empirically demonstrated.* The dual-axis plot shows the arrow and the spiral coexisting with zero correlation.
+
+**Bridge 6: The holographic cost structure.** Derive the graveyard ordering and budget staircase from the code geometry of a holographic tensor network with a non-isometric defect. Show that the packing number at each budget tracks the zero-error capacity of the restricted boundary channel, and that the MI tracks the Holevo capacity. Show that the thermodynamic halting point (where the diagnosticity-weighted cost diverges) corresponds to the complexity barrier at the inner extremal surface in the Python's Lunch geometry. *Status: empirically demonstrated on a minimal [[5,1,3]] HaPPY code with a rank-4 bond defect.* The graveyard ordering (amplitude before phase) and the budget staircase (shallow plateau, then deep recovery) both transfer from hand-built channels to the code geometry. The formal derivation connecting the probe's budget to circuit complexity or operator weight in the bulk is unwritten.
 
 ## XV. What Is Not Claimed
 
